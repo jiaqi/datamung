@@ -21,7 +21,7 @@
         <site>
             <id>cyclopsgroup.server.sourceforge</id>
             <url>
-                s3://www.cyclopsgroup.org/projects/doorman
+                s3://www.cyclopsgroup.org/projects/datamung
             </url>
         </site>
     </distributionManagement>
