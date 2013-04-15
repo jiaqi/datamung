@@ -3,6 +3,9 @@ package org.cyclopsgroup.datamung.api.types;
 public abstract class IdentityAwareObject {
 	private Identity identity;
 
+	public IdentityAwareObject() {
+	}
+
 	public Identity getIdentity() {
 		return identity;
 	}

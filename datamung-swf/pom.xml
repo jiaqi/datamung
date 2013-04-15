@@ -9,5 +9,12 @@
 	</parent>
 	<artifactId>datamung-swf</artifactId>
 	<packaging>jar</packaging>
-	<name>DataMung API</name>
+	<name>DataMung Simple Workflow</name>
+	<dependencies>
+	    <dependency>
+	        <groupId>com.amazonaws</groupId>
+	        <artifactId>aws-java-sdk</artifactId>
+	        <version>1.4.1</version>
+	    </dependency>
+	</dependencies>
 </project>
