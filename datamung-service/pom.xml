@@ -7,19 +7,14 @@
 		<artifactId>datamung</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>datamung-api</artifactId>
-	<packaging>jar</packaging>
-	<name>DataMung API</name>
+	<artifactId>datamung-service</artifactId>
+	<packaging>war</packaging>
+	<name>DataMung Service</name>
 	<dependencies>
 	    <dependency>
-	        <groupId>javax.ws.rs</groupId>
-	        <artifactId>javax.ws.rs-api</artifactId>
-	        <version>2.0-rc3</version>
-	    </dependency>
-	    <dependency>
-	        <groupId>joda-time</groupId>
-	        <artifactId>joda-time</artifactId>
-	        <version>2.2</version>
+	        <groupId>${project.groupId}</groupId>
+	        <artifactId>datamung-api</artifactId>
+	        <version>${project.version}</version>
 	    </dependency>
 	</dependencies>
 </project>

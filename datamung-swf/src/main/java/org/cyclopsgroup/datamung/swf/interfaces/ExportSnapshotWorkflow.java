@@ -5,6 +5,6 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.WorkflowRegistrati
 
 @Workflow
 @WorkflowRegistrationOptions(defaultExecutionStartToCloseTimeoutSeconds = 3600L * 8, defaultTaskList = Constants.WORKFLOW_TASK_LIST)
-public interface ExportInstanceWorkflow {
+public interface ExportSnapshotWorkflow {
 
 }

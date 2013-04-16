@@ -1,13 +1,19 @@
 package org.cyclopsgroup.datamung.api.types;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
+
+@XmlType
 public class S3DataArchive extends DataArchive {
 	private String bucketName;
 	private String objectKey;
 
+	@XmlElement
 	public String getBucketName() {
 		return bucketName;
 	}
 
+	@XmlElement
 	public String getObjectKey() {
 		return objectKey;
 	}
