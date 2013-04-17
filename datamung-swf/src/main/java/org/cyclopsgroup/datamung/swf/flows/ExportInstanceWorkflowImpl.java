@@ -7,6 +7,7 @@ import org.cyclopsgroup.datamung.swf.interfaces.ExportInstanceWorkflow;
 
 import com.amazonaws.services.simpleworkflow.flow.DecisionContextProvider;
 import com.amazonaws.services.simpleworkflow.flow.DecisionContextProviderImpl;
+import com.amazonaws.services.simpleworkflow.flow.core.Promise;
 
 public class ExportInstanceWorkflowImpl implements ExportInstanceWorkflow {
 	private final AwsCloudActivitiesClient cloudActivities = new AwsCloudActivitiesClientImpl();
@@ -20,10 +21,11 @@ public class ExportInstanceWorkflowImpl implements ExportInstanceWorkflow {
 	public void export(ExportInstanceRequest request) {
 		this.request = request;
 
-		String snapshotName = request.getInstanceName()
-				+ "-"
-				+ contextProvider.getDecisionContext().getWorkflowContext()
-						.getWorkflowExecution().getWorkflowId();
+		Promise<String> snapshotName = cloudActivities
+				.createSnapshotName(request.getInstanceName());
 
+		Promise<Void> done = cloudActivities.createSnapshot(snapshotName,
+				Promise.asPromise(request.getInstanceName()),
+				Promise.asPromise(request.getIdentity()));
 	}
 }
