@@ -27,5 +27,7 @@ public class ExportInstanceWorkflowImpl implements ExportInstanceWorkflow {
 		Promise<Void> done = cloudActivities.createSnapshot(snapshotName,
 				Promise.asPromise(request.getInstanceName()),
 				Promise.asPromise(request.getIdentity()));
+		
+		
 	}
 }
