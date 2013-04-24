@@ -3,10 +3,10 @@ package org.cyclopsgroup.datamung.swf.flows;
 import java.util.concurrent.TimeoutException;
 
 import org.cyclopsgroup.datamung.api.types.Identity;
-import org.cyclopsgroup.datamung.swf.interfaces.AwsRdsActivitiesClient;
-import org.cyclopsgroup.datamung.swf.interfaces.AwsRdsActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.CheckWaitWorkflow;
 import org.cyclopsgroup.datamung.swf.interfaces.CheckWaitWorkflowSelfClientImpl;
+import org.cyclopsgroup.datamung.swf.interfaces.RdsActivitiesClient;
+import org.cyclopsgroup.datamung.swf.interfaces.RdsActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.types.CheckAndWait;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -27,8 +27,8 @@ public class CheckWaitWorkflowImpl
     private final DecisionContextProvider contextProvider =
         new DecisionContextProviderImpl();
 
-    private final AwsRdsActivitiesClient rdsActivities =
-        new AwsRdsActivitiesClientImpl();
+    private final RdsActivitiesClient rdsActivities =
+        new RdsActivitiesClientImpl();
 
     /**
      * @inheritDoc
@@ -70,6 +70,7 @@ public class CheckWaitWorkflowImpl
         doCheckAndWait( request, delay );
     }
 
+    @Asynchronous
     private void doCheckAndWait( CheckAndWait request, Promise<?>... waitFor )
         throws TimeoutException
     {
@@ -79,6 +80,10 @@ public class CheckWaitWorkflowImpl
             case SNAPSHOT_CREATION:
                 successful =
                     isSnapshotAvailable( request.getObjectName(),
+                                         request.getIdentity() );
+            case INSTANCE_CREATION:
+                successful =
+                    isInstanceAvailable( request.getObjectName(),
                                          request.getIdentity() );
                 break;
             default:
@@ -92,6 +97,15 @@ public class CheckWaitWorkflowImpl
     private <T> Promise<Boolean> equals( T expects, Promise<T> actual )
     {
         return Promise.asPromise( actual.get().equals( expects ) );
+    }
+
+    @Asynchronous
+    private Promise<Boolean> isInstanceAvailable( String instanceName,
+                                                  Identity identity )
+    {
+        Promise<String> status =
+            rdsActivities.getInstanceStatus( instanceName, identity );
+        return equals( "available", status );
     }
 
     @Asynchronous

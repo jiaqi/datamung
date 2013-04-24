@@ -6,7 +6,7 @@ public class CheckAndWait
 {
     public static enum Type
     {
-        SNAPSHOT_CREATION;
+        SNAPSHOT_CREATION, INSTANCE_CREATION;
     }
 
     private Type checkType;

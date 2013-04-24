@@ -2,8 +2,6 @@ package org.cyclopsgroup.datamung.swf.flows;
 
 import org.cyclopsgroup.datamung.api.types.ExportInstanceRequest;
 import org.cyclopsgroup.datamung.api.types.ExportSnapshotRequest;
-import org.cyclopsgroup.datamung.swf.interfaces.AwsRdsActivitiesClient;
-import org.cyclopsgroup.datamung.swf.interfaces.AwsRdsActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.CheckWaitWorkflowClientFactory;
 import org.cyclopsgroup.datamung.swf.interfaces.CheckWaitWorkflowClientFactoryImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.ControlActivitiesClient;
@@ -11,12 +9,15 @@ import org.cyclopsgroup.datamung.swf.interfaces.ControlActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.ExportInstanceWorkflow;
 import org.cyclopsgroup.datamung.swf.interfaces.ExportSnapshotWorkflowClientFactory;
 import org.cyclopsgroup.datamung.swf.interfaces.ExportSnapshotWorkflowClientFactoryImpl;
+import org.cyclopsgroup.datamung.swf.interfaces.RdsActivitiesClient;
+import org.cyclopsgroup.datamung.swf.interfaces.RdsActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.types.CheckAndWait;
 
 import com.amazonaws.services.simpleworkflow.flow.DecisionContextProvider;
 import com.amazonaws.services.simpleworkflow.flow.DecisionContextProviderImpl;
 import com.amazonaws.services.simpleworkflow.flow.annotations.Asynchronous;
 import com.amazonaws.services.simpleworkflow.flow.core.Promise;
+import com.amazonaws.services.simpleworkflow.flow.core.TryFinally;
 
 public class ExportInstanceWorkflowImpl
     implements ExportInstanceWorkflow
@@ -27,8 +28,8 @@ public class ExportInstanceWorkflowImpl
     private final ExportSnapshotWorkflowClientFactory exportSnapshotFlowFactory =
         new ExportSnapshotWorkflowClientFactoryImpl();
 
-    private final AwsRdsActivitiesClient rdsActivities =
-        new AwsRdsActivitiesClientImpl();
+    private final RdsActivitiesClient rdsActivities =
+        new RdsActivitiesClientImpl();
 
     private final ControlActivitiesClient controlActivities =
         new ControlActivitiesClientImpl();
@@ -52,23 +53,37 @@ public class ExportInstanceWorkflowImpl
      * @inheritDoc
      */
     @Override
-    public void export( ExportInstanceRequest request )
+    public void export( final ExportInstanceRequest request )
     {
         this.request = request;
 
-        Promise<String> snapshotName =
+        final Promise<String> snapshotName =
             controlActivities.createSnapshotName( request.getInstanceName() );
         Promise<Void> done =
             rdsActivities.createSnapshot( snapshotName,
                                           Promise.asPromise( request.getInstanceName() ),
                                           Promise.asPromise( request.getIdentity() ) );
+        new TryFinally( done )
+        {
+            @Override
+            protected void doTry()
+            {
+                Promise<Void> done = waitUntilSnapshotAvailable( snapshotName );
+                Promise<ExportSnapshotRequest> snapshotRequest =
+                    createExportSnapshotRequest( snapshotName );
+                exportSnapshotFlowFactory.getClient( "snapshot-export-"
+                                                         + snapshotName ).export( snapshotRequest,
+                                                                                  done );
+            }
 
-        done = waitUntilSnapshotAvailable( snapshotName, done );
-
-        Promise<ExportSnapshotRequest> snapshotRequest =
-            createExportSnapshotRequest( snapshotName );
-        exportSnapshotFlowFactory.getClient( "snapshot-export-" + snapshotName ).export( snapshotRequest,
-                                                                                         done );
+            @Override
+            protected void doFinally()
+                throws Throwable
+            {
+                rdsActivities.deleteSnapshot( snapshotName,
+                                              Promise.asPromise( request.getIdentity() ) );
+            }
+        };
     }
 
     @Asynchronous

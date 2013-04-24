@@ -1,6 +1,5 @@
 package org.cyclopsgroup.datamung.api.types;
 
-public abstract class DataArchive {
-	public DataArchive() {
-	}
+public abstract class DataArchive
+{
 }
