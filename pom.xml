@@ -86,4 +86,7 @@
             </plugins>
         </pluginManagement>
     </build>
+    <properties>
+        <org.springframework.version>3.2.0.RELEASE</org.springframework.version>
+    </properties>
 </project>
