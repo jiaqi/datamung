@@ -15,6 +15,44 @@
         <constructor-arg ref="awsCredentials" />
     </bean>
 
+    <bean id="aws.SimpleWorkflow"
+        class="com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflowClient">
+        <constructor-arg ref="awsCredentials" />
+    </bean>
+
     <context:component-scan
         base-package="org.cyclopsgroup.datamung.service.activities" />
+
+    <bean class="com.amazonaws.services.simpleworkflow.flow.WorkflowWorker"
+        init-method="start">
+        <constructor-arg ref="aws.SimpleWorkflow" />
+        <constructor-arg value="eng-sandbox-development" />
+        <constructor-arg value="datamung-workflow-tasks" />
+        <property name="workflowImplementationTypes">
+            <list>
+                <value>
+                    org.cyclopsgroup.datamung.swf.flows.CheckWaitWorkflowImpl
+                </value>
+                <value>
+                    org.cyclopsgroup.datamung.swf.flows.ExportInstanceWorkflowImpl
+                </value>
+                <value>
+                    org.cyclopsgroup.datamung.swf.flows.ExportSnapshotWorkflowImpl
+                </value>
+            </list>
+        </property>
+    </bean>
+
+    <bean class="com.amazonaws.services.simpleworkflow.flow.ActivityWorker"
+        init-method="start">
+        <constructor-arg ref="aws.SimpleWorkflow" />
+        <constructor-arg value="eng-sandbox-development" />
+        <constructor-arg value="datamung-workflow-tasks" />
+        <property name="activitiesImplementations">
+            <list>
+                <ref bean="workflow.ControlActivities" />
+                <ref bean="workflow.RdsActivities" />
+            </list>
+        </property>
+    </bean>
 </beans>
