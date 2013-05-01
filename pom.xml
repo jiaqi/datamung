@@ -88,5 +88,7 @@
     </build>
     <properties>
         <org.springframework.version>3.2.0.RELEASE</org.springframework.version>
+        <aws.sdk.version>1.4.1</aws.sdk.version>
+        <aws.sdk.home>${user.home}/aws-java-sdk/${aws.sdk.version}</aws.sdk.home>
     </properties>
 </project>
