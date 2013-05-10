@@ -82,6 +82,7 @@ public class ExportSnapshotWorkflowImpl
         check.setExpireOn( now + 3600 * 1000L );
         check.setIdentity( request.getIdentity() );
         check.setObjectName( instanceName.get() );
-        return waitFlowFactory.getClient( "instance-creation-" + instanceName ).checkAndWait( check );
+        return waitFlowFactory.getClient( "instance-creation-"
+                                              + instanceName.get() ).checkAndWait( check );
     }
 }

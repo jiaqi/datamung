@@ -81,6 +81,7 @@ public class CheckWaitWorkflowImpl
                 successful =
                     isSnapshotAvailable( request.getObjectName(),
                                          request.getIdentity() );
+                break;
             case INSTANCE_CREATION:
                 successful =
                     isInstanceAvailable( request.getObjectName(),

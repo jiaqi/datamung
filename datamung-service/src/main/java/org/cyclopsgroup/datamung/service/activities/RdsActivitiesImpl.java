@@ -143,5 +143,4 @@ public class RdsActivitiesImpl
                                                                      instanceName ),
                                         identity ) );
     }
-
 }

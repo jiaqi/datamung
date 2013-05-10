@@ -72,8 +72,8 @@ public class ExportInstanceWorkflowImpl
                 Promise<ExportSnapshotRequest> snapshotRequest =
                     createExportSnapshotRequest( snapshotName );
                 exportSnapshotFlowFactory.getClient( "snapshot-export-"
-                                                         + snapshotName ).export( snapshotRequest,
-                                                                                  done );
+                                                         + snapshotName.get() ).export( snapshotRequest,
+                                                                                        done );
             }
 
             @Override
@@ -99,6 +99,7 @@ public class ExportInstanceWorkflowImpl
         check.setExpireOn( now + 3600 * 1000L );
         check.setIdentity( request.getIdentity() );
         check.setObjectName( snapshotName.get() );
-        return waitFlowFactory.getClient( "snapshot-creation-" + snapshotName ).checkAndWait( check );
+        return waitFlowFactory.getClient( "snapshot-creation-"
+                                              + snapshotName.get() ).checkAndWait( check );
     }
 }

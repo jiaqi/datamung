@@ -30,6 +30,6 @@ public class ControlActivitiesImpl
     public String createTempInstanceName( String snapshotName )
     {
         return "dm-"
-            + contextProvider.getActivityExecutionContext().getWorkflowExecution().getWorkflowId();
+            + contextProvider.getActivityExecutionContext().getWorkflowExecution().getWorkflowId().hashCode();
     }
 }

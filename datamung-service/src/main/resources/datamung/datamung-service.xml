@@ -1,16 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
     xmlns:context="http://www.springframework.org/schema/context"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:aop="http://www.springframework.org/schema/aop" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="
        http://www.springframework.org/schema/beans
        http://www.springframework.org/schema/beans/spring-beans.xsd
        http://www.springframework.org/schema/context
-       http://www.springframework.org/schema/context/spring-context.xsd">
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop.xsd">
     <context:property-placeholder />
-
     <import resource="./location-${location:local}.xml" />
 
+    <!-- Logging configuration -->
+    <aop:aspectj-autoproxy />
+    <bean id="loggingAdvice"
+        class="org.cyclopsgroup.kaufman.logging.InvocationLoggingAdvice" />
+    <aop:config>
+        <aop:aspect ref="loggingAdvice" order="1">
+            <aop:around
+                pointcut="execution(* org.cyclopsgroup.datamung.swf.interfaces.*Activities.*(..))"
+                method="execute" />
+            <aop:around
+                pointcut="execution(* com.amazonaws.services.*.*Client.*(..))"
+                method="execute" />
+        </aop:aspect>
+    </aop:config>
+
+
+    <!-- AWS resources -->
     <bean class="com.amazonaws.services.rds.AmazonRDSClient">
         <constructor-arg ref="awsCredentials" />
     </bean>
@@ -18,10 +36,14 @@
     <bean id="aws.SimpleWorkflow"
         class="com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflowClient">
         <constructor-arg ref="awsCredentials" />
+        <property name="endpoint" value="https://swf.us-east-1.amazonaws.com" />
     </bean>
 
+
+    <!-- SWF workers -->
     <context:component-scan
         base-package="org.cyclopsgroup.datamung.service.activities" />
+
 
     <bean class="com.amazonaws.services.simpleworkflow.flow.WorkflowWorker"
         init-method="start">
@@ -47,7 +69,7 @@
         init-method="start">
         <constructor-arg ref="aws.SimpleWorkflow" />
         <constructor-arg value="eng-sandbox-development" />
-        <constructor-arg value="datamung-workflow-tasks" />
+        <constructor-arg value="datamung-activity-tasks" />
         <property name="activitiesImplementations">
             <list>
                 <ref bean="workflow.ControlActivities" />
