@@ -139,8 +139,9 @@ public class RdsActivitiesImpl
     @Override
     public void terminateInstance( String instanceName, Identity identity )
     {
-        rds.deleteDBInstance( decorate( new DeleteDBInstanceRequest(
+        rds.deleteDBInstance( decorate(
+                                        new DeleteDBInstanceRequest(
                                                                      instanceName ),
-                                        identity ) );
+                                        identity ).withSkipFinalSnapshot( true ) );
     }
 }
