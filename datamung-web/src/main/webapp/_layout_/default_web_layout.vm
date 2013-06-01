@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+    #parse("_layout_/document_header.vm")
+    <body>
+        <div id="bodyWrapper">
+            <div id="headerContent">
+                <div class="contentWrapper">
+                    #parse("_layout_/web_banner.vm")
+                </div>
+            </div>
+            <div id="bodyContent">
+                <div class="contentWrapper">
+                    <div id="bodyContentColumn">
+                        #if($request.getParameter("message"))
+                        <div id="messageBannerBar" class="icon-prefix"
+                            g:icon="message">
+                            <small>
+                                $request.getParameter("message")
+                            </small>
+                        </div>
+                        #end
+                        <div id="mainBodyContentColumn">
+                            $bodyContent
+                        </div>
+                    </div>
+                </div>
+                <p>
+                  &nbsp;
+                </p>
+            </div>
+            <div id="footerContent">
+                <div class="contentWrapper">
+                    <table width="100%">
+                        <tr>
+                            <td>
+                                <a href="http://www.cyclopsgroup.org">CyclopsGroup.org</a>
+                            </td>
+                            <td align="right">
+                                Powered by
+                                <a href="http://aws.amazon.com">
+                                    Amazon Web Service
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
+                    <p>
+                        &nbsp;
+                    </p>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

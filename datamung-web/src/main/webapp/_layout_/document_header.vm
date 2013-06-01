@@ -1,0 +1,21 @@
+<head>
+    <title>CyclopsGroup.org - DataMung</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <script language="javascript"
+        src="//ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.1.min.js">
+    </script>
+    <script type="text/javascript"
+        src="//ajax.aspnetcdn.com/ajax/jquery.ui/1.8.10/jquery-ui.min.js">
+    </script>
+    <script type="text/javascript" src="$link.contextPath/js/kaufman-core.js">
+    </script>
+
+    <script language="javascript">
+        // <!DATA[
+        // Setting context path to a goal variable so other scripts can use it
+        document.webappBase="$link.contextPath";
+        //]]>
+    </script>
+    <link rel="stylesheet"
+        href="//ajax.aspnetcdn.com/ajax/jquery.ui/1.8.10/themes/cupertino/jquery-ui.css" />
+</head>

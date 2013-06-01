@@ -29,6 +29,7 @@
         <module>datamung-api</module>
         <module>datamung-swf</module>
         <module>datamung-service</module>
+        <module>datamung-web</module>
     </modules>
     <build>
         <pluginManagement>
