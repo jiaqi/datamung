@@ -1,7 +1,25 @@
 <table width="100%" border="0">
     <tr>
-        <td valigh="middle">
-            <h1>CyclopsGroup.org - DataMung Demo</h1>
+        <td valigh="middle" rowspan="2">
+            <h1>DataMung Demo</h1>
+        </td>
+        <td></td>
+    </tr>
+    <tr>
+        <td align="right" valign="bottom">
+            <table>
+                <tr>
+                    <td width="80px">
+                        <a href="$link.absolute('')">Home</a>
+                    </td>
+                    <td width="80px">
+                        <a href="$link.absolute('/jobs.html')">Jobs</a>
+                    </td>
+                    <td width="80px">
+                        <a href="$link.absolute('/about.html')">About</a>
+                    </td>
+                </tr>
+            </table>
         </td>
     </tr>
 </table>
