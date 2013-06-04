@@ -5,6 +5,7 @@ import javax.validation.constraints.Size;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Regions;
 
 @ValidAwsCredential( message = "AWS credentials has problem, perhaps it doesn't have required permissions." )
 public class CredentialsAndAction
@@ -36,6 +37,9 @@ public class CredentialsAndAction
     @Size( min = 1, message = "AWS access key Id must be specified" )
     private String awsAccessKeyId;
 
+    @NotNull( message = "A region must be selected" )
+    private Regions awsRegion;
+
     @Size( min = 1, message = "AWS secret key must be specified" )
     private String awsSecretKey;
 
@@ -47,6 +51,11 @@ public class CredentialsAndAction
     public String getAwsAccessKeyId()
     {
         return awsAccessKeyId;
+    }
+
+    public Regions getAwsRegion()
+    {
+        return awsRegion;
     }
 
     public String getAwsSecretKey()
@@ -62,6 +71,11 @@ public class CredentialsAndAction
     public void setAwsAccessKeyId( String awsAccessKeyId )
     {
         this.awsAccessKeyId = awsAccessKeyId;
+    }
+
+    public void setAwsRegion( Regions awsRegion )
+    {
+        this.awsRegion = awsRegion;
     }
 
     public void setAwsSecretKey( String awsSecretKey )

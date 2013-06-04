@@ -13,7 +13,7 @@
                         id="actionTypeRadio_$actionType" />
                     <label for="actionTypeRadio_$actionType">
                         $actionType.description
-                </label>
+                    </label>
                 </ol>
                 #end
             </ul>
@@ -23,9 +23,8 @@
         <p>
             The credential must have permissions to:
             <ol>
-                <li>List, launch and terminate RDS instances</li>
+                <li>List, launch, modify and terminate RDS instances</li>
                 <li>List, create and delete RDS snapshot</li>
-                <li>Launch EC2 instance</li>
                 <li>List S3 buckets</li>
                 <li>Upload, download and delete S3 object</li>
             </ol>
@@ -51,6 +50,20 @@
                 <td></td>
                 <td class="error" u:for="awsSecretKey"></td>
             </tr>
+            <tr>
+                <td>AWS region: </td>
+                <td>
+                    <select name="awsRegion">
+                        #foreach($region in $allRegions)
+                        <option value="$region">$region.name</option>
+                        #end
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="error" u:for="awsRegion"></td>
+            </tr>
         </table>
         <p>
             The demo website does not store any information
@@ -66,7 +79,7 @@
             <a
                 href="http://docs.aws.amazon.com/STS/latest/APIReference/API_GetSessionToken.html">
                 session token
-        </a>
+            </a>
             from given credentials
             to access all AWS services. The
             original

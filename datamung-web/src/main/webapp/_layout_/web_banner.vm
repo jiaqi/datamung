@@ -7,22 +7,13 @@
     </tr>
     <tr>
         <td align="right" valign="bottom">
-            <table>
-                <tr>
-                    <td width="120" nowrap="nowrap">
-                        <a href="$link.absolute('')">Home</a>
-                    </td>
-                    <td width="120" nowrap="nowrap">
-                        <a href="$link.absolute('/get_started.html')">Get started</a>
-                    </td>
-                    <td width="120" nowrap="nowrap">
-                        <a href="$link.absolute('/jobs.html')">Active jobs</a>
-                    </td>
-                    <td width="120" nowrap="nowrap">
-                        <a href="$link.absolute('/about.html')">Learn more</a>
-                    </td>
-                </tr>
-            </table>
+            <a href="$link.absolute('')">Home</a>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="$link.absolute('/get_started.html')">Get started</a>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="$link.absolute('/jobs.html')">Active jobs</a>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="$link.absolute('/about.html')">Learn more</a>
         </td>
     </tr>
 </table>
