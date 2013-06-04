@@ -1,8 +1,8 @@
 <div>
     <h2>What is it</h2>
     <p>
-        Open source tool that backs up MySQL RDS instances in form of S3
-        objects, which allows to replicate RDS across regions or AWS
+        Open source service that backs up MySQL RDS instances in form of
+        S3 objects, which allows to replicate RDS across regions or AWS
         accounts. Driven by
         <a href="http://aws.amazon.com/swf">AWS Simple Workflow</a>
         , it does so by
@@ -39,79 +39,5 @@
     <p>
         This website is a quick demo of DataMung. Here you may try
         backing up a MySQL RDS instance under your AWS account.
-    </p>
-    <p>
-    &nbsp;
-    </p>
-    <h2>Get started</h2>
-    <h3>Choose what to do</h3>
-    <p>
-        <ul>
-            <ol>
-                <input type="radio" name="actonType" value="BACKUP_INSTANCE"
-                    id="actionRadioBackupInstance" />
-                <label for="actionRadioBackupInstance">
-                    Backup an RDS MySQL instance to S3
-                    object
-                </label>
-            </ol>
-            <ol>
-                <input type="radio" name="actonType" value="BACKUP_SNAPSHOT"
-                    id="actionRadioBackupSnapshot" />
-                <label for="actionRadioBackupSnapshot">
-                    Convert an RDS MySQL snapshot to S3
-                    object
-                </label>
-            </ol>
-        </ul>
-    </p>
-    <h3>Input an AWS credential:</h3>
-    <table border="0" cellpadding="2" cellspading="4">
-        <tr>
-            Input an AWS credential:
-            AWS access key id
-            AWS secret key
-
-            The
-            credential must have permissions to:
-
-            List, launch and
-            terminate RDS instances
-            List, create and delete RDS snapshot
-            <td>AWS access key id: </td>
-            <td>
-                <input type="text" name="awsAccessKeyId" size="20" />
-            </td>
-        </tr>
-        <tr>
-            <td>AWS secret key: </td>
-            <td>
-                <input type="text" name="awsAccessKeyId" size="50" />
-            </td>
-        </tr>
-    </table>
-    <p>
-        The credential must have permissions to:
-        <ol>
-            <li>List, launch and terminate RDS instances</li>
-            <li>List, create and delete RDS snapshot</li>
-            <li>Launch EC2 instance</li>
-            <li>List S3 buckets</li>
-            <li>Upload, download and delete S3 object</li>
-        </ol>
-    </p>
-    <p>
-        This demo website does not store any information
-        permanently. The
-        IAM and all other information about RDS,
-        EC2 and S3 will be
-        temporarily
-        stored in memory and thrown
-        away
-        after process
-        finishes.
-    </p>
-    <p>
-        <button type="submit">Continue...</button>
     </p>
 </div>

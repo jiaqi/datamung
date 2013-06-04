@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.cyclopsgroup.datamung.api.types.DataArchive;
 import org.cyclopsgroup.datamung.api.types.Identity;
 import org.cyclopsgroup.datamung.swf.interfaces.RdsActivities;
+import org.cyclopsgroup.datamung.swf.types.InstanceDescription;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +15,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.model.CreateDBSnapshotRequest;
+import com.amazonaws.services.rds.model.DBInstance;
 import com.amazonaws.services.rds.model.DeleteDBInstanceRequest;
 import com.amazonaws.services.rds.model.DeleteDBSnapshotRequest;
 import com.amazonaws.services.rds.model.DescribeDBInstancesRequest;
@@ -123,14 +125,25 @@ public class RdsActivitiesImpl
      * @inheritDoc
      */
     @Override
-    public void restoreSnapshot( String snapshotName, String instanceName,
-                                 Identity identity )
+    public InstanceDescription restoreSnapshot( String snapshotName,
+                                                String instanceName,
+                                                Identity identity )
     {
         // TODO Set security group properly
-        rds.restoreDBInstanceFromDBSnapshot( decorate( new RestoreDBInstanceFromDBSnapshotRequest(
-                                                                                                   instanceName,
-                                                                                                   snapshotName ).withPubliclyAccessible( true ),
-                                                       identity ) );
+        DBInstance ins =
+            rds.restoreDBInstanceFromDBSnapshot( decorate( new RestoreDBInstanceFromDBSnapshotRequest(
+                                                                                                       instanceName,
+                                                                                                       snapshotName ).withPubliclyAccessible( true ),
+                                                           identity ) );
+        InstanceDescription desc = new InstanceDescription();
+        desc.setAllocatedStorage( ins.getAllocatedStorage() );
+        desc.setAvailabilityZone( ins.getAvailabilityZone() );
+        desc.setInstanceId( ins.getDBInstanceIdentifier() );
+        desc.setInstanceType( ins.getDBInstanceClass() );
+        desc.setPublicHostName( ins.getEndpoint().getAddress() );
+        desc.setPort( ins.getEndpoint().getPort() );
+        desc.setMasterUser( ins.getMasterUsername() );
+        return desc;
     }
 
     /**

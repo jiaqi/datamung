@@ -1,0 +1,84 @@
+<div>
+    <h2>Get started</h2>
+    <form method="post" onsubmit="return validateForm(this)"
+        action="$link.absolute('/do_get_started.html')">
+        <input type="hidden" name="formBean"
+            value="org.cyclopsgroup.datamung.web.form.CredentialsAndAction" />
+        <h3>Choose what to do</h3>
+        <p>
+            <ul>
+                #foreach($actionType in $allActionTypes)
+                <ol>
+                    <input type="radio" name="actionType" value="$actionType"
+                        id="actionTypeRadio_$actionType" />
+                    <label for="actionTypeRadio_$actionType">
+                        $actionType.description
+                </label>
+                </ol>
+                #end
+            </ul>
+        </p>
+        <p class="error" u:for="actionType"></p>
+        <h3>Input an AWS credential:</h3>
+        <p>
+            The credential must have permissions to:
+            <ol>
+                <li>List, launch and terminate RDS instances</li>
+                <li>List, create and delete RDS snapshot</li>
+                <li>Launch EC2 instance</li>
+                <li>List S3 buckets</li>
+                <li>Upload, download and delete S3 object</li>
+            </ol>
+        </p>
+        <table border="0" cellpadding="2" cellspading="4">
+            <tr>
+                <td>AWS access key id: </td>
+                <td>
+                    <input type="text" name="awsAccessKeyId" size="30" />
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="error" u:for="awsAccessKeyId"></td>
+            </tr>
+            <tr>
+                <td>AWS secret key: </td>
+                <td>
+                    <input type="text" name="awsSecretKey" size="64" />
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="error" u:for="awsSecretKey"></td>
+            </tr>
+        </table>
+        <p>
+            The demo website does not store any information
+            permanently.
+            The
+            IAM and all other information about RDS, EC2 and S3 will
+            be
+            temporarily stored in memory and thrown away after process
+            finishes.
+        </p>
+        <p>
+            DataMung creates temporary
+            <a
+                href="http://docs.aws.amazon.com/STS/latest/APIReference/API_GetSessionToken.html">
+                session token
+        </a>
+            from given credentials
+            to access all AWS services. The
+            original
+            credential pair is not
+            passed into DataMung system
+            except the
+            initial call to session
+            token service.
+        </p>
+        <p class="error" u:for="form"></p>
+        <p>
+            <button type="submit">Continue...</button>
+        </p>
+    </form>
+</div>

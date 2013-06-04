@@ -50,7 +50,7 @@ function validateFormWithResult(form, data) {
 		$(form).find(":input[name='" + field.fieldName + "']").addClass(
 				"malformed");
 		$(form).parent().find(".error").each(function() {
-			if ($(this).attr("g:for") == field.fieldName) {
+			if ($(this).attr("u:for") == field.fieldName) {
 				$(this).html(field.failureMessages.join());
 			}
 		});

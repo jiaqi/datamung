@@ -9,6 +9,7 @@ import org.cyclopsgroup.datamung.swf.interfaces.ExportSnapshotWorkflow;
 import org.cyclopsgroup.datamung.swf.interfaces.RdsActivitiesClient;
 import org.cyclopsgroup.datamung.swf.interfaces.RdsActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.types.CheckAndWait;
+import org.cyclopsgroup.datamung.swf.types.InstanceDescription;
 
 import com.amazonaws.services.simpleworkflow.flow.DecisionContextProvider;
 import com.amazonaws.services.simpleworkflow.flow.DecisionContextProviderImpl;
@@ -42,7 +43,7 @@ public class ExportSnapshotWorkflowImpl
         this.request = request;
         final Promise<String> tempInstanceName =
             controlActivities.createTempInstanceName( request.getSnapshotName() );
-        Promise<Void> done =
+        Promise<InstanceDescription> done =
             rdsActivities.restoreSnapshot( Promise.asPromise( request.getSnapshotName() ),
                                            tempInstanceName,
                                            Promise.asPromise( request.getIdentity() ) );
@@ -52,12 +53,14 @@ public class ExportSnapshotWorkflowImpl
             @Override
             protected void doTry()
             {
-                Promise<Void> done =
+                Promise<Void> sourceAvailable =
                     waitUntilInstanceAvailable( tempInstanceName );
+                String workerId = "dm-worker-" + tempInstanceName.get();
+                Promise<Void> workerReady = waitUntilWorkerRunning( workerId );
                 rdsActivities.dumpAndArchive( tempInstanceName,
                                               Promise.asPromise( request.getDestinationArchive() ),
                                               Promise.asPromise( request.getIdentity() ),
-                                              done );
+                                              sourceAvailable, workerReady );
             }
 
             @Override
@@ -84,5 +87,18 @@ public class ExportSnapshotWorkflowImpl
         check.setObjectName( instanceName.get() );
         return waitFlowFactory.getClient( "instance-creation-"
                                               + instanceName.get() ).checkAndWait( check );
+    }
+
+    private Promise<Void> waitUntilWorkerRunning( String workerId )
+    {
+        long now =
+            contextProvider.getDecisionContext().getWorkflowClock().currentTimeMillis();
+
+        CheckAndWait check = new CheckAndWait();
+        check.setCheckType( CheckAndWait.Type.LAUNCHING_EC2 );
+        // Hardcoded 1 hour wait for now
+        check.setExpireOn( now + 3600 * 1000L );
+        check.setObjectName( workerId );
+        return waitFlowFactory.getClient( "worker-launching-" + workerId ).checkAndWait( check );
     }
 }

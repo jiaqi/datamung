@@ -5,6 +5,8 @@ import java.util.concurrent.TimeoutException;
 import org.cyclopsgroup.datamung.api.types.Identity;
 import org.cyclopsgroup.datamung.swf.interfaces.CheckWaitWorkflow;
 import org.cyclopsgroup.datamung.swf.interfaces.CheckWaitWorkflowSelfClientImpl;
+import org.cyclopsgroup.datamung.swf.interfaces.Ec2ActivitiesClient;
+import org.cyclopsgroup.datamung.swf.interfaces.Ec2ActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.RdsActivitiesClient;
 import org.cyclopsgroup.datamung.swf.interfaces.RdsActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.types.CheckAndWait;
@@ -29,6 +31,9 @@ public class CheckWaitWorkflowImpl
 
     private final RdsActivitiesClient rdsActivities =
         new RdsActivitiesClientImpl();
+
+    private final Ec2ActivitiesClient ec2Activities =
+        new Ec2ActivitiesClientImpl();
 
     /**
      * @inheritDoc
@@ -87,6 +92,9 @@ public class CheckWaitWorkflowImpl
                     isInstanceAvailable( request.getObjectName(),
                                          request.getIdentity() );
                 break;
+            case LAUNCHING_EC2:
+                successful = isEc2InstanceRunning( request.getObjectName() );
+                break;
             default:
                 throw new IllegalStateException( "Unexpected check type "
                     + request.getCheckType() );
@@ -116,5 +124,12 @@ public class CheckWaitWorkflowImpl
         Promise<String> status =
             rdsActivities.getSnapshotStatus( snapshotName, identity );
         return equals( "available", status );
+    }
+
+    @Asynchronous
+    private Promise<Boolean> isEc2InstanceRunning( String instanceId )
+    {
+        Promise<String> status = ec2Activities.getInstanceStatus( instanceId );
+        return equals( "running", status );
     }
 }

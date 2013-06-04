@@ -3,20 +3,23 @@
         <td valigh="middle" rowspan="2">
             <h1>DataMung Demo</h1>
         </td>
-        <td></td>
+        <td align="right"></td>
     </tr>
     <tr>
         <td align="right" valign="bottom">
             <table>
                 <tr>
-                    <td width="80px">
+                    <td width="120" nowrap="nowrap">
                         <a href="$link.absolute('')">Home</a>
                     </td>
-                    <td width="80px">
-                        <a href="$link.absolute('/jobs.html')">Jobs</a>
+                    <td width="120" nowrap="nowrap">
+                        <a href="$link.absolute('/get_started.html')">Get started</a>
                     </td>
-                    <td width="80px">
-                        <a href="$link.absolute('/about.html')">About</a>
+                    <td width="120" nowrap="nowrap">
+                        <a href="$link.absolute('/jobs.html')">Active jobs</a>
+                    </td>
+                    <td width="120" nowrap="nowrap">
+                        <a href="$link.absolute('/about.html')">Learn more</a>
                     </td>
                 </tr>
             </table>

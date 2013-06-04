@@ -1,0 +1,129 @@
+<h2>Instance backup details</h2>
+<form>
+    <table cellpadding="0" cellpading="2" border="0" width="100%">
+        <tr>
+            <td width="5%"></td>
+            <td width="95%"></td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                #if($actionType.name()=="BACKUP_INSTANCE")
+                <h3>Back up from</h3>
+                <p>
+                    Choose an RDS MySQL instance to backup.
+                </p>
+                #else
+                <h3>Convert from</h3>
+                <p>
+                    Choose an RDS MySQL snapshot.
+                </p>
+                #end
+                <p>
+                    DataMung does not persist database password. It uses
+                    database password to
+                    execute mysqldump command in
+                    order to backup
+                    database, then throw it away after
+                    process
+                    completes.
+                </p>
+            </td>
+        </tr>
+        #if($actionType.name()=="BACKUP_INSTANCE")
+        <tr>
+            <td nowrap="nowrap">Instance:</td>
+            <td>
+                <select name="sourceInstanceId">
+                    <option value="">--Select an instance--</option>
+                    #foreach($instance in $allInstances)
+                    <option value="$instance.dBInstanceIdentifier">
+                        $instance.dBInstanceIdentifier
+                        ($instance.allocatedStorage Gb,
+                        $instance.dBInstanceStatus)
+                </option>
+                    #end
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td class="error" u:for="sourceInstanceId" />
+        </tr>
+        #else
+        <tr>
+            <td nowrap="nowrap">Snapshot:</td>
+            <td>
+                <select name="sourceSnapshotId">
+                    <option value="">--Select a snapshot--</option>
+                    #foreach($snapshot in $allSnapshots)
+                    <option value="$snapshot.dBSnapshotIdentifier">
+                        $snapshot.dBSnapshotIdentifier
+                        ($snapshot.status)
+                </option>
+                    #end
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td class="error" u:for="sourceSnapshotId" />
+        </tr>
+        #end
+        <tr>
+            <td nowrap="nowrap">Master password:</td>
+            <td>
+                <input type="password" name="masterPassword" size="20" />
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td class="error" u:for="masterPassword" />
+        </tr>
+        <tr>
+            <td colspan="2">
+                <h3>#if($actionType.name()=="BACKUP_INSTANCE") Backup
+                    #else Convert #end to</h3>
+                <p>
+                    Specify where the mysqldump result file should be
+                    persisted
+                 </p>
+            </td>
+        </tr>
+        <tr>
+            <td nowrap="nowrap">S3 bucket name:</td>
+            <td>
+                <select name="destBucketName">
+                    <option value="">--Select an bucket--</option>
+                    #foreach($bucket in $allBuckets)
+                    <option value="$bucket.name">
+                        $bucket.name
+                    </option>
+                    #end
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td class="error" u:for="destBucketName" />
+        </tr>
+        <tr>
+            <td nowrap="nowrap">S3 object key:</td>
+            <td>
+                <input type="text" name="destObjectKey" size="60" />
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td class="error" u:for="destObjectKey" />
+        </tr>
+        <tr>
+            <td></td>
+            <td class="error" u:for="form"></td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <button type="submit">Continue...</button>
+            </td>
+        </tr>
+    </table>
+</form>
