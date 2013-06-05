@@ -1,11 +1,16 @@
 package org.cyclopsgroup.datamung.web.module;
 
+import java.io.IOException;
+
 import javax.validation.Valid;
 
+import org.apache.commons.lang.StringUtils;
 import org.cyclopsgroup.datamung.web.form.CredentialsAndAction;
+import org.cyclopsgroup.datamung.web.form.JobInput;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -22,13 +27,22 @@ import com.amazonaws.services.s3.AmazonS3Client;
 public class HomePages
 {
     @RequestMapping( value = "/do_get_started.html", method = RequestMethod.POST )
-    public ModelAndView doGetStarted( @Valid
-    CredentialsAndAction form )
+    public ModelAndView doGetStarted( @Valid CredentialsAndAction form,
+                                      @RequestParam( value = "inputData" ) String inputData )
+        throws IOException
     {
+        JobInput input = JobInput.deserializeFrom( inputData );
+        input.setActionType( form.getActionType() );
+        input.setAwsRegion( form.getAwsRegion() );
+        input.setAwsAccessKeyId( form.getAwsAccessKeyId() );
+        input.setAwsSecretKey( form.getAwsSecretKey() );
+
         AWSCredentialsProvider creds =
             new StaticCredentialsProvider( form.toAwsCredential() );
         ModelAndView mav =
-            new ModelAndView().addObject( "actionType", form.getActionType() );
+            new ModelAndView().addObject( "input", input ).addObject( "inputData",
+                                                                      input.serializeTo() );
+
         ClientConfiguration config = new ClientConfiguration();
         Region region = Region.getRegion( form.getAwsRegion() );
         switch ( form.getActionType() )
@@ -56,11 +70,25 @@ public class HomePages
     }
 
     @RequestMapping( "/get_started.html" )
-    public ModelAndView showGetStarted()
+    public ModelAndView showGetStarted( @RequestParam( value = "inputData", required = false ) String inputData )
+        throws IOException
     {
-        return new ModelAndView( "get_started.vm" ).addObject( "allActionTypes",
-                                                               CredentialsAndAction.ActionType.values() ).addObject( "allRegions",
-                                                                                                                     Regions.values() );
+        ModelAndView mav =
+            new ModelAndView( "get_started.vm" ).addObject( "allActionTypes",
+                                                            CredentialsAndAction.ActionType.values() ).addObject( "allRegions",
+                                                                                                                  Regions.values() );
+        JobInput input;
+        if ( StringUtils.isBlank( inputData ) )
+        {
+            input = new JobInput();
+            input.setAwsRegion( Regions.US_EAST_1 );
+        }
+        else
+        {
+            input = JobInput.deserializeFrom( inputData );
+        }
+        return mav.addObject( "input", input ).addObject( "inputData",
+                                                          input.serializeTo() );
     }
 
     /**

@@ -19,6 +19,14 @@
     </listener>
 
     <filter>
+        <filter-name>domain</filter-name>
+        <filter-class>org.cyclopsgroup.kaufman.servlet.DomainWhitelistingFilter</filter-class>
+        <init-param>
+            <param-name>whitelistedDomains</param-name>
+            <param-value>datamung-demo.cyclopsgroup.org</param-value>
+        </init-param>
+    </filter>
+    <filter>
         <filter-name>gzip</filter-name>
         <filter-class>org.mortbay.servlet.GzipFilter</filter-class>
         <init-param>
@@ -26,6 +34,10 @@
             <param-value>text/html,text/plain</param-value>
         </init-param>
     </filter>
+    <filter-mapping>
+        <filter-name>domain</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
     <filter-mapping>
         <filter-name>gzip</filter-name>
         <url-pattern>/*</url-pattern>

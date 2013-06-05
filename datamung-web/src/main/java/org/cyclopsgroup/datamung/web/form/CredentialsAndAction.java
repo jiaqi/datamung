@@ -7,9 +7,8 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 
-@ValidAwsCredential( message = "AWS credentials has problem, perhaps it doesn't have required permissions." )
+@ValidAwsCredential( message = "AWS credentials has problem, perhaps it doesn't have required permissions" )
 public class CredentialsAndAction
-    implements AwsCredentialAware
 {
     public static enum ActionType
     {
@@ -83,10 +82,6 @@ public class CredentialsAndAction
         this.awsSecretKey = awsSecretKey;
     }
 
-    /**
-     * @return
-     */
-    @Override
     public AWSCredentials toAwsCredential()
     {
         return new BasicAWSCredentials( awsAccessKeyId, awsSecretKey );

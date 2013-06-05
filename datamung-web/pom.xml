@@ -34,6 +34,11 @@
             <version>1.1</version>
         </dependency>
         <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
+        </dependency>
+        <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk</artifactId>
             <version>1.4.4.2</version>
@@ -52,11 +57,6 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-context-support</artifactId>
             <version>${org.springframework.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.avro</groupId>
-            <artifactId>avro</artifactId>
-            <version>1.7.4</version>
         </dependency>
         <dependency>
             <groupId>org.apache.cxf</groupId>
@@ -165,6 +165,12 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <version>2.3</version>
                 <configuration>
+                    <webResources>
+                        <resource>
+                            <directory>src/main/ebextensions</directory>
+                            <targetPath>.ebextensions</targetPath>
+                        </resource>
+                    </webResources>
                     <archiveClasses>true</archiveClasses>
                 </configuration>
             </plugin>

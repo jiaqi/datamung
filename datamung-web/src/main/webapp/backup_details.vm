@@ -1,129 +1,154 @@
-<h2>Instance backup details</h2>
-<form>
-    <table cellpadding="0" cellpading="2" border="0" width="100%">
-        <tr>
-            <td width="5%"></td>
-            <td width="95%"></td>
-        </tr>
-        <tr>
-            <td colspan="2">
-                #if($actionType.name()=="BACKUP_INSTANCE")
-                <h3>Back up from</h3>
-                <p>
-                    Choose an RDS MySQL instance to backup.
+<div>
+    <h2>Instance backup details</h2>
+    <form method="post">
+        <input type="hidden" name="formBean"
+            value="org.cyclopsgroup.datamung.web.form.SourceDestinationForm" />
+        <input type="hidden" name="inputData" value="$inputData" />
+        <input type="hidden" name="actionType" value="$input.actionType" />
+        <table cellpadding="0" cellpading="2" border="0" width="100%">
+            <tr>
+                <td width="5%"></td>
+                <td width="95%"></td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    #if($input.actionType.name()=="BACKUP_INSTANCE")
+                    <h3>Back up from</h3>
+                    <p>
+                        Choose an RDS MySQL instance to backup.
                 </p>
-                #else
-                <h3>Convert from</h3>
-                <p>
-                    Choose an RDS MySQL snapshot.
+                    #else
+                    <h3>Convert from</h3>
+                    <p>
+                        Choose an RDS MySQL snapshot.
                 </p>
-                #end
-                <p>
-                    DataMung does not persist database password. It uses
-                    database password to
-                    execute mysqldump command in
-                    order to backup
-                    database, then throw it away after
-                    process
-                    completes.
+                    #end
+                    <p>
+                        DataMung does not persist database password. It
+                        uses
+                        database password to
+                        execute mysqldump
+                        command in
+                        order to backup
+                        database, then throw it
+                        away after
+                        process
+                        completes.
                 </p>
-            </td>
-        </tr>
-        #if($actionType.name()=="BACKUP_INSTANCE")
-        <tr>
-            <td nowrap="nowrap">Instance:</td>
-            <td>
-                <select name="sourceInstanceId">
-                    <option value="">--Select an instance--</option>
-                    #foreach($instance in $allInstances)
-                    <option value="$instance.dBInstanceIdentifier">
-                        $instance.dBInstanceIdentifier
-                        ($instance.allocatedStorage Gb,
-                        $instance.dBInstanceStatus)
-                </option>
-                    #end
-                </select>
-            </td>
-        </tr>
-        <tr>
-            <td></td>
-            <td class="error" u:for="sourceInstanceId" />
-        </tr>
-        #else
-        <tr>
-            <td nowrap="nowrap">Snapshot:</td>
-            <td>
-                <select name="sourceSnapshotId">
-                    <option value="">--Select a snapshot--</option>
-                    #foreach($snapshot in $allSnapshots)
-                    <option value="$snapshot.dBSnapshotIdentifier">
-                        $snapshot.dBSnapshotIdentifier
-                        ($snapshot.status)
-                </option>
-                    #end
-                </select>
-            </td>
-        </tr>
-        <tr>
-            <td></td>
-            <td class="error" u:for="sourceSnapshotId" />
-        </tr>
-        #end
-        <tr>
-            <td nowrap="nowrap">Master password:</td>
-            <td>
-                <input type="password" name="masterPassword" size="20" />
-            </td>
-        </tr>
-        <tr>
-            <td></td>
-            <td class="error" u:for="masterPassword" />
-        </tr>
-        <tr>
-            <td colspan="2">
-                <h3>#if($actionType.name()=="BACKUP_INSTANCE") Backup
-                    #else Convert #end to</h3>
-                <p>
-                    Specify where the mysqldump result file should be
-                    persisted
-                 </p>
-            </td>
-        </tr>
-        <tr>
-            <td nowrap="nowrap">S3 bucket name:</td>
-            <td>
-                <select name="destBucketName">
-                    <option value="">--Select an bucket--</option>
-                    #foreach($bucket in $allBuckets)
-                    <option value="$bucket.name">
-                        $bucket.name
-                    </option>
-                    #end
-                </select>
-            </td>
-        </tr>
-        <tr>
-            <td></td>
-            <td class="error" u:for="destBucketName" />
-        </tr>
-        <tr>
-            <td nowrap="nowrap">S3 object key:</td>
-            <td>
-                <input type="text" name="destObjectKey" size="60" />
-            </td>
-        </tr>
-        <tr>
-            <td></td>
-            <td class="error" u:for="destObjectKey" />
-        </tr>
-        <tr>
-            <td></td>
-            <td class="error" u:for="form"></td>
-        </tr>
-        <tr>
-            <td colspan="2">
-                <button type="submit">Continue...</button>
-            </td>
-        </tr>
-    </table>
-</form>
+                </td>
+            </tr>
+            #if($input.actionType.name()=="BACKUP_INSTANCE")
+            <tr>
+                <td nowrap="nowrap">Instance:</td>
+                <td>
+                    <select name="databaseInstanceId">
+                        <option value="">--Select an instance--
+                        </option>
+                        #foreach($instance in $allInstances)
+                        <option value="$instance.dBInstanceIdentifier">
+                            $instance.dBInstanceIdentifier
+                            ($instance.allocatedStorage Gb,
+                            $instance.dBInstanceStatus)
+                        </option>
+                        #end
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="error" u:for="databaseInstanceId" />
+            </tr>
+            #else
+            <tr>
+                <td nowrap="nowrap">Snapshot:</td>
+                <td>
+                    <select name="databaseSnapshotId">
+                        <option value="">--Select a snapshot--
+                        </option>
+                        #foreach($snapshot in $allSnapshots)
+                        <option value="$snapshot.dBSnapshotIdentifier">
+                            $snapshot.dBSnapshotIdentifier
+                            ($snapshot.status)
+                        </option>
+                        #end
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="error" u:for="databaseSnapshotId" />
+            </tr>
+            #end
+            <tr>
+                <td nowrap="nowrap">Master password:</td>
+                <td>
+                    <input type="password" name="databaseMasterPassword"
+                        size="20" />
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="error" u:for="databaseMasterPassword" />
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <h3>#if($input.actionType.name()=="BACKUP_INSTANCE")
+                        Backup
+                        #else Convert #end to</h3>
+                    <p>
+                        Specify where the mysqldump result file should be
+                        persisted
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <td nowrap="nowrap">S3 bucket name:</td>
+                <td>
+                    <select name="archiveBucketName">
+                        <option value="">--Select an bucket--
+                        </option>
+                        #foreach($bucket in $allBuckets)
+                        #if($bucket.name==$input.archiveBucketName))
+                        <option value="$bucket.name" selected="selected">
+                            $bucket.name
+                        </option>
+                        #else
+                        <option value="$bucket.name">
+                            $bucket.name
+                        </option>
+                        #end
+                        #end
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="error" u:for="archiveBucketName" />
+            </tr>
+            <tr>
+                <td nowrap="nowrap">S3 object key:</td>
+                <td>
+                    <input type="text" name="archiveObjectKey"
+                        size="60" value="$!input.archiveObjectKey" />
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="error" u:for="archiveObjectKey" />
+            </tr>
+            <tr>
+                <td></td>
+                <td class="error" u:for="form"></td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    #set($getStartedUrl=$link.absolute("/get_started.html"))
+                    <button type="submit"
+                        onclick="this.form.action='$getStartedUrl'">Back</button>
+                    <button type="submit"
+                        onclick="return validateForm(this.form);">Continue...</button>
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>

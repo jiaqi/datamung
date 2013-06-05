@@ -38,6 +38,9 @@
     </p>
     <p>
         This website is a quick demo of DataMung. Here you may try
-        backing up a MySQL RDS instance under your AWS account.
+        backing up a MySQL RDS instance under your AWS account. If it
+        does sound like a solution of your problem, why not
+        <a href="$link.absolute('/get_started.html')">have a try</a>
+        ?
     </p>
 </div>
