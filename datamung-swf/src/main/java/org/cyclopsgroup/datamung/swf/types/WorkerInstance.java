@@ -3,7 +3,7 @@ package org.cyclopsgroup.datamung.swf.types;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement( name = "WorkerDescription" )
+@XmlRootElement( name = "WorkerInstance" )
 public class WorkerInstance
 {
     private String instanceId;
