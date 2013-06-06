@@ -5,7 +5,7 @@ import java.io.IOException;
 import org.cyclopsgroup.datamung.api.types.DataArchive;
 import org.cyclopsgroup.datamung.api.types.Identity;
 import org.cyclopsgroup.datamung.swf.interfaces.RdsActivities;
-import org.cyclopsgroup.datamung.swf.types.InstanceDescription;
+import org.cyclopsgroup.datamung.swf.types.DatabaseInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -125,7 +125,7 @@ public class RdsActivitiesImpl
      * @inheritDoc
      */
     @Override
-    public InstanceDescription restoreSnapshot( String snapshotName,
+    public DatabaseInstance restoreSnapshot( String snapshotName,
                                                 String instanceName,
                                                 Identity identity )
     {
@@ -135,7 +135,7 @@ public class RdsActivitiesImpl
                                                                                                        instanceName,
                                                                                                        snapshotName ).withPubliclyAccessible( true ),
                                                            identity ) );
-        InstanceDescription desc = new InstanceDescription();
+        DatabaseInstance desc = new DatabaseInstance();
         desc.setAllocatedStorage( ins.getAllocatedStorage() );
         desc.setAvailabilityZone( ins.getAvailabilityZone() );
         desc.setInstanceId( ins.getDBInstanceIdentifier() );

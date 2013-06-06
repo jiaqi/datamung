@@ -1,6 +1,7 @@
 package org.cyclopsgroup.datamung.swf.interfaces;
 
-import org.cyclopsgroup.datamung.swf.types.InstanceDescription;
+import org.cyclopsgroup.datamung.swf.types.DatabaseInstance;
+import org.cyclopsgroup.datamung.swf.types.WorkerInstance;
 
 import com.amazonaws.services.simpleworkflow.flow.annotations.Activities;
 import com.amazonaws.services.simpleworkflow.flow.annotations.ActivityRegistrationOptions;
@@ -11,8 +12,8 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.ExponentialRetry;
 public interface Ec2Activities
 {
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
-    void launchInstance( String instanceId, InstanceDescription forDbInstance );
+    void launchInstance( String instanceId, DatabaseInstance databaseInstance );
 
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
-    String getInstanceStatus( String instanceId );
+    WorkerInstance describeInstance( String instanceId );
 }

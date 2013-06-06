@@ -6,7 +6,7 @@ public class CheckAndWait
 {
     public static enum Type
     {
-        SNAPSHOT_CREATION, INSTANCE_CREATION, LAUNCHING_EC2;
+        SNAPSHOT_CREATION, DATABASE_CREATION, WORKER_LAUNCH;
     }
 
     private Type checkType;

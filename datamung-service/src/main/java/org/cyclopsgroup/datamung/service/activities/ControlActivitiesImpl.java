@@ -27,7 +27,7 @@ public class ControlActivitiesImpl
      * @inheritDoc
      */
     @Override
-    public String createTempInstanceName( String snapshotName )
+    public String createWorkerName( String snapshotName )
     {
         return "dm-"
             + contextProvider.getActivityExecutionContext().getWorkflowExecution().getWorkflowId().hashCode();

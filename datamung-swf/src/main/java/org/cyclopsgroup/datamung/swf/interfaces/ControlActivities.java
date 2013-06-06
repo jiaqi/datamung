@@ -12,5 +12,5 @@ public interface ControlActivities
     String createSnapshotName( String instanceName );
 
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
-    String createTempInstanceName( String snapshotName );
+    String createWorkerName( String snapshotName );
 }

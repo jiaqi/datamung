@@ -4,7 +4,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement( name = "InstanceDescription" )
-public class InstanceDescription
+public class DatabaseInstance
 {
     private int allocatedStorage;
 

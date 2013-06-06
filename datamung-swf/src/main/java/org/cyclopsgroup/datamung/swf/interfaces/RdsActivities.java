@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import org.cyclopsgroup.datamung.api.types.DataArchive;
 import org.cyclopsgroup.datamung.api.types.Identity;
-import org.cyclopsgroup.datamung.swf.types.InstanceDescription;
+import org.cyclopsgroup.datamung.swf.types.DatabaseInstance;
 
 import com.amazonaws.services.simpleworkflow.flow.annotations.Activities;
 import com.amazonaws.services.simpleworkflow.flow.annotations.ActivityRegistrationOptions;
@@ -34,7 +34,7 @@ public interface RdsActivities
     String getSnapshotStatus( String snapshotName, Identity identity );
 
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
-    InstanceDescription restoreSnapshot( String snapshotName,
+    DatabaseInstance restoreSnapshot( String snapshotName,
                                          String instanceName, Identity identity );
 
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )

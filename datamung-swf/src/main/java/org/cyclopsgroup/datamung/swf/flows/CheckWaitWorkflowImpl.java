@@ -10,6 +10,7 @@ import org.cyclopsgroup.datamung.swf.interfaces.Ec2ActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.RdsActivitiesClient;
 import org.cyclopsgroup.datamung.swf.interfaces.RdsActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.types.CheckAndWait;
+import org.cyclopsgroup.datamung.swf.types.WorkerInstance;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -29,11 +30,11 @@ public class CheckWaitWorkflowImpl
     private final DecisionContextProvider contextProvider =
         new DecisionContextProviderImpl();
 
-    private final RdsActivitiesClient rdsActivities =
-        new RdsActivitiesClientImpl();
-
     private final Ec2ActivitiesClient ec2Activities =
         new Ec2ActivitiesClientImpl();
+
+    private final RdsActivitiesClient rdsActivities =
+        new RdsActivitiesClientImpl();
 
     /**
      * @inheritDoc
@@ -87,12 +88,12 @@ public class CheckWaitWorkflowImpl
                     isSnapshotAvailable( request.getObjectName(),
                                          request.getIdentity() );
                 break;
-            case INSTANCE_CREATION:
+            case DATABASE_CREATION:
                 successful =
                     isInstanceAvailable( request.getObjectName(),
                                          request.getIdentity() );
                 break;
-            case LAUNCHING_EC2:
+            case WORKER_LAUNCH:
                 successful = isEc2InstanceRunning( request.getObjectName() );
                 break;
             default:
@@ -106,6 +107,20 @@ public class CheckWaitWorkflowImpl
     private <T> Promise<Boolean> equals( T expects, Promise<T> actual )
     {
         return Promise.asPromise( actual.get().equals( expects ) );
+    }
+
+    @Asynchronous
+    private Promise<Boolean> isEc2InstanceRunning( Promise<WorkerInstance> instance )
+    {
+        return Promise.asPromise( instance.get().getInstanceStatus().equals( "running" ) );
+    }
+
+    @Asynchronous
+    private Promise<Boolean> isEc2InstanceRunning( String instanceId )
+    {
+        Promise<WorkerInstance> instance =
+            ec2Activities.describeInstance( instanceId );
+        return isEc2InstanceRunning( instance );
     }
 
     @Asynchronous
@@ -124,12 +139,5 @@ public class CheckWaitWorkflowImpl
         Promise<String> status =
             rdsActivities.getSnapshotStatus( snapshotName, identity );
         return equals( "available", status );
-    }
-
-    @Asynchronous
-    private Promise<Boolean> isEc2InstanceRunning( String instanceId )
-    {
-        Promise<String> status = ec2Activities.getInstanceStatus( instanceId );
-        return equals( "running", status );
     }
 }
