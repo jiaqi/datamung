@@ -165,9 +165,13 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <version>2.3</version>
                 <configuration>
+                    <warName>demo-website</warName>
                     <webResources>
                         <resource>
-                            <directory>src/main/ebextensions</directory>
+                            <directory>${aws.ebapp.config.dir}</directory>
+                            <includes>
+                                <include>${aws.ebapp.config.file}</include>
+                            </includes>
                             <targetPath>.ebextensions</targetPath>
                         </resource>
                     </webResources>
@@ -226,4 +230,8 @@
             </plugins>
         </pluginManagement>
     </build>
+    <properties>
+        <aws.ebapp.config.dir>${basedir}/src/main/ebextensions</aws.ebapp.config.dir>
+        <aws.ebapp.config.file>DataMungWebsite.config</aws.ebapp.config.file>
+    </properties>
 </project>
