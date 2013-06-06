@@ -12,8 +12,11 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.ExponentialRetry;
 public interface Ec2Activities
 {
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
+    WorkerInstance describeInstance( String instanceId );
+
+    @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
     void launchInstance( String instanceId, DatabaseInstance databaseInstance );
 
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
-    WorkerInstance describeInstance( String instanceId );
+    void terminateInstance( String instanceId );
 }

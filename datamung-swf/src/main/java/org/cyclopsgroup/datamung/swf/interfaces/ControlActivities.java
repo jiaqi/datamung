@@ -9,8 +9,8 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.ExponentialRetry;
 public interface ControlActivities
 {
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
-    String createSnapshotName( String instanceName );
+    String createSnapshotName( String databaseName );
 
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
-    String createWorkerName( String snapshotName );
+    String createDatabaseName( String snapshotName );
 }

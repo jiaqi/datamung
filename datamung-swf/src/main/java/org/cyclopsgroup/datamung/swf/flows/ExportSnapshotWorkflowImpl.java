@@ -5,6 +5,8 @@ import org.cyclopsgroup.datamung.swf.interfaces.CheckWaitWorkflowClientFactory;
 import org.cyclopsgroup.datamung.swf.interfaces.CheckWaitWorkflowClientFactoryImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.ControlActivitiesClient;
 import org.cyclopsgroup.datamung.swf.interfaces.ControlActivitiesClientImpl;
+import org.cyclopsgroup.datamung.swf.interfaces.Ec2ActivitiesClient;
+import org.cyclopsgroup.datamung.swf.interfaces.Ec2ActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.ExportSnapshotWorkflow;
 import org.cyclopsgroup.datamung.swf.interfaces.RdsActivitiesClient;
 import org.cyclopsgroup.datamung.swf.interfaces.RdsActivitiesClientImpl;
@@ -29,10 +31,33 @@ public class ExportSnapshotWorkflowImpl
     private final RdsActivitiesClient rdsActivities =
         new RdsActivitiesClientImpl();
 
+    private final Ec2ActivitiesClient ec2Activities =
+        new Ec2ActivitiesClientImpl();
+
     private ExportSnapshotRequest request;
 
     private final CheckWaitWorkflowClientFactory waitFlowFactory =
         new CheckWaitWorkflowClientFactoryImpl();
+
+    @Asynchronous
+    private void dumpDatabase( Promise<DatabaseInstance> database )
+    {
+        final String workerName = "dm-worker-" + database.get().getInstanceId();
+        Promise<Void> launched =
+            ec2Activities.launchInstance( workerName, database.get() );
+        new TryFinally( launched )
+        {
+            protected void doTry()
+            {
+                Promise<Void> running = waitUntilWorkerRunning( workerName );
+            }
+
+            protected void doFinally()
+            {
+                ec2Activities.terminateInstance( workerName );
+            }
+        };
+    }
 
     /**
      * @inheritDoc
@@ -41,11 +66,11 @@ public class ExportSnapshotWorkflowImpl
     public void export( final ExportSnapshotRequest request )
     {
         this.request = request;
-        final Promise<String> workerName =
-            controlActivities.createWorkerName( request.getSnapshotName() );
+        final Promise<String> databaseName =
+            controlActivities.createDatabaseName( request.getSnapshotName() );
         Promise<DatabaseInstance> done =
             rdsActivities.restoreSnapshot( Promise.asPromise( request.getSnapshotName() ),
-                                           workerName,
+                                           databaseName,
                                            Promise.asPromise( request.getIdentity() ) );
         new TryFinally( done )
         {
@@ -54,39 +79,37 @@ public class ExportSnapshotWorkflowImpl
             protected void doTry()
             {
                 Promise<Void> sourceAvailable =
-                    waitUntilWorkerAvailable( workerName );
-                String workerId = "dm-worker-" + workerName.get();
-                Promise<Void> workerReady = waitUntilWorkerRunning( workerId );
-                rdsActivities.dumpAndArchive( workerName,
-                                              Promise.asPromise( request.getDestinationArchive() ),
-                                              Promise.asPromise( request.getIdentity() ),
-                                              sourceAvailable, workerReady );
+                    waitUntilDatabaseAvailable( databaseName );
+                Promise<DatabaseInstance> source =
+                    rdsActivities.describeInstance( databaseName,
+                                                    Promise.asPromise( request.getIdentity() ),
+                                                    sourceAvailable );
+                dumpDatabase( source );
             }
 
             @Override
             protected void doFinally()
             {
-                rdsActivities.terminateInstance( workerName,
+                rdsActivities.terminateInstance( databaseName,
                                                  Promise.asPromise( request.getIdentity() ) );
             }
         };
     }
 
     @Asynchronous
-    private Promise<Void> waitUntilWorkerAvailable( Promise<String> workerName,
-                                                    Promise<?>... waitFor )
+    private Promise<Void> waitUntilDatabaseAvailable( Promise<String> databaseId,
+                                                      Promise<?>... waitFor )
     {
         long now =
             contextProvider.getDecisionContext().getWorkflowClock().currentTimeMillis();
 
         CheckAndWait check = new CheckAndWait();
-        check.setCheckType( CheckAndWait.Type.WORKER_LAUNCH );
+        check.setCheckType( CheckAndWait.Type.DATABASE_CREATION );
         // Hardcoded 1 hour wait for now
         check.setExpireOn( now + 3600 * 1000L );
         check.setIdentity( request.getIdentity() );
-        check.setObjectName( workerName.get() );
-        return waitFlowFactory.getClient( "instance-creation-"
-                                              + workerName.get() ).checkAndWait( check );
+        check.setObjectName( databaseId.get() );
+        return waitFlowFactory.getClient( "restore-db-" + databaseId.get() ).checkAndWait( check );
     }
 
     private Promise<Void> waitUntilWorkerRunning( String workerId )
@@ -99,6 +122,6 @@ public class ExportSnapshotWorkflowImpl
         // Hardcoded 1 hour wait for now
         check.setExpireOn( now + 3600 * 1000L );
         check.setObjectName( workerId );
-        return waitFlowFactory.getClient( "worker-launching-" + workerId ).checkAndWait( check );
+        return waitFlowFactory.getClient( "launch-worker-" + workerId ).checkAndWait( check );
     }
 }

@@ -1,8 +1,5 @@
 package org.cyclopsgroup.datamung.swf.interfaces;
 
-import java.io.IOException;
-
-import org.cyclopsgroup.datamung.api.types.DataArchive;
 import org.cyclopsgroup.datamung.api.types.Identity;
 import org.cyclopsgroup.datamung.swf.types.DatabaseInstance;
 
@@ -21,21 +18,15 @@ public interface RdsActivities
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
     void deleteSnapshot( String snapshotName, Identity identity );
 
-    @ActivityRegistrationOptions( defaultTaskStartToCloseTimeoutSeconds = 1200, defaultTaskScheduleToStartTimeoutSeconds = 600, defaultTaskList = Constants.ACTIVITY_TASK_LIST )
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
-    void dumpAndArchive( String instanceName, DataArchive archive,
-                         Identity identity )
-        throws IOException;
-
-    @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
-    String getInstanceStatus( String instanceName, Identity identity );
+    DatabaseInstance describeInstance( String instanceName, Identity identity );
 
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
     String getSnapshotStatus( String snapshotName, Identity identity );
 
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
-    DatabaseInstance restoreSnapshot( String snapshotName,
-                                         String instanceName, Identity identity );
+    DatabaseInstance restoreSnapshot( String snapshotName, String instanceName,
+                                      Identity identity );
 
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
     void terminateInstance( String instanceName, Identity identity );

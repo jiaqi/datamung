@@ -10,6 +10,7 @@ import org.cyclopsgroup.datamung.swf.interfaces.Ec2ActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.RdsActivitiesClient;
 import org.cyclopsgroup.datamung.swf.interfaces.RdsActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.types.CheckAndWait;
+import org.cyclopsgroup.datamung.swf.types.DatabaseInstance;
 import org.cyclopsgroup.datamung.swf.types.WorkerInstance;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -90,8 +91,8 @@ public class CheckWaitWorkflowImpl
                 break;
             case DATABASE_CREATION:
                 successful =
-                    isInstanceAvailable( request.getObjectName(),
-                                         request.getIdentity() );
+                    isDatabaseInstanceAvailable( request.getObjectName(),
+                                                 request.getIdentity() );
                 break;
             case WORKER_LAUNCH:
                 successful = isEc2InstanceRunning( request.getObjectName() );
@@ -110,6 +111,21 @@ public class CheckWaitWorkflowImpl
     }
 
     @Asynchronous
+    private Promise<Boolean> isDatabaseInstanceAvailable( Promise<DatabaseInstance> instance )
+    {
+        return Promise.asPromise( instance.get().getInstanceStatus().equals( "available" ) );
+    }
+
+    @Asynchronous
+    private Promise<Boolean> isDatabaseInstanceAvailable( String instanceName,
+                                                          Identity identity )
+    {
+        Promise<DatabaseInstance> instance =
+            rdsActivities.describeInstance( instanceName, identity );
+        return isDatabaseInstanceAvailable( instance );
+    }
+
+    @Asynchronous
     private Promise<Boolean> isEc2InstanceRunning( Promise<WorkerInstance> instance )
     {
         return Promise.asPromise( instance.get().getInstanceStatus().equals( "running" ) );
@@ -121,15 +137,6 @@ public class CheckWaitWorkflowImpl
         Promise<WorkerInstance> instance =
             ec2Activities.describeInstance( instanceId );
         return isEc2InstanceRunning( instance );
-    }
-
-    @Asynchronous
-    private Promise<Boolean> isInstanceAvailable( String instanceName,
-                                                  Identity identity )
-    {
-        Promise<String> status =
-            rdsActivities.getInstanceStatus( instanceName, identity );
-        return equals( "available", status );
     }
 
     @Asynchronous
