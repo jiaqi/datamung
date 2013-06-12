@@ -42,14 +42,16 @@ public class ExportSnapshotWorkflowImpl
     @Asynchronous
     private void dumpDatabase( Promise<DatabaseInstance> database )
     {
-        final String workerName = "dm-worker-" + database.get().getInstanceId();
+        final Promise<String> workerName =
+            controlActivities.createWorkerName( database.get().getInstanceId() );
         Promise<Void> launched =
-            ec2Activities.launchInstance( workerName, database.get() );
+            ec2Activities.launchInstance( workerName, database );
         new TryFinally( launched )
         {
             protected void doTry()
             {
-                Promise<Void> running = waitUntilWorkerRunning( workerName );
+                Promise<Void> running =
+                    waitUntilWorkerRunning( workerName.get() );
             }
 
             protected void doFinally()

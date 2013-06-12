@@ -1,8 +1,5 @@
 package org.cyclopsgroup.datamung.service.activities;
 
-import java.io.IOException;
-
-import org.cyclopsgroup.datamung.api.types.DataArchive;
 import org.cyclopsgroup.datamung.api.types.Identity;
 import org.cyclopsgroup.datamung.swf.interfaces.RdsActivities;
 import org.cyclopsgroup.datamung.swf.types.DatabaseInstance;
@@ -81,28 +78,28 @@ public class RdsActivitiesImpl
      * @inheritDoc
      */
     @Override
-    public void dumpAndArchive( String instanceName, DataArchive archive,
-                                Identity identity )
-        throws IOException
+    public DatabaseInstance describeInstance( String instanceName,
+                                              Identity identity )
     {
-        // TODO Auto-generated method stub
-
-    }
-
-    /**
-     * @inheritDoc
-     */
-    @Override
-    public String getInstanceStatus( String instanceName, Identity identity )
-    {
-        DescribeDBInstancesResult result =
+        DescribeDBInstancesResult results =
             rds.describeDBInstances( decorate( new DescribeDBInstancesRequest().withDBInstanceIdentifier( instanceName ),
                                                identity ) );
-        if ( result.getDBInstances().isEmpty() )
+        if ( results.getDBInstances().isEmpty() )
         {
             return null;
         }
-        return result.getDBInstances().get( 0 ).getDBInstanceStatus();
+        DBInstance result = results.getDBInstances().get( 0 );
+
+        DatabaseInstance i = new DatabaseInstance();
+        i.setAllocatedStorage( result.getAllocatedStorage() );
+        i.setAvailabilityZone( result.getAvailabilityZone() );
+        i.setInstanceId( result.getDBInstanceIdentifier() );
+        i.setInstanceStatus( result.getDBInstanceStatus() );
+        i.setInstanceType( result.getDBInstanceClass() );
+        i.setMasterUser( result.getMasterUsername() );
+        i.setPort( result.getEndpoint().getPort() );
+        i.setPublicHostName( result.getEndpoint().getAddress() );
+        return i;
     }
 
     /**
@@ -126,8 +123,8 @@ public class RdsActivitiesImpl
      */
     @Override
     public DatabaseInstance restoreSnapshot( String snapshotName,
-                                                String instanceName,
-                                                Identity identity )
+                                             String instanceName,
+                                             Identity identity )
     {
         // TODO Set security group properly
         DBInstance ins =
