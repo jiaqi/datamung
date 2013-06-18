@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:aop="http://www.springframework.org/schema/aop" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop.xsd">
+    <context:property-placeholder />
+    <aop:aspectj-autoproxy />
+    <bean id="loggingAdvice"
+        class="org.cyclopsgroup.kaufman.logging.InvocationLoggingAdvice" />
+    <aop:config>
+        <aop:aspect ref="loggingAdvice" order="1">
+            <aop:around
+                pointcut="execution(* com.amazonaws.services.*.*Client.*(..))"
+                method="execute" />
+        </aop:aspect>
+    </aop:config>
+
+    <import resource="./context-${context:ec2}.xml" />
+
+    <bean id="amazonSqs" class="com.amazonaws.services.sqs.AmazonSQSClient">
+        <constructor-arg ref="awsCredentials" />
+    </bean>
+    <bean id="amazonS3" class="com.amazonaws.services.s3.AmazonS3lient">
+        <constructor-arg ref="awsCredentials" />
+    </bean>
+    <bean class="org.cyclopsgroup.datamung.agent.Bootstrap">
+        <constructor-arg ref="amazonSqs" />
+        <constructor-arg ref="amazonS3" />
+        <constructor-arg ref="agentConfig" />
+    </bean>
+</beans>

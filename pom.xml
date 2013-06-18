@@ -30,6 +30,7 @@
         <module>datamung-swf</module>
         <module>datamung-service</module>
         <module>datamung-web</module>
+        <module>datamung-agent</module>
     </modules>
     <build>
         <pluginManagement>
