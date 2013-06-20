@@ -26,7 +26,7 @@
     <bean id="amazonSqs" class="com.amazonaws.services.sqs.AmazonSQSClient">
         <constructor-arg ref="awsCredentials" />
     </bean>
-    <bean id="amazonS3" class="com.amazonaws.services.s3.AmazonS3lient">
+    <bean id="amazonS3" class="com.amazonaws.services.s3.AmazonS3Client">
         <constructor-arg ref="awsCredentials" />
     </bean>
     <bean class="org.cyclopsgroup.datamung.agent.Bootstrap">

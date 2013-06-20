@@ -7,6 +7,6 @@
     <bean id="awsCredentials"
         class="com.amazonaws.auth.EnvironmentVariableCredentialsProvider" />
     <bean id="agentConfig" class="org.cyclopsgroup.datamung.agent.AgentConfig">
-        <property name="jobQueueUrl" value="" />
+        <property name="jobQueueUrl" value="${queueUrl}" />
     </bean>
 </beans>
