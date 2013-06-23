@@ -3,6 +3,8 @@ package org.cyclopsgroup.datamung.swf.types;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.cyclopsgroup.datamung.api.types.InstanceNetwork;
+
 @XmlRootElement( name = "DatabaseInstance" )
 public class DatabaseInstance
 {
@@ -17,6 +19,8 @@ public class DatabaseInstance
     private String instanceType;
 
     private String masterUser;
+
+    private InstanceNetwork network;
 
     private int port;
 
@@ -59,6 +63,12 @@ public class DatabaseInstance
     }
 
     @XmlElement
+    public InstanceNetwork getNetwork()
+    {
+        return network;
+    }
+
+    @XmlElement
     public int getPort()
     {
         return port;
@@ -98,6 +108,11 @@ public class DatabaseInstance
     public void setMasterUser( String masterUser )
     {
         this.masterUser = masterUser;
+    }
+
+    public void setNetwork( InstanceNetwork network )
+    {
+        this.network = network;
     }
 
     public void setPort( int port )

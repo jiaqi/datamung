@@ -2,6 +2,7 @@ package org.cyclopsgroup.datamung.service.activities;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.cyclopsgroup.datamung.swf.interfaces.ControlActivities;
+import org.cyclopsgroup.datamung.swf.types.Queue;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
 
@@ -13,18 +14,28 @@ public class ControlActivitiesImpl
      * @inheritDoc
      */
     @Override
-    public String createSnapshotName( String instanceName )
+    public String createDatabaseName( String snapshotName )
     {
-        return instanceName + "-" + new DateTime().toString( "ddHHmm" );
+        return snapshotName + "-" + RandomStringUtils.randomAlphanumeric( 6 );
     }
 
     /**
      * @inheritDoc
      */
     @Override
-    public String createDatabaseName( String snapshotName )
+    public String createJobWorkerUserData( Queue queue )
     {
-        return snapshotName + "-" + RandomStringUtils.randomAlphanumeric( 6 );
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public String createSnapshotName( String instanceName )
+    {
+        return instanceName + "-" + new DateTime().toString( "ddHHmm" );
     }
 
     /**

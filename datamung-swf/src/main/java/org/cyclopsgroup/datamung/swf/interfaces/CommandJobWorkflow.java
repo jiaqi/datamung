@@ -1,6 +1,6 @@
 package org.cyclopsgroup.datamung.swf.interfaces;
 
-import org.cyclopsgroup.datamung.api.types.Job;
+import org.cyclopsgroup.datamung.api.types.RunJobRequest;
 
 import com.amazonaws.services.simpleworkflow.flow.annotations.Execute;
 import com.amazonaws.services.simpleworkflow.flow.annotations.Workflow;
@@ -11,5 +11,5 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.WorkflowRegistrati
 public interface CommandJobWorkflow
 {
     @Execute( name = "CommandJobWorkflow", version = "1.0" )
-    void executeCommand( Job job );
+    void executeCommand( RunJobRequest request );
 }

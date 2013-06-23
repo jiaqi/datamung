@@ -1,9 +1,6 @@
 package org.cyclopsgroup.datamung.swf.types;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement( name = "WorkerInstance" )
 public class WorkerInstance
 {
     private String instanceId;
@@ -12,19 +9,16 @@ public class WorkerInstance
 
     private String publicIpAddress;
 
-    @XmlElement
     public String getInstanceId()
     {
         return instanceId;
     }
 
-    @XmlElement
     public String getInstanceStatus()
     {
         return instanceStatus;
     }
 
-    @XmlElement
     public String getPublicIpAddress()
     {
         return publicIpAddress;

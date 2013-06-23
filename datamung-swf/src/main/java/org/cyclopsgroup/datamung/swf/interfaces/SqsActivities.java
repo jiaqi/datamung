@@ -1,5 +1,8 @@
 package org.cyclopsgroup.datamung.swf.interfaces;
 
+import org.cyclopsgroup.datamung.api.types.Identity;
+import org.cyclopsgroup.datamung.swf.types.Queue;
+
 import com.amazonaws.services.simpleworkflow.flow.annotations.Activities;
 import com.amazonaws.services.simpleworkflow.flow.annotations.ActivityRegistrationOptions;
 import com.amazonaws.services.simpleworkflow.flow.annotations.ExponentialRetry;
@@ -9,8 +12,8 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.ExponentialRetry;
 public interface SqsActivities
 {
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
-    String createQueue( String queueName );
+    Queue createQueue( String queueName, Identity identity );
 
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
-    void deleteQueue( String queueUrl );
+    void deleteQueue( String queueUrlj, Identity identity );
 }

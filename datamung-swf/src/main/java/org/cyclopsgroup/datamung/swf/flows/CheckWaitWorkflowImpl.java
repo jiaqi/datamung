@@ -95,7 +95,9 @@ public class CheckWaitWorkflowImpl
                                                  request.getIdentity() );
                 break;
             case WORKER_LAUNCH:
-                successful = isEc2InstanceRunning( request.getObjectName() );
+                successful =
+                    isEc2InstanceRunning( request.getObjectName(),
+                                          request.getIdentity() );
                 break;
             default:
                 throw new IllegalStateException( "Unexpected check type "
@@ -132,10 +134,11 @@ public class CheckWaitWorkflowImpl
     }
 
     @Asynchronous
-    private Promise<Boolean> isEc2InstanceRunning( String instanceId )
+    private Promise<Boolean> isEc2InstanceRunning( String instanceId,
+                                                   Identity identity )
     {
         Promise<WorkerInstance> instance =
-            ec2Activities.describeInstance( instanceId );
+            ec2Activities.describeInstance( instanceId, identity );
         return isEc2InstanceRunning( instance );
     }
 

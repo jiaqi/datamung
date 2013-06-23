@@ -5,8 +5,6 @@ import org.cyclopsgroup.datamung.swf.interfaces.CheckWaitWorkflowClientFactory;
 import org.cyclopsgroup.datamung.swf.interfaces.CheckWaitWorkflowClientFactoryImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.ControlActivitiesClient;
 import org.cyclopsgroup.datamung.swf.interfaces.ControlActivitiesClientImpl;
-import org.cyclopsgroup.datamung.swf.interfaces.Ec2ActivitiesClient;
-import org.cyclopsgroup.datamung.swf.interfaces.Ec2ActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.ExportSnapshotWorkflow;
 import org.cyclopsgroup.datamung.swf.interfaces.RdsActivitiesClient;
 import org.cyclopsgroup.datamung.swf.interfaces.RdsActivitiesClientImpl;
@@ -31,9 +29,6 @@ public class ExportSnapshotWorkflowImpl
     private final RdsActivitiesClient rdsActivities =
         new RdsActivitiesClientImpl();
 
-    private final Ec2ActivitiesClient ec2Activities =
-        new Ec2ActivitiesClientImpl();
-
     private ExportSnapshotRequest request;
 
     private final CheckWaitWorkflowClientFactory waitFlowFactory =
@@ -42,23 +37,6 @@ public class ExportSnapshotWorkflowImpl
     @Asynchronous
     private void dumpDatabase( Promise<DatabaseInstance> database )
     {
-        final Promise<String> workerName =
-            controlActivities.createWorkerName( database.get().getInstanceId() );
-        Promise<Void> launched =
-            ec2Activities.launchInstance( workerName, database );
-        new TryFinally( launched )
-        {
-            protected void doTry()
-            {
-                Promise<Void> running =
-                    waitUntilWorkerRunning( workerName.get() );
-            }
-
-            protected void doFinally()
-            {
-                ec2Activities.terminateInstance( workerName );
-            }
-        };
     }
 
     /**
@@ -112,18 +90,5 @@ public class ExportSnapshotWorkflowImpl
         check.setIdentity( request.getIdentity() );
         check.setObjectName( databaseId.get() );
         return waitFlowFactory.getClient( "restore-db-" + databaseId.get() ).checkAndWait( check );
-    }
-
-    private Promise<Void> waitUntilWorkerRunning( String workerId )
-    {
-        long now =
-            contextProvider.getDecisionContext().getWorkflowClock().currentTimeMillis();
-
-        CheckAndWait check = new CheckAndWait();
-        check.setCheckType( CheckAndWait.Type.WORKER_LAUNCH );
-        // Hardcoded 1 hour wait for now
-        check.setExpireOn( now + 3600 * 1000L );
-        check.setObjectName( workerId );
-        return waitFlowFactory.getClient( "launch-worker-" + workerId ).checkAndWait( check );
     }
 }
