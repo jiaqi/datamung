@@ -5,12 +5,21 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement( name = "RunJobRequest" )
 public class RunJobRequest
+    extends BaseType
 {
+    private int failAfterRetries = 5;
+
     private Identity identity;
 
     private Job job;
 
     private InstanceNetwork network;
+
+    @XmlElement
+    public int getFailAfterRetries()
+    {
+        return failAfterRetries;
+    }
 
     @XmlElement
     public Identity getIdentity()
@@ -28,6 +37,11 @@ public class RunJobRequest
     public InstanceNetwork getNetwork()
     {
         return network;
+    }
+
+    public void setFailAfterRetries( int failAfterRetries )
+    {
+        this.failAfterRetries = failAfterRetries;
     }
 
     public void setIdentity( Identity identity )

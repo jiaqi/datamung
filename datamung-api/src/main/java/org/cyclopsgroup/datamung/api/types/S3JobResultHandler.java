@@ -1,6 +1,9 @@
 package org.cyclopsgroup.datamung.api.types;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
+@XmlType
 public class S3JobResultHandler
     extends JobResultHandler
 {
@@ -13,11 +16,13 @@ public class S3JobResultHandler
         super( Type.S3 );
     }
 
+    @XmlElement
     public String getBucketName()
     {
         return bucketName;
     }
 
+    @XmlElement
     public String getObjectKey()
     {
         return objectKey;

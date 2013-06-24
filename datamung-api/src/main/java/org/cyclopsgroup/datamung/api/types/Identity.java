@@ -5,6 +5,7 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlType
 public class Identity
+    extends BaseType
 {
     private String awsAccessKeyId;
 

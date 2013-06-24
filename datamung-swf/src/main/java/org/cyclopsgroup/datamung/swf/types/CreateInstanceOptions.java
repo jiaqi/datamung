@@ -1,22 +1,16 @@
 package org.cyclopsgroup.datamung.swf.types;
 
-import org.cyclopsgroup.datamung.api.types.Identity;
+import org.cyclopsgroup.datamung.api.types.BaseType;
 import org.cyclopsgroup.datamung.api.types.InstanceNetwork;
 
 public class CreateInstanceOptions
+    extends BaseType
 {
-    private Identity identity;
-
     private InstanceNetwork network;
 
     private InstanceProfile profile;
 
     private String userData;
-
-    public Identity getIdentity()
-    {
-        return identity;
-    }
 
     public InstanceNetwork getNetwork()
     {
@@ -31,11 +25,6 @@ public class CreateInstanceOptions
     public String getUserData()
     {
         return userData;
-    }
-
-    public void setIdentity( Identity identity )
-    {
-        this.identity = identity;
     }
 
     public void setNetwork( InstanceNetwork network )

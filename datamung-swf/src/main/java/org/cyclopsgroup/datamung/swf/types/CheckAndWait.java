@@ -1,8 +1,10 @@
 package org.cyclopsgroup.datamung.swf.types;
 
+import org.cyclopsgroup.datamung.api.types.BaseType;
 import org.cyclopsgroup.datamung.api.types.Identity;
 
 public class CheckAndWait
+    extends BaseType
 {
     public static enum Type
     {

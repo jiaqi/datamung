@@ -1,6 +1,9 @@
 package org.cyclopsgroup.datamung.swf.types;
 
+import org.cyclopsgroup.datamung.api.types.BaseType;
+
 public class Queue
+    extends BaseType
 {
     private String arn;
 

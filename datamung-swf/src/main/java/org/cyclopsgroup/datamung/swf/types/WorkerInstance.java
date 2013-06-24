@@ -1,7 +1,9 @@
 package org.cyclopsgroup.datamung.swf.types;
 
+import org.cyclopsgroup.datamung.api.types.BaseType;
 
 public class WorkerInstance
+    extends BaseType
 {
     private String instanceId;
 
@@ -37,5 +39,11 @@ public class WorkerInstance
     public void setPublicIpAddress( String publicIpAddress )
     {
         this.publicIpAddress = publicIpAddress;
+    }
+
+    public WorkerInstance withInstanceStatus( String status )
+    {
+        setInstanceStatus( status );
+        return this;
     }
 }

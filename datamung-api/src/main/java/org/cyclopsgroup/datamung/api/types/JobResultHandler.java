@@ -2,7 +2,7 @@ package org.cyclopsgroup.datamung.api.types;
 
 import javax.xml.bind.annotation.XmlTransient;
 
-public class JobResultHandler
+public abstract class JobResultHandler
 {
     public static enum Type
     {

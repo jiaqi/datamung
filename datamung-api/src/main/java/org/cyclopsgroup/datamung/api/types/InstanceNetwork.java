@@ -5,11 +5,21 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlType
 public class InstanceNetwork
+    extends BaseType
 {
+    public static InstanceNetwork ofVpc( String subnetId, String vpcId )
+    {
+        InstanceNetwork network = new InstanceNetwork();
+        network.subnetId = subnetId;
+        network.vpcId = vpcId;
+        return network;
+    }
+
     private String subnetId;
 
     private String vpcId;
 
+    @XmlElement
     public String getSubnetId()
     {
         return subnetId;
