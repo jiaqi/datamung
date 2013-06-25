@@ -1,15 +1,12 @@
 package org.cyclopsgroup.datamung.swf.flows;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.cyclopsgroup.datamung.api.types.Identity;
 import org.cyclopsgroup.datamung.api.types.InstanceNetwork;
 import org.cyclopsgroup.datamung.api.types.Job;
 import org.cyclopsgroup.datamung.api.types.JobResult;
-import org.cyclopsgroup.datamung.api.types.JobResultHandler;
 import org.cyclopsgroup.datamung.api.types.RunJobRequest;
-import org.cyclopsgroup.datamung.api.types.S3JobResultHandler;
 import org.cyclopsgroup.datamung.swf.interfaces.CommandJobWorkflowClientFactoryImpl;
+import org.cyclopsgroup.datamung.swf.interfaces.Constants;
 import org.cyclopsgroup.datamung.swf.interfaces.ControlActivities;
 import org.cyclopsgroup.datamung.swf.interfaces.Ec2Activities;
 import org.cyclopsgroup.datamung.swf.interfaces.SqsActivities;
@@ -30,9 +27,6 @@ import com.amazonaws.services.simpleworkflow.flow.junit.FlowBlockJUnit4ClassRunn
 public class CommandJobWorkflowImplTest
     extends AbstractWorkflowTestCase
 {
-    private static final Log LOG =
-        LogFactory.getLog( CommandJobWorkflowImplTest.class );
-
     private Ec2Activities ec2Activities;
 
     private SqsActivities sqsActivities;
@@ -40,7 +34,7 @@ public class CommandJobWorkflowImplTest
     private ControlActivities controlActivities;
 
     @Before
-    public void testUpWorkflow()
+    public void setUpWorkflow()
     {
         ec2Activities = context.mock( Ec2Activities.class );
         sqsActivities = context.mock( SqsActivities.class );
@@ -48,11 +42,14 @@ public class CommandJobWorkflowImplTest
 
         workflowTest.addWorkflowImplementationType( CheckWaitWorkflowImpl.class );
         workflowTest.addWorkflowImplementationType( CommandJobWorkflowImpl.class );
-        workflowTest.addActivitiesImplementation( InvocationLoggingDecorator.decorate( Ec2Activities.class,
+        workflowTest.addActivitiesImplementation( Constants.ACTIVITY_TASK_LIST,
+                                                  InvocationLoggingDecorator.decorate( Ec2Activities.class,
                                                                                        ec2Activities ) );
-        workflowTest.addActivitiesImplementation( InvocationLoggingDecorator.decorate( SqsActivities.class,
+        workflowTest.addActivitiesImplementation( Constants.ACTIVITY_TASK_LIST,
+                                                  InvocationLoggingDecorator.decorate( SqsActivities.class,
                                                                                        sqsActivities ) );
-        workflowTest.addActivitiesImplementation( InvocationLoggingDecorator.decorate( ControlActivities.class,
+        workflowTest.addActivitiesImplementation( Constants.ACTIVITY_TASK_LIST,
+                                                  InvocationLoggingDecorator.decorate( ControlActivities.class,
                                                                                        controlActivities ) );
     }
 
@@ -70,11 +67,10 @@ public class CommandJobWorkflowImplTest
         final Job job = new Job();
         job.setTimeoutSeconds( 10 );
 
-        JobResultHandler handler = new S3JobResultHandler();
-        job.setResultHandler( handler );
+        request.setJob( job );
 
         final Queue queue = new Queue();
-        queue.setQueueName( "http://queue" );
+        queue.setQueueUrl( "http://queue" );
 
         final InstanceProfile profile = new InstanceProfile();
 
@@ -86,7 +82,7 @@ public class CommandJobWorkflowImplTest
         context.checking( new Expectations()
         {
             {
-                one( sqsActivities ).createQueue( "dmp-test", identity );
+                one( sqsActivities ).createQueue( "dmq-test", identity );
                 will( returnValue( queue ) );
 
                 one( ec2Activities ).createInstanceProfileForSqs( "dmip-test",
@@ -110,6 +106,7 @@ public class CommandJobWorkflowImplTest
                 one( sqsActivities ).pollJobResult( job, identity );
                 will( returnValue( Wrapper.of( new JobResult() ) ) );
 
+                one( ec2Activities ).terminateInstance( "dmw-test", identity );
                 one( ec2Activities ).deleteInstanceProfile( profile, identity );
                 one( sqsActivities ).deleteQueue( "http://queue", identity );
             }

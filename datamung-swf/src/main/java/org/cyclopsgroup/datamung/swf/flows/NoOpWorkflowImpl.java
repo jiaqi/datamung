@@ -14,6 +14,9 @@ public class NoOpWorkflowImpl
     private final ControlActivitiesClient control =
         new ControlActivitiesClientImpl();
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void run()
     {
@@ -28,7 +31,6 @@ public class NoOpWorkflowImpl
         {
             return;
         }
-        System.out.println( "Run called, " + count );
         Promise<String> name =
             control.createDatabaseName( new DecisionContextProviderImpl().getDecisionContext().getWorkflowContext().getWorkflowExecution().getWorkflowId() );
         scheduleNext( count, name );

@@ -1,7 +1,5 @@
 package org.cyclopsgroup.datamung.swf.flows;
 
-import java.util.concurrent.atomic.AtomicReference;
-
 import org.cyclopsgroup.datamung.api.types.JobResult;
 import org.cyclopsgroup.datamung.api.types.RunJobRequest;
 import org.cyclopsgroup.datamung.swf.interfaces.CheckWaitWorkflowClientFactory;
@@ -40,12 +38,14 @@ public class CommandJobWorkflowImpl
     private final Ec2ActivitiesClient ec2Activities =
         new Ec2ActivitiesClientImpl();
 
+    private InstanceProfile instanceProfile;
+
+    private Queue queue;
+
     private RunJobRequest request;
 
     private final SqsActivitiesClient sqsActivities =
         new SqsActivitiesClientImpl();
-
-    private Queue queue;
 
     /**
      * @inheritDoc
@@ -53,21 +53,29 @@ public class CommandJobWorkflowImpl
     @Override
     public void executeCommand( final RunJobRequest request )
     {
-        System.out.println( "Run job request is " + request );
         this.request = request;
-
         final String workflowId =
             contextProvider.getDecisionContext().getWorkflowContext().getWorkflowExecution().getWorkflowId();
-        final AtomicReference<Promise<Queue>> queue =
-            new AtomicReference<Promise<Queue>>( null );
+        final String workerId = "dmw-" + workflowId;
         new TryFinally()
         {
             @Override
             protected void doFinally()
             {
-                if ( queue.get() != null )
+                Promise<Void> done =
+                    ec2Activities.terminateInstance( workerId,
+                                                     request.getIdentity() );
+
+                if ( instanceProfile != null )
                 {
-                    sqsActivities.deleteQueue( queue.get().get().getQueueUrl(),
+                    ec2Activities.deleteInstanceProfile( instanceProfile,
+                                                         request.getIdentity(),
+                                                         done );
+                }
+
+                if ( queue != null )
+                {
+                    sqsActivities.deleteQueue( queue.getQueueUrl(),
                                                request.getIdentity() );
                 }
             }
@@ -75,56 +83,23 @@ public class CommandJobWorkflowImpl
             @Override
             protected void doTry()
             {
-                queue.set( sqsActivities.createQueue( "dmq-" + workflowId,
-                                                      request.getIdentity() ) );
-                executeCommandWithQueue( queue.get() );
+                Promise<Queue> queue =
+                    sqsActivities.createQueue( "dmq-" + workflowId,
+                                               request.getIdentity() );
+                Promise<Void> set = setQueue( queue );
+                Promise<InstanceProfile> profile =
+                    ec2Activities.createInstanceProfileForSqs( Promise.asPromise( "dmip-"
+                                                                   + workflowId ),
+                                                               queue,
+                                                               Promise.asPromise( request.getIdentity() ),
+                                                               set );
+                set = setInstanceProfile( profile );
+                // instanceProfile = profile;
+                Promise<String> userData =
+                    controlActivities.createJobWorkerUserData( queue );
+                runInstanceAndExecute( workerId, profile, userData, set );
             }
         };
-    }
-
-    @Asynchronous
-    private void executeCommandWithProfile( Promise<InstanceProfile> profile,
-                                            Promise<String> userData )
-    {
-        final CreateInstanceOptions options = new CreateInstanceOptions();
-        options.setNetwork( request.getNetwork() );
-        options.setProfile( profile.get() );
-        options.setUserData( userData.get() );
-
-        final String workerId =
-            "dmw-"
-                + contextProvider.getDecisionContext().getWorkflowContext().getWorkflowExecution().getWorkflowId();
-        new TryFinally()
-        {
-            @Override
-            protected void doFinally()
-            {
-                ec2Activities.terminateInstance( workerId,
-                                                 request.getIdentity() );
-            }
-
-            @Override
-            protected void doTry()
-            {
-                Promise<Void> launched =
-                    ec2Activities.launchInstance( workerId, options,
-                                                  request.getIdentity() );
-                Promise<Void> ready = waitUntilWorkerReady( workerId, launched );
-                Promise<Void> sent =
-                    sqsActivities.sendJobToQueue( queue, request.getJob(),
-                                                  request.getIdentity(), ready );
-                returnJobResult( sqsActivities.pollJobResult( request.getJob(),
-                                                              request.getIdentity(),
-                                                              sent ),
-                                 timestamp( sent ) );
-            }
-        };
-    }
-
-    @Asynchronous
-    private Promise<Long> timestamp( Promise<?>... waitFor )
-    {
-        return Promise.asPromise( contextProvider.getDecisionContext().getWorkflowClock().currentTimeMillis() );
     }
 
     @Asynchronous
@@ -150,6 +125,50 @@ public class CommandJobWorkflowImpl
     }
 
     @Asynchronous
+    private void runInstanceAndExecute( String workerId,
+                                        Promise<InstanceProfile> profile,
+                                        Promise<String> userData,
+                                        Promise<?>... waitFor )
+    {
+        final CreateInstanceOptions options = new CreateInstanceOptions();
+        options.setNetwork( request.getNetwork() );
+        options.setProfile( instanceProfile );
+        options.setUserData( userData.get() );
+
+        Promise<Void> launched =
+            ec2Activities.launchInstance( workerId, options,
+                                          request.getIdentity() );
+        Promise<Void> ready = waitUntilWorkerReady( workerId, launched );
+        Promise<Void> sent =
+            sqsActivities.sendJobToQueue( queue, request.getJob(),
+                                          request.getIdentity(), ready );
+        returnJobResult( sqsActivities.pollJobResult( request.getJob(),
+                                                      request.getIdentity(),
+                                                      sent ), timestamp( sent ) );
+
+    }
+
+    @Asynchronous
+    private Promise<Void> setInstanceProfile( Promise<InstanceProfile> profile )
+    {
+        this.instanceProfile = profile.get();
+        return Promise.Void();
+    }
+
+    @Asynchronous
+    private Promise<Void> setQueue( Promise<Queue> queue )
+    {
+        this.queue = queue.get();
+        return Promise.Void();
+    }
+
+    @Asynchronous
+    private Promise<Long> timestamp( Promise<?>... waitFor )
+    {
+        return Promise.asPromise( contextProvider.getDecisionContext().getWorkflowClock().currentTimeMillis() );
+    }
+
+    @Asynchronous
     private Promise<Void> waitUntilWorkerReady( String workerId,
                                                 Promise<?>... waitFor )
     {
@@ -161,38 +180,5 @@ public class CommandJobWorkflowImpl
             * 4000L
             + contextProvider.getDecisionContext().getWorkflowClock().currentTimeMillis() );
         return checkWaitWorkflow.getClient( "workerId" + "-wait" ).checkAndWait( waitWorker );
-    }
-
-    @Asynchronous
-    private void executeCommandWithQueue( final Promise<Queue> queue )
-    {
-        this.queue = queue.get();
-        final String workflowId =
-            contextProvider.getDecisionContext().getWorkflowContext().getWorkflowExecution().getWorkflowId();
-        final AtomicReference<Promise<InstanceProfile>> profile =
-            new AtomicReference<Promise<InstanceProfile>>();
-
-        new TryFinally()
-        {
-            @Override
-            protected void doFinally()
-            {
-                if ( profile.get() != null )
-                {
-                    ec2Activities.deleteInstanceProfile( profile.get(),
-                                                         Promise.asPromise( request.getIdentity() ) );
-                }
-            }
-
-            @Override
-            protected void doTry()
-            {
-                profile.set( ec2Activities.createInstanceProfileForSqs( "dmip-"
-                    + workflowId, queue.get(), request.getIdentity() ) );
-                Promise<String> userData =
-                    controlActivities.createJobWorkerUserData( queue );
-                executeCommandWithProfile( profile.get(), userData );
-            }
-        };
     }
 }

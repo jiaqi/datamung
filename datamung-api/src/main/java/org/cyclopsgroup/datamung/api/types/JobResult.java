@@ -1,7 +1,7 @@
 package org.cyclopsgroup.datamung.api.types;
 
-
 public class JobResult
+    extends BaseType
 {
     private long elapsedMillis;
 

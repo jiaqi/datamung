@@ -3,6 +3,7 @@ package org.cyclopsgroup.datamung.api.types;
 import java.util.List;
 
 public class Job
+    extends BaseType
 {
     private List<String> arguments;
 

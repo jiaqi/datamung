@@ -3,6 +3,7 @@ package org.cyclopsgroup.datamung.api.types;
 import javax.xml.bind.annotation.XmlTransient;
 
 public abstract class JobResultHandler
+    extends BaseType
 {
     public static enum Type
     {
