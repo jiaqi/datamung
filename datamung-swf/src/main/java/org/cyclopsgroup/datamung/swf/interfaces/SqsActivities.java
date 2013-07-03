@@ -18,7 +18,7 @@ public interface SqsActivities
     Queue createQueue( String queueName, Identity identity );
 
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
-    void deleteQueue( String queueUrlj, Identity identity );
+    void deleteQueue( String queueUrl, Identity identity );
 
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
     Wrapper<JobResult> pollJobResult( Job job, Identity identity );

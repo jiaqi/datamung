@@ -9,6 +9,7 @@ import org.cyclopsgroup.datamung.swf.types.InstanceProfile;
 import org.cyclopsgroup.datamung.swf.types.Queue;
 import org.cyclopsgroup.datamung.swf.types.WorkerInstance;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
@@ -31,6 +32,7 @@ import com.amazonaws.services.identitymanagement.model.GetInstanceProfileResult;
 import com.amazonaws.services.identitymanagement.model.NoSuchEntityException;
 import com.amazonaws.services.identitymanagement.model.RemoveRoleFromInstanceProfileRequest;
 
+@Component( "ec2Activities" )
 public class Ec2ActivitiesImpl
     implements Ec2Activities
 {
