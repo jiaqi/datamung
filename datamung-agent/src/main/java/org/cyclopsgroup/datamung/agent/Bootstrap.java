@@ -11,7 +11,6 @@ import org.apache.commons.lang.Validate;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.cyclopsgroup.datamung.api.types.Job;
 import org.cyclopsgroup.datamung.api.types.JobResult;
 import org.cyclopsgroup.datamung.api.types.S3JobResultHandler;
@@ -19,6 +18,7 @@ import org.cyclopsgroup.datamung.api.types.SqsJobResultHandler;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.simpleworkflow.flow.JsonDataConverter;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
 import com.amazonaws.services.sqs.model.Message;
@@ -42,7 +42,7 @@ public class Bootstrap
 
     private final AmazonS3 s3;
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final JsonDataConverter converter = new JsonDataConverter();
 
     public Bootstrap( AmazonSQS sqs, AgentConfig config )
     {
@@ -83,7 +83,7 @@ public class Bootstrap
         {
             try
             {
-                Job job = mapper.readValue( message.getBody(), Job.class );
+                Job job = converter.fromData( message.getBody(), Job.class );
                 runJob( job );
                 sqs.deleteMessage( new DeleteMessageRequest(
                                                              config.getJobQueueUrl(),
@@ -109,7 +109,7 @@ public class Bootstrap
         result.setExitCode( proc.waitFor() );
         result.setElapsedMillis( System.currentTimeMillis()
             - result.getStarted() );
-        String output = mapper.writeValueAsString( result );
+        String output = converter.toData( result );
         LOG.info( "Handling job result " + output + " with "
             + job.getResultHandler() );
 
