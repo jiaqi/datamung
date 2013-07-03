@@ -16,8 +16,7 @@ public interface Ec2Activities
 {
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
     InstanceProfile createInstanceProfileForSqs( String profileName,
-                                                 Queue queue,
-                                                 Identity identity );
+                                                 Queue queue, Identity identity );
 
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
     void deleteInstanceProfile( InstanceProfile profile, Identity identity );
@@ -26,8 +25,7 @@ public interface Ec2Activities
     WorkerInstance describeInstance( String instanceId, Identity identity );
 
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
-    void launchInstance( String instanceId, CreateInstanceOptions options,
-                         Identity identity );
+    String launchInstance( CreateInstanceOptions options, Identity identity );
 
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
     void terminateInstance( String instanceId, Identity identity );

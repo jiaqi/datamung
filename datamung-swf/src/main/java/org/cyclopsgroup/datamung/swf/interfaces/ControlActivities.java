@@ -18,7 +18,4 @@ public interface ControlActivities
 
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
     String createSnapshotName( String databaseName );
-
-    @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
-    String createWorkerName( String databaseName );
 }

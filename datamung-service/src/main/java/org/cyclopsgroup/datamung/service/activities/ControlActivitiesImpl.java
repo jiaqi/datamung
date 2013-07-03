@@ -37,14 +37,4 @@ public class ControlActivitiesImpl
     {
         return instanceName + "-" + new DateTime().toString( "ddHHmm" );
     }
-
-    /**
-     * @inheritDoc
-     */
-    @Override
-    public String createWorkerName( String databaseName )
-    {
-        return databaseName + "-worker-"
-            + RandomStringUtils.randomAlphabetic( 4 );
-    }
 }

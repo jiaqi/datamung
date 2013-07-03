@@ -6,10 +6,6 @@ import org.cyclopsgroup.datamung.swf.types.DatabaseInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.amazonaws.AmazonWebServiceRequest;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.model.CreateDBSnapshotRequest;
 import com.amazonaws.services.rds.model.DBInstance;
@@ -25,27 +21,6 @@ import com.amazonaws.services.rds.model.RestoreDBInstanceFromDBSnapshotRequest;
 public class RdsActivitiesImpl
     implements RdsActivities
 {
-    private static <T extends AmazonWebServiceRequest> T decorate( T request,
-                                                                   Identity id )
-    {
-        AWSCredentials creds;
-        if ( id.getAwsAccessToken() == null )
-        {
-            creds =
-                new BasicAWSCredentials( id.getAwsAccessKeyId(),
-                                         id.getAwsSecretKey() );
-        }
-        else
-        {
-            creds =
-                new BasicSessionCredentials( id.getAwsAccessKeyId(),
-                                             id.getAwsSecretKey(),
-                                             id.getAwsAccessToken() );
-        }
-        request.setRequestCredentials( creds );
-        return request;
-    }
-
     @Autowired
     private AmazonRDS rds;
 
@@ -57,10 +32,10 @@ public class RdsActivitiesImpl
                                 Identity identity )
     {
 
-        rds.createDBSnapshot( decorate( new CreateDBSnapshotRequest(
-                                                                     snapshotName,
-                                                                     instanceName ),
-                                        identity ) );
+        rds.createDBSnapshot( ActivityUtils.decorate( new CreateDBSnapshotRequest(
+                                                                                   snapshotName,
+                                                                                   instanceName ),
+                                                      identity ) );
     }
 
     /**
@@ -69,9 +44,9 @@ public class RdsActivitiesImpl
     @Override
     public void deleteSnapshot( String snapshotName, Identity identity )
     {
-        rds.deleteDBSnapshot( decorate( new DeleteDBSnapshotRequest(
-                                                                     snapshotName ),
-                                        identity ) );
+        rds.deleteDBSnapshot( ActivityUtils.decorate( new DeleteDBSnapshotRequest(
+                                                                                   snapshotName ),
+                                                      identity ) );
     }
 
     /**
@@ -82,8 +57,8 @@ public class RdsActivitiesImpl
                                               Identity identity )
     {
         DescribeDBInstancesResult results =
-            rds.describeDBInstances( decorate( new DescribeDBInstancesRequest().withDBInstanceIdentifier( instanceName ),
-                                               identity ) );
+            rds.describeDBInstances( ActivityUtils.decorate( new DescribeDBInstancesRequest().withDBInstanceIdentifier( instanceName ),
+                                                             identity ) );
         if ( results.getDBInstances().isEmpty() )
         {
             return null;
@@ -109,8 +84,8 @@ public class RdsActivitiesImpl
     public String getSnapshotStatus( String snapshotName, Identity identity )
     {
         DescribeDBSnapshotsResult result =
-            rds.describeDBSnapshots( decorate( new DescribeDBSnapshotsRequest().withDBSnapshotIdentifier( snapshotName ),
-                                               identity ) );
+            rds.describeDBSnapshots( ActivityUtils.decorate( new DescribeDBSnapshotsRequest().withDBSnapshotIdentifier( snapshotName ),
+                                                             identity ) );
         if ( result.getDBSnapshots().isEmpty() )
         {
             return null;
@@ -128,10 +103,10 @@ public class RdsActivitiesImpl
     {
         // TODO Set security group properly
         DBInstance ins =
-            rds.restoreDBInstanceFromDBSnapshot( decorate( new RestoreDBInstanceFromDBSnapshotRequest(
-                                                                                                       instanceName,
-                                                                                                       snapshotName ).withPubliclyAccessible( true ),
-                                                           identity ) );
+            rds.restoreDBInstanceFromDBSnapshot( ActivityUtils.decorate( new RestoreDBInstanceFromDBSnapshotRequest(
+                                                                                                                     instanceName,
+                                                                                                                     snapshotName ).withPubliclyAccessible( true ),
+                                                                         identity ) );
         DatabaseInstance desc = new DatabaseInstance();
         desc.setAllocatedStorage( ins.getAllocatedStorage() );
         desc.setAvailabilityZone( ins.getAvailabilityZone() );
@@ -149,9 +124,8 @@ public class RdsActivitiesImpl
     @Override
     public void terminateInstance( String instanceName, Identity identity )
     {
-        rds.deleteDBInstance( decorate(
-                                        new DeleteDBInstanceRequest(
-                                                                     instanceName ),
-                                        identity ).withSkipFinalSnapshot( true ) );
+        rds.deleteDBInstance( ActivityUtils.decorate( new DeleteDBInstanceRequest(
+                                                                                   instanceName ),
+                                                      identity ).withSkipFinalSnapshot( true ) );
     }
 }

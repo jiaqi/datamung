@@ -93,8 +93,8 @@ public class CommandJobWorkflowImplTest
                 one( controlActivities ).createJobWorkerUserData( queue );
                 will( returnValue( "test-data" ) );
 
-                one( ec2Activities ).launchInstance( "dmw-test", options,
-                                                     identity );
+                one( ec2Activities ).launchInstance( options, identity );
+                will( returnValue( "dmw-test" ) );
 
                 one( ec2Activities ).describeInstance( "dmw-test", identity );
                 will( returnValue( new WorkerInstance().withInstanceStatus( "running" ) ) );
