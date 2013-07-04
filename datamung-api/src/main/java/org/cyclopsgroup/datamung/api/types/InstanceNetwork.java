@@ -3,9 +3,11 @@ package org.cyclopsgroup.datamung.api.types;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import org.cyclopsgroup.kaufman.interfaces.BaseComparableBean;
+
 @XmlType
 public class InstanceNetwork
-    extends BaseType
+    extends BaseComparableBean
 {
     public static InstanceNetwork ofVpc( String subnetId, String vpcId )
     {

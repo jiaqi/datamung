@@ -1,10 +1,10 @@
 package org.cyclopsgroup.datamung.swf.types;
 
-import org.cyclopsgroup.datamung.api.types.BaseType;
 import org.cyclopsgroup.datamung.api.types.Identity;
+import org.cyclopsgroup.kaufman.interfaces.BaseComparableBean;
 
 public class CheckAndWait
-    extends BaseType
+    extends BaseComparableBean
 {
     public static enum Type
     {

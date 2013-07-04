@@ -3,9 +3,11 @@ package org.cyclopsgroup.datamung.api.types;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.cyclopsgroup.kaufman.interfaces.BaseComparableBean;
+
 @XmlRootElement( name = "RunJobRequest" )
 public class RunJobRequest
-    extends BaseType
+    extends BaseComparableBean
 {
     private int failAfterRetries = 5;
 

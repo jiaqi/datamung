@@ -1,10 +1,10 @@
 package org.cyclopsgroup.datamung.swf.types;
 
-import org.cyclopsgroup.datamung.api.types.BaseType;
 import org.cyclopsgroup.datamung.api.types.InstanceNetwork;
+import org.cyclopsgroup.kaufman.interfaces.BaseComparableBean;
 
 public class CreateInstanceOptions
-    extends BaseType
+    extends BaseComparableBean
 {
     private InstanceNetwork network;
 

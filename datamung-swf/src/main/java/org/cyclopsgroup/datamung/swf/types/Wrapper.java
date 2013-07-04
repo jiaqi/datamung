@@ -1,9 +1,9 @@
 package org.cyclopsgroup.datamung.swf.types;
 
-import org.cyclopsgroup.datamung.api.types.BaseType;
+import org.cyclopsgroup.kaufman.interfaces.BaseComparableBean;
 
 public class Wrapper<T>
-    extends BaseType
+    extends BaseComparableBean
 {
     public static <T> Wrapper<T> of( T object )
     {

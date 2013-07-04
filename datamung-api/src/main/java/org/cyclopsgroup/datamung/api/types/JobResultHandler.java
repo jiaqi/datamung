@@ -2,8 +2,10 @@ package org.cyclopsgroup.datamung.api.types;
 
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.cyclopsgroup.kaufman.interfaces.BaseComparableBean;
+
 public abstract class JobResultHandler
-    extends BaseType
+    extends BaseComparableBean
 {
     public static enum Type
     {

@@ -3,12 +3,12 @@ package org.cyclopsgroup.datamung.swf.types;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.cyclopsgroup.datamung.api.types.BaseType;
 import org.cyclopsgroup.datamung.api.types.InstanceNetwork;
+import org.cyclopsgroup.kaufman.interfaces.BaseComparableBean;
 
 @XmlRootElement( name = "DatabaseInstance" )
 public class DatabaseInstance
-    extends BaseType
+    extends BaseComparableBean
 {
     private int allocatedStorage;
 

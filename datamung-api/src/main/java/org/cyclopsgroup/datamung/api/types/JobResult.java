@@ -1,7 +1,9 @@
 package org.cyclopsgroup.datamung.api.types;
 
+import org.cyclopsgroup.kaufman.interfaces.BaseComparableBean;
+
 public class JobResult
-    extends BaseType
+    extends BaseComparableBean
 {
     private long elapsedMillis;
 

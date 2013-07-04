@@ -2,8 +2,10 @@ package org.cyclopsgroup.datamung.api.types;
 
 import java.util.List;
 
+import org.cyclopsgroup.kaufman.interfaces.BaseComparableBean;
+
 public class Job
-    extends BaseType
+    extends BaseComparableBean
 {
     private List<String> arguments;
 

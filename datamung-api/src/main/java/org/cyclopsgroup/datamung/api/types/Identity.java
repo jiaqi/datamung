@@ -3,9 +3,11 @@ package org.cyclopsgroup.datamung.api.types;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import org.cyclopsgroup.kaufman.interfaces.BaseComparableBean;
+
 @XmlType
 public class Identity
-    extends BaseType
+    extends BaseComparableBean
 {
     private String awsAccessKeyId;
 
