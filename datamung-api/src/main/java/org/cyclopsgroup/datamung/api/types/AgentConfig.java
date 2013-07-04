@@ -1,6 +1,9 @@
-package org.cyclopsgroup.datamung.agent;
+package org.cyclopsgroup.datamung.api.types;
+
+import org.cyclopsgroup.kaufman.interfaces.BaseComparableBean;
 
 public class AgentConfig
+    extends BaseComparableBean
 {
     private String jobQueueUrl;
 

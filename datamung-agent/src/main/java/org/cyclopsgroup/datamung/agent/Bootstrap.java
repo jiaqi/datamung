@@ -11,6 +11,7 @@ import org.apache.commons.lang.Validate;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.cyclopsgroup.datamung.api.types.AgentConfig;
 import org.cyclopsgroup.datamung.api.types.Job;
 import org.cyclopsgroup.datamung.api.types.JobResult;
 import org.cyclopsgroup.datamung.api.types.S3JobResultHandler;
