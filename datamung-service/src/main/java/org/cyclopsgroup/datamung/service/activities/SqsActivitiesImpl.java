@@ -32,7 +32,7 @@ import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 
-@Component( "sqsActivities" )
+@Component( "workflow.SqsActivities" )
 public class SqsActivitiesImpl
     implements SqsActivities
 {
@@ -85,7 +85,7 @@ public class SqsActivitiesImpl
      * @inheritDoc
      */
     @Override
-    public Wrapper<JobResult> pollJobResult( Job job, Identity identity )
+    public Wrapper<JobResult> pollJobResult( Job job )
     {
         switch ( job.getResultHandler().getHandlerType() )
         {
@@ -98,7 +98,7 @@ public class SqsActivitiesImpl
                         s3.getObject( ActivityUtils.decorate( new GetObjectRequest(
                                                                                     s3Handler.getBucketName(),
                                                                                     s3Handler.getObjectKey() ),
-                                                              identity ) );
+                                                              job.getIdentity() ) );
                     InputStream in = object.getObjectContent();
                     try
                     {
@@ -129,7 +129,7 @@ public class SqsActivitiesImpl
                 ReceiveMessageResult msgs =
                     sqs.receiveMessage( ActivityUtils.decorate( new ReceiveMessageRequest(
                                                                                            sqsHandler.getResultQueueUrl() ),
-                                                                identity ) );
+                                                                job.getIdentity() ) );
                 if ( msgs.getMessages().isEmpty() )
                 {
                     return Wrapper.of( null );
@@ -148,11 +148,11 @@ public class SqsActivitiesImpl
      * @inheritDoc
      */
     @Override
-    public void sendJobToQueue( Queue queue, Job job, Identity identity )
+    public void sendJobToQueue( Queue queue, Job job )
     {
         sqs.sendMessage( ActivityUtils.decorate( new SendMessageRequest(
                                                                          queue.getQueueUrl(),
                                                                          converter.toData( job ) ),
-                                                 identity ) );
+                                                 job.getIdentity() ) );
     }
 }

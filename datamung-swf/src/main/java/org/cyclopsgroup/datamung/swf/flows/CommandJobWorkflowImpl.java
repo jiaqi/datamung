@@ -68,19 +68,20 @@ public class CommandJobWorkflowImpl
                 {
                     done =
                         ec2Activities.terminateInstance( workerId,
-                                                         request.getIdentity() );
+                                                         request.getJob().getIdentity() );
                 }
                 if ( instanceProfile != null )
                 {
                     done =
                         ec2Activities.deleteInstanceProfile( instanceProfile,
-                                                             request.getIdentity(),
+                                                             request.getJob().getIdentity(),
                                                              done );
                 }
                 if ( queue != null )
                 {
                     sqsActivities.deleteQueue( queue.getQueueUrl(),
-                                               request.getIdentity(), done );
+                                               request.getJob().getIdentity(),
+                                               done );
                 }
             }
 
@@ -89,13 +90,13 @@ public class CommandJobWorkflowImpl
             {
                 Promise<Queue> queue =
                     sqsActivities.createQueue( "dmq-" + workflowId,
-                                               request.getIdentity() );
+                                               request.getJob().getIdentity() );
                 Promise<Void> set = setQueue( queue );
                 Promise<InstanceProfile> profile =
                     ec2Activities.createInstanceProfileForSqs( Promise.asPromise( "dmip-"
                                                                    + workflowId ),
                                                                queue,
-                                                               Promise.asPromise( request.getIdentity() ),
+                                                               Promise.asPromise( request.getJob().getIdentity() ),
                                                                set );
                 set = setInstanceProfile( profile );
                 // instanceProfile = profile;
@@ -125,7 +126,6 @@ public class CommandJobWorkflowImpl
         Promise<Void> nextRun =
             contextProvider.getDecisionContext().getWorkflowClock().createTimer( request.getJob().getTimeoutSeconds() / 10 );
         return returnJobResult( sqsActivities.pollJobResult( request.getJob(),
-                                                             request.getIdentity(),
                                                              nextRun ),
                                 jobStart );
     }
@@ -135,20 +135,20 @@ public class CommandJobWorkflowImpl
                                                    Promise<String> userData,
                                                    Promise<?>... waitFor )
     {
+        Promise<Void> sent =
+            sqsActivities.sendJobToQueue( queue, request.getJob() );
+
         final CreateInstanceOptions options = new CreateInstanceOptions();
         options.setNetwork( request.getNetwork() );
         options.setProfile( instanceProfile );
         options.setUserData( userData.get() );
 
         Promise<String> workerId =
-            ec2Activities.launchInstance( options, request.getIdentity() );
+            ec2Activities.launchInstance( options,
+                                          request.getJob().getIdentity() );
         Promise<Void> ready = waitUntilWorkerReady( workerId );
-        Promise<Void> sent =
-            sqsActivities.sendJobToQueue( queue, request.getJob(),
-                                          request.getIdentity(), ready );
-        returnJobResult( sqsActivities.pollJobResult( request.getJob(),
-                                                      request.getIdentity(),
-                                                      sent ), timestamp( sent ) );
+        returnJobResult( sqsActivities.pollJobResult( request.getJob(), sent,
+                                                      ready ), timestamp( sent ) );
         return workerId;
     }
 
@@ -184,7 +184,7 @@ public class CommandJobWorkflowImpl
     {
         CheckAndWait waitWorker = new CheckAndWait();
         waitWorker.setCheckType( CheckAndWait.Type.WORKER_LAUNCH );
-        waitWorker.setIdentity( request.getIdentity() );
+        waitWorker.setIdentity( request.getJob().getIdentity() );
         waitWorker.setObjectName( workerId.get() );
         waitWorker.setExpireOn( waitWorker.getWaitIntervalSeconds()
             * 4000L

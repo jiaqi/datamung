@@ -11,6 +11,8 @@ public class Job
 
     private String command;
 
+    private Identity identity;
+
     private JobResultHandler resultHandler;
 
     private int timeoutSeconds = 300;
@@ -23,6 +25,11 @@ public class Job
     public String getCommand()
     {
         return command;
+    }
+
+    public Identity getIdentity()
+    {
+        return identity;
     }
 
     public JobResultHandler getResultHandler()
@@ -43,6 +50,11 @@ public class Job
     public void setCommand( String command )
     {
         this.command = command;
+    }
+
+    public void setIdentity( Identity identity )
+    {
+        this.identity = identity;
     }
 
     public void setResultHandler( JobResultHandler resultHandler )

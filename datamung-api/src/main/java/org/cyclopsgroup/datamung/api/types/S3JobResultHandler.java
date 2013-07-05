@@ -11,6 +11,14 @@ public class S3JobResultHandler
 
     private String objectKey;
 
+    public static S3JobResultHandler of( String bucketName, String objectKey )
+    {
+        S3JobResultHandler h = new S3JobResultHandler();
+        h.bucketName = bucketName;
+        h.objectKey = objectKey;
+        return h;
+    }
+
     public S3JobResultHandler()
     {
         super( Type.S3 );

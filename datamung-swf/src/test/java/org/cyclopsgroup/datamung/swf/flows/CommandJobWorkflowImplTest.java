@@ -61,11 +61,11 @@ public class CommandJobWorkflowImplTest
             InstanceNetwork.ofVpc( "test-subset", "test-vpc" );
 
         RunJobRequest request = new RunJobRequest();
-        request.setIdentity( identity );
         request.setNetwork( network );
 
         final Job job = new Job();
         job.setTimeoutSeconds( 10 );
+        job.setIdentity( identity );
 
         request.setJob( job );
 
@@ -99,11 +99,11 @@ public class CommandJobWorkflowImplTest
                 one( ec2Activities ).describeInstance( "dmw-test", identity );
                 will( returnValue( new WorkerInstance().withInstanceStatus( "running" ) ) );
 
-                one( sqsActivities ).sendJobToQueue( queue, job, identity );
-                exactly( 2 ).of( sqsActivities ).pollJobResult( job, identity );
+                one( sqsActivities ).sendJobToQueue( queue, job );
+                exactly( 2 ).of( sqsActivities ).pollJobResult( job );
                 will( returnValue( Wrapper.<JobResult> of( null ) ) );
 
-                one( sqsActivities ).pollJobResult( job, identity );
+                one( sqsActivities ).pollJobResult( job );
                 will( returnValue( Wrapper.of( new JobResult() ) ) );
 
                 one( ec2Activities ).terminateInstance( "dmw-test", identity );

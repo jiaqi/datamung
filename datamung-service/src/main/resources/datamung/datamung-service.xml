@@ -9,8 +9,7 @@
        http://www.springframework.org/schema/context/spring-context.xsd
        http://www.springframework.org/schema/aop
        http://www.springframework.org/schema/aop/spring-aop.xsd">
-    <context:property-placeholder />
-    <import resource="./location-${location:local}.xml" />
+    <import resource="./context-${stage:alpha}.xml" />
 
     <!-- Logging configuration -->
     <aop:aspectj-autoproxy />
@@ -30,12 +29,24 @@
 
     <!-- AWS resources -->
     <bean class="com.amazonaws.services.rds.AmazonRDSClient">
-        <constructor-arg ref="awsCredentials" />
+        <constructor-arg ref="aws.Credentials" />
     </bean>
-
+    <bean class="com.amazonaws.services.sqs.AmazonSQSClient">
+        <constructor-arg ref="aws.Credentials" />
+    </bean>
+    <bean class="com.amazonaws.services.ec2.AmazonEC2Client">
+        <constructor-arg ref="aws.Credentials" />
+    </bean>
+    <bean class="com.amazonaws.services.s3.AmazonS3Client">
+        <constructor-arg ref="aws.Credentials" />
+    </bean>
+    <bean
+        class="com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient">
+        <constructor-arg ref="aws.Credentials" />
+    </bean>
     <bean id="aws.SimpleWorkflow"
         class="com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflowClient">
-        <constructor-arg ref="awsCredentials" />
+        <constructor-arg ref="aws.Credentials" />
         <property name="endpoint" value="https://swf.us-east-1.amazonaws.com" />
     </bean>
 
@@ -48,7 +59,7 @@
     <bean class="com.amazonaws.services.simpleworkflow.flow.WorkflowWorker"
         init-method="start">
         <constructor-arg ref="aws.SimpleWorkflow" />
-        <constructor-arg value="eng-sandbox-development" />
+        <constructor-arg ref="aws.SwfDomain" />
         <constructor-arg value="datamung-workflow-tasks" />
         <property name="workflowImplementationTypes">
             <list>
@@ -61,6 +72,9 @@
                 <value>
                     org.cyclopsgroup.datamung.swf.flows.ExportSnapshotWorkflowImpl
                 </value>
+                <value>
+                    org.cyclopsgroup.datamung.swf.flows.CommandJobWorkflowImpl
+                </value>
             </list>
         </property>
     </bean>
@@ -68,12 +82,14 @@
     <bean class="com.amazonaws.services.simpleworkflow.flow.ActivityWorker"
         init-method="start">
         <constructor-arg ref="aws.SimpleWorkflow" />
-        <constructor-arg value="eng-sandbox-development" />
+        <constructor-arg ref="aws.SwfDomain" />
         <constructor-arg value="datamung-activity-tasks" />
         <property name="activitiesImplementations">
             <list>
                 <ref bean="workflow.ControlActivities" />
                 <ref bean="workflow.RdsActivities" />
+                <ref bean="workflow.Ec2Activities" />
+                <ref bean="workflow.SqsActivities" />
             </list>
         </property>
     </bean>
