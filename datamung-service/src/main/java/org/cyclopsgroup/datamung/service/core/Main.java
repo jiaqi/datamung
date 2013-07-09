@@ -6,6 +6,7 @@ import java.util.Arrays;
 
 import org.cyclopsgroup.datamung.api.types.Identity;
 import org.cyclopsgroup.datamung.api.types.Job;
+import org.cyclopsgroup.datamung.api.types.JobResult;
 import org.cyclopsgroup.datamung.api.types.RunJobRequest;
 import org.cyclopsgroup.datamung.api.types.S3JobResultHandler;
 import org.cyclopsgroup.datamung.swf.interfaces.CommandJobWorkflowClientExternalFactory;
@@ -15,20 +16,20 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflow;
 import com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflowClient;
+import com.amazonaws.services.simpleworkflow.flow.JsonDataConverter;
 
 public class Main
 {
     public static void main( String[] args )
         throws IOException
     {
-        AWSCredentials creds =
-            new PropertiesCredentials(
-                                       new File(
-                                                 "/Users/jguo/Dropbox/laogong/grpn/jguo-grpn-aws-creds.properties" ) );
-        runTestFlow( creds );
+        AWSCredentials creds = new PropertiesCredentials( new File( args[0] ) );
+        JobResult result = new JobResult();
+        System.out.println( new JsonDataConverter().toData( result ) );
     }
 
-    private static void runTestFlow( AWSCredentials creds )
+    private static void runTestFlow( AWSCredentials creds, String domainName,
+                                     String resultBucket, String resultKey )
     {
         AmazonSimpleWorkflow swf = new AmazonSimpleWorkflowClient( creds );
         swf.setEndpoint( "https://swf.us-east-1.amazonaws.com" );
@@ -41,13 +42,11 @@ public class Main
         job.setIdentity( Identity.of( creds.getAWSAccessKeyId(),
                                       creds.getAWSSecretKey(), null ) );
 
-        job.setResultHandler( S3JobResultHandler.of( "superuser-test",
-                                                     "a-job-result" ) );
+        job.setResultHandler( S3JobResultHandler.of( resultBucket, resultKey ) );
         request.setJob( job );
 
         CommandJobWorkflowClientExternalFactory fac =
-            new CommandJobWorkflowClientExternalFactoryImpl( swf,
-                                                             "eng-sandbox-development" );
+            new CommandJobWorkflowClientExternalFactoryImpl( swf, domainName );
         fac.getClient( "test" ).executeCommand( request );
     }
 }

@@ -2,9 +2,11 @@ package org.cyclopsgroup.datamung.service.activities;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.cyclopsgroup.datamung.api.types.Identity;
@@ -22,6 +24,7 @@ import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
+import com.amazonaws.services.ec2.model.IamInstanceProfileSpecification;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InstanceType;
 import com.amazonaws.services.ec2.model.Reservation;
@@ -29,6 +32,7 @@ import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.RunInstancesResult;
 import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagement;
+import com.amazonaws.services.identitymanagement.model.AddRoleToInstanceProfileRequest;
 import com.amazonaws.services.identitymanagement.model.CreateInstanceProfileRequest;
 import com.amazonaws.services.identitymanagement.model.CreateRoleRequest;
 import com.amazonaws.services.identitymanagement.model.CreateRoleResult;
@@ -37,8 +41,10 @@ import com.amazonaws.services.identitymanagement.model.DeleteRoleRequest;
 import com.amazonaws.services.identitymanagement.model.EntityAlreadyExistsException;
 import com.amazonaws.services.identitymanagement.model.GetInstanceProfileRequest;
 import com.amazonaws.services.identitymanagement.model.GetInstanceProfileResult;
+import com.amazonaws.services.identitymanagement.model.GetRolePolicyRequest;
 import com.amazonaws.services.identitymanagement.model.GetRoleRequest;
 import com.amazonaws.services.identitymanagement.model.NoSuchEntityException;
+import com.amazonaws.services.identitymanagement.model.PutRolePolicyRequest;
 import com.amazonaws.services.identitymanagement.model.RemoveRoleFromInstanceProfileRequest;
 
 @Component( "workflow.Ec2Activities" )
@@ -53,6 +59,33 @@ public class Ec2ActivitiesImpl
     @Autowired
     private AmazonIdentityManagement iam;
 
+    private String fetchPolicy( String templatePath,
+                                Map<String, String> placeHolders )
+    {
+        try
+        {
+            String template =
+                IOUtils.toString( getClass().getClassLoader().getResource( templatePath ) );
+            if ( placeHolders == null || placeHolders.isEmpty() )
+            {
+                return template;
+            }
+            String result = template;
+            for ( Map.Entry<String, String> entry : placeHolders.entrySet() )
+            {
+                result =
+                    result.replaceAll( "@" + entry.getKey() + "@",
+                                       entry.getValue() );
+            }
+            return result;
+        }
+        catch ( IOException e )
+        {
+            throw new RuntimeException( "Can't load template of policy "
+                + templatePath );
+        }
+    }
+
     /**
      * @inheritDoc
      */
@@ -61,29 +94,15 @@ public class Ec2ActivitiesImpl
                                                         Queue queue,
                                                         Identity identity )
     {
-        String policyDocument;
-        try
-        {
-            String template =
-                IOUtils.toString( getClass().getClassLoader().getResource( "datamung/agent-instance-policy.json" ) );
-            policyDocument = template.replaceAll( "@queueArn@", queue.getArn() );
-            policyDocument = StringUtils.remove( policyDocument, '\n' );
-            policyDocument = StringUtils.remove( policyDocument, '\r' );
-        }
-        catch ( IOException e )
-        {
-            throw new RuntimeException(
-                                        "Can't read template of instance profile policy" );
-        }
+        // Create role if necessary
         String roleName = "role-" + profileName;
-        LOG.info( "Creating role " + roleName + " with policy "
-            + policyDocument );
-
+        boolean roleExisted = false;
         String rolePath;
         try
         {
             CreateRoleResult role =
-                iam.createRole( ActivityUtils.decorate( new CreateRoleRequest().withRoleName( roleName ).withAssumeRolePolicyDocument( policyDocument ),
+                iam.createRole( ActivityUtils.decorate( new CreateRoleRequest().withRoleName( roleName ).withAssumeRolePolicyDocument( fetchPolicy( "datamung/agent-assume-policy.json",
+                                                                                                                                                    null ) ),
                                                         identity ) );
             rolePath = role.getRole().getPath();
         }
@@ -93,17 +112,51 @@ public class Ec2ActivitiesImpl
             rolePath =
                 iam.getRole( ActivityUtils.decorate( new GetRoleRequest().withRoleName( roleName ),
                                                      identity ) ).getRole().getPath();
+            roleExisted = true;
         }
 
+        // Attach policy to role if necessary
+        String policyName = "role-policy-" + profileName;
+        boolean policyRequired = true;
+        if ( roleExisted )
+        {
+            try
+            {
+                iam.getRolePolicy( new GetRolePolicyRequest().withPolicyName( policyName ).withRoleName( roleName ) );
+                policyRequired = false;
+            }
+            catch ( NoSuchEntityException e )
+            {
+            }
+        }
+        if ( policyRequired )
+        {
+            Map<String, String> params = new HashMap<String, String>();
+            params.put( "QUEUE_ARN", queue.getArn() );
+            String policyDocument =
+                fetchPolicy( "datamung/agent-instance-policy.json", params );
+            iam.putRolePolicy( new PutRolePolicyRequest().withRoleName( roleName ).withPolicyName( policyName ).withPolicyDocument( policyDocument ) );
+        }
+
+        // Create instance profile and associate role if necessary
+        boolean roleAssociationRequired = true;
         try
         {
-
             iam.createInstanceProfile( ActivityUtils.decorate( new CreateInstanceProfileRequest().withInstanceProfileName( profileName ).withPath( rolePath ),
                                                                identity ) );
         }
         catch ( EntityAlreadyExistsException e )
         {
             LOG.info( "Instance profile " + profileName + " already exists!" );
+            roleAssociationRequired =
+                iam.getInstanceProfile( ActivityUtils.decorate( new GetInstanceProfileRequest().withInstanceProfileName( profileName ),
+                                                                identity ) ).getInstanceProfile().getRoles().isEmpty();
+        }
+        if ( roleAssociationRequired )
+        {
+            iam.addRoleToInstanceProfile( ActivityUtils.decorate( new AddRoleToInstanceProfileRequest().withInstanceProfileName( profileName ).withRoleName( "role-"
+                                                                                                                                                                 + profileName ),
+                                                                  identity ) );
         }
         InstanceProfile result = new InstanceProfile();
         result.setName( profileName );
@@ -183,9 +236,7 @@ public class Ec2ActivitiesImpl
         RunInstancesRequest request = new RunInstancesRequest();
         if ( options.getProfile() != null )
         {
-            // request.setIamInstanceProfile( new
-            // IamInstanceProfileSpecification().withName(
-            // options.getProfile().getName() ) );
+            request.setIamInstanceProfile( new IamInstanceProfileSpecification().withName( options.getProfile().getName() ) );
         }
         if ( options.getNetwork() != null
             && options.getNetwork().getVpcId() != null )
@@ -194,11 +245,10 @@ public class Ec2ActivitiesImpl
         }
         if ( options.getUserData() != null )
         {
-            request.setUserData( options.getUserData() );
+            request.setUserData( Base64.encodeBase64URLSafeString( options.getUserData().getBytes() ) );
         }
-        request.withMinCount( 1 ).withMaxCount( 1 ).withImageId( "ami-22dda04b" ).withInstanceType( InstanceType.T1Micro );
-        // request.setKernelId( "aki-b6aa75df" );
-        request.setKeyName( "timecrook" );
+        request.withMinCount( 1 ).withMaxCount( 1 ).withImageId( "ami-72aed21b" ).withInstanceType( InstanceType.T1Micro );
+        request.setKeyName( options.getKeyPairName() );
         RunInstancesResult result =
             ec2.runInstances( ActivityUtils.decorate( request, identity ) );
         return result.getReservation().getInstances().get( 0 ).getInstanceId();

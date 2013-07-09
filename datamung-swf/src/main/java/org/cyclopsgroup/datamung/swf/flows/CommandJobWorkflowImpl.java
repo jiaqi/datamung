@@ -49,6 +49,12 @@ public class CommandJobWorkflowImpl
     private final SqsActivitiesClient sqsActivities =
         new SqsActivitiesClientImpl();
 
+    @Asynchronous
+    private Promise<Void> timer( int seconds, Promise<?>... waitFor )
+    {
+        return contextProvider.getDecisionContext().getWorkflowClock().createTimer( seconds );
+    }
+
     /**
      * @inheritDoc
      */
@@ -60,6 +66,31 @@ public class CommandJobWorkflowImpl
             contextProvider.getDecisionContext().getWorkflowContext().getWorkflowExecution().getWorkflowId();
         new TryFinally()
         {
+            @Override
+            protected void doTry()
+            {
+                Promise<Queue> queue =
+                    sqsActivities.createQueue( "dmq-" + workflowId,
+                                               request.getJob().getIdentity() );
+                Promise<Void> set = setQueue( queue );
+                Promise<InstanceProfile> profile =
+                    ec2Activities.createInstanceProfileForSqs( Promise.asPromise( "dmip-"
+                                                                   + workflowId ),
+                                                               queue,
+                                                               Promise.asPromise( request.getJob().getIdentity() ),
+                                                               set );
+                set = setInstanceProfile( profile );
+                Promise<String> userData =
+                    controlActivities.createJobWorkerUserData( queue );
+
+                // It takes a few seconds before instance profile becomes
+                // available. Unfortunately, there's no deterministic way to
+                // know when it is
+                Promise<String> workerId =
+                    runInstanceAndExecute( profile, userData, timer( 10, set ) );
+                setWorkerId( workerId );
+            }
+
             @Override
             protected void doFinally()
             {
@@ -83,28 +114,6 @@ public class CommandJobWorkflowImpl
                                                request.getJob().getIdentity(),
                                                done );
                 }
-            }
-
-            @Override
-            protected void doTry()
-            {
-                Promise<Queue> queue =
-                    sqsActivities.createQueue( "dmq-" + workflowId,
-                                               request.getJob().getIdentity() );
-                Promise<Void> set = setQueue( queue );
-                Promise<InstanceProfile> profile =
-                    ec2Activities.createInstanceProfileForSqs( Promise.asPromise( "dmip-"
-                                                                   + workflowId ),
-                                                               queue,
-                                                               Promise.asPromise( request.getJob().getIdentity() ),
-                                                               set );
-                set = setInstanceProfile( profile );
-                // instanceProfile = profile;
-                Promise<String> userData =
-                    controlActivities.createJobWorkerUserData( queue );
-                Promise<String> workerId =
-                    runInstanceAndExecute( profile, userData, set );
-                setWorkerId( workerId );
             }
         };
     }
@@ -189,6 +198,6 @@ public class CommandJobWorkflowImpl
         waitWorker.setExpireOn( waitWorker.getWaitIntervalSeconds()
             * 4000L
             + contextProvider.getDecisionContext().getWorkflowClock().currentTimeMillis() );
-        return checkWaitWorkflow.getClient( "workerId" + "-wait" ).checkAndWait( waitWorker );
+        return checkWaitWorkflow.getClient( "dmwf-" + workerId.get() + "-wait" ).checkAndWait( waitWorker );
     }
 }

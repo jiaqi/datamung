@@ -17,14 +17,15 @@ import org.cyclopsgroup.datamung.swf.types.Wrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.simpleworkflow.flow.JsonDataConverter;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.CreateQueueRequest;
 import com.amazonaws.services.sqs.model.CreateQueueResult;
+import com.amazonaws.services.sqs.model.DeleteMessageRequest;
 import com.amazonaws.services.sqs.model.DeleteQueueRequest;
 import com.amazonaws.services.sqs.model.GetQueueAttributesRequest;
 import com.amazonaws.services.sqs.model.GetQueueAttributesResult;
@@ -117,11 +118,15 @@ public class SqsActivitiesImpl
                     throw new RuntimeException( "Communication failure: "
                         + e.getMessage(), e );
                 }
-                catch ( AmazonServiceException e )
+                catch ( AmazonS3Exception e )
                 {
-                    LOG.warn( "Got service exception while getting job result for job "
-                                  + job, e );
-                    return Wrapper.of( null );
+                    if ( e.getStatusCode() == 404 )
+                    {
+                        LOG.info( "Received 404: " + e.getMessage()
+                            + ", return NULL" );
+                        return Wrapper.of( null );
+                    }
+                    throw e;
                 }
             case SQS:
                 SqsJobResultHandler sqsHandler =
@@ -137,6 +142,9 @@ public class SqsActivitiesImpl
                 JobResult result =
                     converter.fromData( msgs.getMessages().get( 0 ).getBody(),
                                         JobResult.class );
+                sqs.deleteMessage( new DeleteMessageRequest(
+                                                             sqsHandler.getResultQueueUrl(),
+                                                             msgs.getMessages().get( 0 ).getReceiptHandle() ) );
                 return Wrapper.of( result );
             default:
                 throw new AssertionError( "Unexpected handler type "

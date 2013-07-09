@@ -15,7 +15,7 @@ public class Job
 
     private JobResultHandler resultHandler;
 
-    private int timeoutSeconds = 300;
+    private int timeoutSeconds = 900;
 
     public List<String> getArguments()
     {

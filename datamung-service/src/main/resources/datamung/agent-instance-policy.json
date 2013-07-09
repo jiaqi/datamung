@@ -1,11 +1,13 @@
-{
+{ 
   "Statement": [
     {
-      "Action":"sts:AssumeRole",
-      "Effect":"Allow",
-      "Principal": {
-        "Service":["ec2.amazonaws.com"]
-      }
+      "Action": [
+        "sqs:ReceiveMessage", 
+        "sqs:DeleteMessage", 
+        "sqs:DeleteMessageBatch"
+      ],
+      "Effect": "Allow",
+      "Resource": ["@QUEUE_ARN@"]
     }
   ]
 }
