@@ -13,6 +13,8 @@ public class RunJobRequest
 
     private Job job;
 
+    private String keyPairName;
+
     private InstanceNetwork network;
 
     @XmlElement
@@ -25,6 +27,12 @@ public class RunJobRequest
     public Job getJob()
     {
         return job;
+    }
+
+    @XmlElement
+    public String getKeyPairName()
+    {
+        return keyPairName;
     }
 
     @XmlElement
@@ -41,6 +49,11 @@ public class RunJobRequest
     public void setJob( Job job )
     {
         this.job = job;
+    }
+
+    public void setKeyPairName( String keyPairName )
+    {
+        this.keyPairName = keyPairName;
     }
 
     public void setNetwork( InstanceNetwork network )

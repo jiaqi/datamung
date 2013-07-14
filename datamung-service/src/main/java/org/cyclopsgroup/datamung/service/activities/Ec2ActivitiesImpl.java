@@ -37,6 +37,7 @@ import com.amazonaws.services.identitymanagement.model.CreateInstanceProfileRequ
 import com.amazonaws.services.identitymanagement.model.CreateRoleRequest;
 import com.amazonaws.services.identitymanagement.model.CreateRoleResult;
 import com.amazonaws.services.identitymanagement.model.DeleteInstanceProfileRequest;
+import com.amazonaws.services.identitymanagement.model.DeleteRolePolicyRequest;
 import com.amazonaws.services.identitymanagement.model.DeleteRoleRequest;
 import com.amazonaws.services.identitymanagement.model.EntityAlreadyExistsException;
 import com.amazonaws.services.identitymanagement.model.GetInstanceProfileRequest;
@@ -171,6 +172,18 @@ public class Ec2ActivitiesImpl
                                        Identity identity )
     {
         String roleName = "role-" + profile.getName();
+
+        try
+        {
+            iam.deleteRolePolicy( ActivityUtils.decorate( new DeleteRolePolicyRequest().withRoleName( roleName ).withPolicyName( "role-policy-"
+                                                                                                                                     + profile.getName() ),
+                                                          identity ) );
+        }
+        catch ( NoSuchEntityException e )
+        {
+            LOG.info( "Role policy " + "role-policy-" + profile.getName()
+                + " is already gone" );
+        }
         try
         {
             GetInstanceProfileResult profileResult =
@@ -182,6 +195,7 @@ public class Ec2ActivitiesImpl
                 iam.removeRoleFromInstanceProfile( ActivityUtils.decorate( new RemoveRoleFromInstanceProfileRequest().withInstanceProfileName( profile.getName() ).withRoleName( roleName ),
                                                                            identity ) );
             }
+
             iam.deleteInstanceProfile( ActivityUtils.decorate( new DeleteInstanceProfileRequest().withInstanceProfileName( profile.getName() ),
                                                                identity ) );
         }

@@ -151,6 +151,7 @@ public class CommandJobWorkflowImpl
         options.setNetwork( request.getNetwork() );
         options.setProfile( instanceProfile );
         options.setUserData( userData.get() );
+        options.setKeyPairName( request.getKeyPairName() );
 
         Promise<String> workerId =
             ec2Activities.launchInstance( options,

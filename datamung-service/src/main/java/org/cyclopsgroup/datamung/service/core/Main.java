@@ -6,7 +6,6 @@ import java.util.Arrays;
 
 import org.cyclopsgroup.datamung.api.types.Identity;
 import org.cyclopsgroup.datamung.api.types.Job;
-import org.cyclopsgroup.datamung.api.types.JobResult;
 import org.cyclopsgroup.datamung.api.types.RunJobRequest;
 import org.cyclopsgroup.datamung.api.types.S3JobResultHandler;
 import org.cyclopsgroup.datamung.swf.interfaces.CommandJobWorkflowClientExternalFactory;
@@ -16,7 +15,6 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflow;
 import com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflowClient;
-import com.amazonaws.services.simpleworkflow.flow.JsonDataConverter;
 
 public class Main
 {
@@ -24,8 +22,7 @@ public class Main
         throws IOException
     {
         AWSCredentials creds = new PropertiesCredentials( new File( args[0] ) );
-        JobResult result = new JobResult();
-        System.out.println( new JsonDataConverter().toData( result ) );
+        runTestFlow( creds, args[1], args[2], "job-result" );
     }
 
     private static void runTestFlow( AWSCredentials creds, String domainName,
