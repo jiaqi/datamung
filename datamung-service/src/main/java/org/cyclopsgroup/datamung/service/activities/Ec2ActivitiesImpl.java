@@ -1,6 +1,5 @@
 package org.cyclopsgroup.datamung.service.activities;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,10 +17,7 @@ import org.cyclopsgroup.datamung.swf.types.WorkerInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.IamInstanceProfileSpecification;
@@ -252,14 +248,17 @@ public class Ec2ActivitiesImpl
         {
             request.setIamInstanceProfile( new IamInstanceProfileSpecification().withName( options.getProfile().getName() ) );
         }
-        if ( options.getNetwork() != null
-            && options.getNetwork().getVpcId() != null )
+        if ( options.getNetwork() != null )
         {
-            request.setSubnetId( options.getNetwork().getSubnetId() );
+            if ( options.getNetwork().getSubnetId() != null )
+            {
+                request.setSubnetId( options.getNetwork().getSubnetId() );
+            }
+            request.setSecurityGroupIds( options.getNetwork().getSecurityGroupIds() );
         }
         if ( options.getUserData() != null )
         {
-            request.setUserData( Base64.encodeBase64URLSafeString( options.getUserData().getBytes() ) );
+            request.setUserData( Base64.encodeBase64String( options.getUserData().getBytes() ) );
         }
         request.withMinCount( 1 ).withMaxCount( 1 ).withImageId( "ami-72aed21b" ).withInstanceType( InstanceType.T1Micro );
         request.setKeyName( options.getKeyPairName() );
@@ -276,24 +275,5 @@ public class Ec2ActivitiesImpl
     {
         ec2.terminateInstances( ActivityUtils.decorate( new TerminateInstancesRequest().withInstanceIds( instanceId ),
                                                         identity ) );
-    }
-
-    public static void main( String[] args )
-        throws IOException
-    {
-        AWSCredentials creds =
-            new PropertiesCredentials(
-                                       new File(
-                                                 "/Users/jguo/Dropbox/laogong/grpn/jguo-grpn-aws-creds.properties" ) );
-        Ec2ActivitiesImpl impl = new Ec2ActivitiesImpl();
-        impl.ec2 = new AmazonEC2Client( creds );
-
-        Identity id =
-            Identity.of( creds.getAWSAccessKeyId(), creds.getAWSSecretKey(),
-                         null );
-        CreateInstanceOptions options = new CreateInstanceOptions();
-        options.setProfile( InstanceProfile.of( "dmip-test" ) );
-        options.setUserData( "blah blah" );
-        System.out.println( impl.launchInstance( options, id ) );
     }
 }

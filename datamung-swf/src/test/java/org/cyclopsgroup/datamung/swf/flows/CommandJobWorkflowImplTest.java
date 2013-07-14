@@ -1,5 +1,7 @@
 package org.cyclopsgroup.datamung.swf.flows;
 
+import java.util.Arrays;
+
 import org.cyclopsgroup.datamung.api.types.Identity;
 import org.cyclopsgroup.datamung.api.types.InstanceNetwork;
 import org.cyclopsgroup.datamung.api.types.Job;
@@ -58,7 +60,8 @@ public class CommandJobWorkflowImplTest
     {
         final Identity identity = Identity.of( "a", "b", "c" );
         InstanceNetwork network =
-            InstanceNetwork.ofVpc( "test-subset", "test-vpc" );
+            InstanceNetwork.ofVpc( "test-subset", "test-vpc",
+                                   Arrays.asList( "test-group" ) );
 
         RunJobRequest request = new RunJobRequest();
         request.setNetwork( network );
