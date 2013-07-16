@@ -56,6 +56,13 @@ public class ExportSnapshotWorkflowImpl
         {
 
             @Override
+            protected void doFinally()
+            {
+                rdsActivities.terminateInstance( databaseName,
+                                                 Promise.asPromise( request.getIdentity() ) );
+            }
+
+            @Override
             protected void doTry()
             {
                 Promise<Void> sourceAvailable =
@@ -65,13 +72,6 @@ public class ExportSnapshotWorkflowImpl
                                                     Promise.asPromise( request.getIdentity() ),
                                                     sourceAvailable );
                 dumpDatabase( source );
-            }
-
-            @Override
-            protected void doFinally()
-            {
-                rdsActivities.terminateInstance( databaseName,
-                                                 Promise.asPromise( request.getIdentity() ) );
             }
         };
     }

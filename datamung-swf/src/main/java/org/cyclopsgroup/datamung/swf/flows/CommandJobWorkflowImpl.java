@@ -1,7 +1,8 @@
 package org.cyclopsgroup.datamung.swf.flows;
 
-import org.cyclopsgroup.datamung.api.types.JobResult;
 import org.cyclopsgroup.datamung.api.types.RunJobRequest;
+import org.cyclopsgroup.datamung.swf.interfaces.AgentActivitiesClient;
+import org.cyclopsgroup.datamung.swf.interfaces.AgentActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.CheckWaitWorkflowClientFactory;
 import org.cyclopsgroup.datamung.swf.interfaces.CheckWaitWorkflowClientFactoryImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.CommandJobWorkflow;
@@ -9,13 +10,8 @@ import org.cyclopsgroup.datamung.swf.interfaces.ControlActivitiesClient;
 import org.cyclopsgroup.datamung.swf.interfaces.ControlActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.Ec2ActivitiesClient;
 import org.cyclopsgroup.datamung.swf.interfaces.Ec2ActivitiesClientImpl;
-import org.cyclopsgroup.datamung.swf.interfaces.SqsActivitiesClient;
-import org.cyclopsgroup.datamung.swf.interfaces.SqsActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.types.CheckAndWait;
 import org.cyclopsgroup.datamung.swf.types.CreateInstanceOptions;
-import org.cyclopsgroup.datamung.swf.types.InstanceProfile;
-import org.cyclopsgroup.datamung.swf.types.Queue;
-import org.cyclopsgroup.datamung.swf.types.Wrapper;
 
 import com.amazonaws.services.simpleworkflow.flow.DecisionContextProvider;
 import com.amazonaws.services.simpleworkflow.flow.DecisionContextProviderImpl;
@@ -26,6 +22,9 @@ import com.amazonaws.services.simpleworkflow.flow.core.TryFinally;
 public class CommandJobWorkflowImpl
     implements CommandJobWorkflow
 {
+    private final AgentActivitiesClient agentActivities =
+        new AgentActivitiesClientImpl();
+
     private final CheckWaitWorkflowClientFactory checkWaitWorkflow =
         new CheckWaitWorkflowClientFactoryImpl();
 
@@ -38,22 +37,9 @@ public class CommandJobWorkflowImpl
     private final Ec2ActivitiesClient ec2Activities =
         new Ec2ActivitiesClientImpl();
 
-    private InstanceProfile instanceProfile;
-
-    private Queue queue;
-
     private RunJobRequest request;
 
     private String workerId;
-
-    private final SqsActivitiesClient sqsActivities =
-        new SqsActivitiesClientImpl();
-
-    @Asynchronous
-    private Promise<Void> timer( int seconds, Promise<?>... waitFor )
-    {
-        return contextProvider.getDecisionContext().getWorkflowClock().createTimer( seconds );
-    }
 
     /**
      * @inheritDoc
@@ -64,31 +50,34 @@ public class CommandJobWorkflowImpl
         this.request = request;
         final String workflowId =
             contextProvider.getDecisionContext().getWorkflowContext().getWorkflowExecution().getWorkflowId();
+        final String masterRoleName = "dm-master-role-" + workflowId;
+        final String agentProfileName = "dm-profile-" + workflowId;
         new TryFinally()
         {
             @Override
             protected void doTry()
             {
-                Promise<Queue> queue =
-                    sqsActivities.createQueue( "dmq-" + workflowId,
-                                               request.getJob().getIdentity() );
-                Promise<Void> set = setQueue( queue );
-                Promise<InstanceProfile> profile =
-                    ec2Activities.createInstanceProfileForSqs( Promise.asPromise( "dmip-"
-                                                                   + workflowId ),
-                                                               queue,
-                                                               Promise.asPromise( request.getJob().getIdentity() ),
-                                                               set );
-                set = setInstanceProfile( profile );
+                String taskListName = "dm-agent-tl-" + workflowId;
+                Promise<String> masterRoleArn =
+                    controlActivities.createAgentControllerRole( masterRoleName,
+                                                                 taskListName );
+
+                Promise<Void> profileCreated =
+                    ec2Activities.createAgentInstanceProfile( Promise.asPromise( agentProfileName ),
+                                                              masterRoleArn,
+                                                              Promise.asPromise( request.getJob().getIdentity() ) );
                 Promise<String> userData =
-                    controlActivities.createJobWorkerUserData( queue );
+                    controlActivities.createAgentUserData( taskListName,
+                                                           masterRoleArn );
 
                 // It takes a few seconds before instance profile becomes
                 // available. Unfortunately, there's no deterministic way to
                 // know when it is
                 Promise<String> workerId =
-                    runInstanceAndExecute( profile, userData, timer( 10, set ) );
+                    runInstanceAndExecute( agentProfileName, userData,
+                                           timer( 10, profileCreated ) );
                 setWorkerId( workerId );
+                agentActivities.runJob( request.getJob(), workerId );
             }
 
             @Override
@@ -101,79 +90,36 @@ public class CommandJobWorkflowImpl
                         ec2Activities.terminateInstance( workerId,
                                                          request.getJob().getIdentity() );
                 }
-                if ( instanceProfile != null )
-                {
-                    done =
-                        ec2Activities.deleteInstanceProfile( instanceProfile,
-                                                             request.getJob().getIdentity(),
-                                                             done );
-                }
-                if ( queue != null )
-                {
-                    sqsActivities.deleteQueue( queue.getQueueUrl(),
-                                               request.getJob().getIdentity(),
-                                               done );
-                }
+                done =
+                    ec2Activities.deleteInstanceProfile( agentProfileName,
+                                                         request.getJob().getIdentity(),
+                                                         done );
+                controlActivities.deleteRole( masterRoleName, done );
             }
         };
     }
 
     @Asynchronous
-    private Promise<Void> returnJobResult( Promise<Wrapper<JobResult>> result,
-                                           Promise<Long> jobStart )
-    {
-        if ( result.get().getObject() != null )
-        {
-            return Promise.Void();
-        }
-        if ( contextProvider.getDecisionContext().getWorkflowClock().currentTimeMillis()
-            - jobStart.get() > request.getJob().getTimeoutSeconds() * 1000L )
-        {
-            // Job timed out
-            return Promise.Void();
-        }
-        Promise<Void> nextRun =
-            contextProvider.getDecisionContext().getWorkflowClock().createTimer( request.getJob().getTimeoutSeconds() / 10 );
-        return returnJobResult( sqsActivities.pollJobResult( request.getJob(),
-                                                             nextRun ),
-                                jobStart );
-    }
-
-    @Asynchronous
-    private Promise<String> runInstanceAndExecute( Promise<InstanceProfile> profile,
+    private Promise<String> runInstanceAndExecute( String instanceProfile,
                                                    Promise<String> userData,
                                                    Promise<?>... waitFor )
     {
-        Promise<Void> sent =
-            sqsActivities.sendJobToQueue( queue, request.getJob() );
-
         final CreateInstanceOptions options = new CreateInstanceOptions();
         options.setNetwork( request.getNetwork() );
-        options.setProfile( instanceProfile );
+        options.setInstanceProfileName( instanceProfile );
         options.setUserData( userData.get() );
         options.setKeyPairName( request.getKeyPairName() );
 
         Promise<String> workerId =
             ec2Activities.launchInstance( options,
                                           request.getJob().getIdentity() );
-        Promise<Void> ready = waitUntilWorkerReady( workerId );
-        returnJobResult( sqsActivities.pollJobResult( request.getJob(), sent,
-                                                      ready ), timestamp( sent ) );
-        return workerId;
+        return and( workerId, waitUntilWorkerReady( workerId ) );
     }
 
     @Asynchronous
-    private Promise<Void> setInstanceProfile( Promise<InstanceProfile> profile )
+    private <T> Promise<T> and( Promise<T> result, Promise<?>... waitFor )
     {
-        this.instanceProfile = profile.get();
-        return Promise.Void();
-    }
-
-    @Asynchronous
-    private Promise<Void> setQueue( Promise<Queue> queue )
-    {
-        this.queue = queue.get();
-        return Promise.Void();
+        return result;
     }
 
     @Asynchronous
@@ -184,9 +130,9 @@ public class CommandJobWorkflowImpl
     }
 
     @Asynchronous
-    private Promise<Long> timestamp( Promise<?>... waitFor )
+    private Promise<Void> timer( int seconds, Promise<?>... waitFor )
     {
-        return Promise.asPromise( contextProvider.getDecisionContext().getWorkflowClock().currentTimeMillis() );
+        return contextProvider.getDecisionContext().getWorkflowClock().createTimer( seconds );
     }
 
     @Asynchronous

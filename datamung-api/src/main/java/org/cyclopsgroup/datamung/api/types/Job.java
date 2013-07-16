@@ -13,8 +13,6 @@ public class Job
 
     private Identity identity;
 
-    private JobResultHandler resultHandler;
-
     private int timeoutSeconds = 900;
 
     public List<String> getArguments()
@@ -30,11 +28,6 @@ public class Job
     public Identity getIdentity()
     {
         return identity;
-    }
-
-    public JobResultHandler getResultHandler()
-    {
-        return resultHandler;
     }
 
     public int getTimeoutSeconds()
@@ -55,11 +48,6 @@ public class Job
     public void setIdentity( Identity identity )
     {
         this.identity = identity;
-    }
-
-    public void setResultHandler( JobResultHandler resultHandler )
-    {
-        this.resultHandler = resultHandler;
     }
 
     public void setTimeoutSeconds( int timeoutSeconds )

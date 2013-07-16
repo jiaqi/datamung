@@ -15,6 +15,8 @@ public class JobResult
 
     private String runsOn;
 
+    private String stackTrace;
+
     private String standardOutput;
 
     private long started;
@@ -44,6 +46,11 @@ public class JobResult
     public String getRunsOn()
     {
         return runsOn;
+    }
+
+    public String getStackTrace()
+    {
+        return stackTrace;
     }
 
     public String getStandardOutput()
@@ -84,6 +91,11 @@ public class JobResult
     public void setRunsOn( String runsOn )
     {
         this.runsOn = runsOn;
+    }
+
+    public void setStackTrace( String stackTrace )
+    {
+        this.stackTrace = stackTrace;
     }
 
     public void setStandardOutput( String standardOutput )

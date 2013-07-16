@@ -8,7 +8,7 @@ public class CheckAndWait
 {
     public static enum Type
     {
-        SNAPSHOT_CREATION, DATABASE_CREATION, WORKER_LAUNCH;
+        DATABASE_CREATION, SNAPSHOT_CREATION, WORKER_LAUNCH;
     }
 
     private Type checkType;

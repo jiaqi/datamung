@@ -11,12 +11,6 @@ public abstract class AbstractWorkflowTestCase
 {
     Mockery context;
 
-    @Before
-    public void setUpMock()
-    {
-        context = new Mockery();
-    }
-
     @Rule
     public WorkflowTest workflowTest = new WorkflowTest();
 
@@ -24,5 +18,11 @@ public abstract class AbstractWorkflowTestCase
     public void assertMock()
     {
         context.assertIsSatisfied();
+    }
+
+    @Before
+    public void setUpMock()
+    {
+        context = new Mockery();
     }
 }

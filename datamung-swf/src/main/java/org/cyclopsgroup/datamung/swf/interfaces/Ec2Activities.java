@@ -2,8 +2,6 @@ package org.cyclopsgroup.datamung.swf.interfaces;
 
 import org.cyclopsgroup.datamung.api.types.Identity;
 import org.cyclopsgroup.datamung.swf.types.CreateInstanceOptions;
-import org.cyclopsgroup.datamung.swf.types.InstanceProfile;
-import org.cyclopsgroup.datamung.swf.types.Queue;
 import org.cyclopsgroup.datamung.swf.types.WorkerInstance;
 
 import com.amazonaws.services.simpleworkflow.flow.annotations.Activities;
@@ -15,11 +13,11 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.ExponentialRetry;
 public interface Ec2Activities
 {
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
-    InstanceProfile createInstanceProfileForSqs( String profileName,
-                                                 Queue queue, Identity identity );
+    void createAgentInstanceProfile( String profileName,
+                                     String controllerRoleArn, Identity identity );
 
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
-    void deleteInstanceProfile( InstanceProfile profile, Identity identity );
+    void deleteInstanceProfile( String profileName, Identity identity );
 
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
     WorkerInstance describeInstance( String instanceId, Identity identity );

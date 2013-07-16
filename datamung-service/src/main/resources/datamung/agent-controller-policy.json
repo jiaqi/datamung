@@ -1,0 +1,10 @@
+{
+   "Statement" : [ {
+      "Effect" : "Allow",
+      "Action" : "swf:*",
+      "Resource" : "arn:aws:swf:*:@CONTROLLER_ACCOUNT_ID@:/domain/@SWF_DOMAIN@",
+      "Condition" : {
+         "StringEquals" : { "swf:taskList.name" : "@TASK_LIST@" }
+      }
+   } ]
+} 

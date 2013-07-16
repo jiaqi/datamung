@@ -1,0 +1,16 @@
+{
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "@CLIENT_ACCOUNT_ID@"
+      },
+      "Action": "sts:AssumeRole",
+      "Condition": {
+        "StringEquals": {
+          "sts:ExternalId": "@CLIENT_EXTERNAL_ID@"
+        }
+      }
+    }
+  ]
+}

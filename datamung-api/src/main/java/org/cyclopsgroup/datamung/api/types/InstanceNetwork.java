@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
 
 import org.cyclopsgroup.kaufman.interfaces.BaseComparableBean;
@@ -36,6 +37,8 @@ public class InstanceNetwork
 
     private String vpcId;
 
+    @XmlElementWrapper
+    @XmlElement( name = "groupId" )
     public Set<String> getSecurityGroupIds()
     {
         return securityGroupIds;

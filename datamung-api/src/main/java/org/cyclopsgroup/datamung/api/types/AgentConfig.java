@@ -5,15 +5,15 @@ import org.cyclopsgroup.kaufman.interfaces.BaseComparableBean;
 public class AgentConfig
     extends BaseComparableBean
 {
-    private String jobQueueUrl;
+    private String workflowTaskList;
 
-    public String getJobQueueUrl()
+    public String getWorkflowTaskList()
     {
-        return jobQueueUrl;
+        return workflowTaskList;
     }
 
-    public void setJobQueueUrl( String jobQueueUrl )
+    public void setWorkflowTaskList( String workflowTaskList )
     {
-        this.jobQueueUrl = jobQueueUrl;
+        this.workflowTaskList = workflowTaskList;
     }
 }

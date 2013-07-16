@@ -25,14 +25,14 @@ public class ExportInstanceWorkflowImpl
     private final DecisionContextProvider contextProvider =
         new DecisionContextProviderImpl();
 
+    private final ControlActivitiesClient controlActivities =
+        new ControlActivitiesClientImpl();
+
     private final ExportSnapshotWorkflowClientFactory exportSnapshotFlowFactory =
         new ExportSnapshotWorkflowClientFactoryImpl();
 
     private final RdsActivitiesClient rdsActivities =
         new RdsActivitiesClientImpl();
-
-    private final ControlActivitiesClient controlActivities =
-        new ControlActivitiesClientImpl();
 
     private ExportInstanceRequest request;
 
@@ -66,6 +66,14 @@ public class ExportInstanceWorkflowImpl
         new TryFinally( done )
         {
             @Override
+            protected void doFinally()
+                throws Throwable
+            {
+                rdsActivities.deleteSnapshot( snapshotName,
+                                              Promise.asPromise( request.getIdentity() ) );
+            }
+
+            @Override
             protected void doTry()
             {
                 Promise<Void> done = waitUntilSnapshotAvailable( snapshotName );
@@ -74,14 +82,6 @@ public class ExportInstanceWorkflowImpl
                 exportSnapshotFlowFactory.getClient( "snapshot-export-"
                                                          + snapshotName.get() ).export( snapshotRequest,
                                                                                         done );
-            }
-
-            @Override
-            protected void doFinally()
-                throws Throwable
-            {
-                rdsActivities.deleteSnapshot( snapshotName,
-                                              Promise.asPromise( request.getIdentity() ) );
             }
         };
     }

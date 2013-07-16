@@ -6,13 +6,18 @@ import org.cyclopsgroup.kaufman.interfaces.BaseComparableBean;
 public class CreateInstanceOptions
     extends BaseComparableBean
 {
+    private String instanceProfileName;
+
     private String keyPairName;
 
     private InstanceNetwork network;
 
-    private InstanceProfile profile;
-
     private String userData;
+
+    public String getInstanceProfileName()
+    {
+        return instanceProfileName;
+    }
 
     public String getKeyPairName()
     {
@@ -24,14 +29,14 @@ public class CreateInstanceOptions
         return network;
     }
 
-    public InstanceProfile getProfile()
-    {
-        return profile;
-    }
-
     public String getUserData()
     {
         return userData;
+    }
+
+    public void setInstanceProfileName( String instanceProfileName )
+    {
+        this.instanceProfileName = instanceProfileName;
     }
 
     public void setKeyPairName( String keyPairName )
@@ -42,11 +47,6 @@ public class CreateInstanceOptions
     public void setNetwork( InstanceNetwork network )
     {
         this.network = network;
-    }
-
-    public void setProfile( InstanceProfile profile )
-    {
-        this.profile = profile;
     }
 
     public void setUserData( String userData )
