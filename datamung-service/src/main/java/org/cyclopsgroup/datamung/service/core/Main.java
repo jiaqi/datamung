@@ -33,13 +33,12 @@ public class Main
         RunJobRequest request = new RunJobRequest();
 
         Job job = new Job();
-        job.setCommand( "echo" );
-        job.setArguments( Arrays.asList( "1", "2", "3", "4", "5" ) );
+        job.setCommand( "echo 1 2 3 4 5 6" );
         job.setIdentity( Identity.of( creds.getAWSAccessKeyId(),
                                       creds.getAWSSecretKey(), null ) );
         request.setJob( job );
-        request.setKeyPairName( "timecrook" );
-        request.setNetwork( InstanceNetwork.ofPublic( Arrays.asList( "sg-56e9453d" ) ) );
+        request.setKeyPairName( "robokitten" );
+        request.setNetwork( InstanceNetwork.ofPublic( Arrays.asList( "sg-33efd25a" ) ) );
 
         CommandJobWorkflowClientExternalFactory fac =
             new CommandJobWorkflowClientExternalFactoryImpl( swf,
