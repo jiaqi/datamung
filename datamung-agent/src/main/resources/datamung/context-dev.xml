@@ -6,7 +6,10 @@
        http://www.springframework.org/schema/beans/spring-beans.xsd">
     <bean id="awsCredentials"
         class="com.amazonaws.auth.EnvironmentVariableCredentialsProvider" />
-    <bean id="agentConfig" class="org.cyclopsgroup.datamung.agent.AgentConfig">
-        <property name="jobQueueUrl" value="${queueUrl}" />
+    <bean id="agentConfig" class="org.cyclopsgroup.datamung.api.types.AgentConfig">
+        <property name="workflowTaskList" value="dm-agent-tl-test" />
+        <property name="workflowDomain" value="datamung-test" />
+        <property name="controllerRoleArn"
+            value="arn:aws:iam::943220853308:role/datamung-agent-test" />
     </bean>
 </beans>

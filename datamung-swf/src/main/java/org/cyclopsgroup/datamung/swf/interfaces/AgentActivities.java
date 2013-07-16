@@ -1,7 +1,5 @@
 package org.cyclopsgroup.datamung.swf.interfaces;
 
-import java.io.IOException;
-
 import org.cyclopsgroup.datamung.api.types.Job;
 import org.cyclopsgroup.datamung.api.types.JobResult;
 
@@ -14,6 +12,5 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.ExponentialRetry;
 public interface AgentActivities
 {
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
-    JobResult runJob( Job job )
-        throws IOException;
+    JobResult runJob( Job job );
 }

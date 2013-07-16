@@ -13,6 +13,7 @@ import org.cyclopsgroup.datamung.swf.interfaces.Ec2ActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.types.CheckAndWait;
 import org.cyclopsgroup.datamung.swf.types.CreateInstanceOptions;
 
+import com.amazonaws.services.simpleworkflow.flow.ActivitySchedulingOptions;
 import com.amazonaws.services.simpleworkflow.flow.DecisionContextProvider;
 import com.amazonaws.services.simpleworkflow.flow.DecisionContextProviderImpl;
 import com.amazonaws.services.simpleworkflow.flow.annotations.Asynchronous;
@@ -60,15 +61,16 @@ public class CommandJobWorkflowImpl
                 String taskListName = "dm-agent-tl-" + workflowId;
                 Promise<String> masterRoleArn =
                     controlActivities.createAgentControllerRole( masterRoleName,
-                                                                 taskListName );
+                                                                 taskListName,
+                                                                 request.getJob().getIdentity() );
 
                 Promise<Void> profileCreated =
                     ec2Activities.createAgentInstanceProfile( Promise.asPromise( agentProfileName ),
                                                               masterRoleArn,
                                                               Promise.asPromise( request.getJob().getIdentity() ) );
                 Promise<String> userData =
-                    controlActivities.createAgentUserData( taskListName,
-                                                           masterRoleArn );
+                    controlActivities.createAgentUserData( masterRoleArn,
+                                                           Promise.asPromise( taskListName ) );
 
                 // It takes a few seconds before instance profile becomes
                 // available. Unfortunately, there's no deterministic way to
@@ -77,7 +79,9 @@ public class CommandJobWorkflowImpl
                     runInstanceAndExecute( agentProfileName, userData,
                                            timer( 10, profileCreated ) );
                 setWorkerId( workerId );
-                agentActivities.runJob( request.getJob(), workerId );
+                agentActivities.runJob( request.getJob(),
+                                        new ActivitySchedulingOptions().withTaskList( taskListName ),
+                                        workerId );
             }
 
             @Override

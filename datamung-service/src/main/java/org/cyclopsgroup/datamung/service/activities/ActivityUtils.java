@@ -30,6 +30,61 @@ class ActivityUtils
 {
     private static final Log LOG = LogFactory.getLog( Ec2ActivitiesImpl.class );
 
+    static Role createRole( String roleName, AmazonIdentityManagement iam,
+                            String policyTemplate,
+                            Map<String, String> policyVariables,
+                            String trustTemplate,
+                            Map<String, String> trustVariables,
+                            Identity identity )
+    {
+        boolean roleExisted = false;
+        String assumeRolePolicy = mergeDocument( trustTemplate, trustVariables );
+        LOG.info( "Assume role policy will be: " + assumeRolePolicy );
+
+        Role r;
+        try
+        {
+            LOG.info( "Creating new role " + roleName );
+            CreateRoleResult role =
+                iam.createRole( decorate( new CreateRoleRequest().withRoleName( roleName ).withAssumeRolePolicyDocument( assumeRolePolicy ),
+                                          identity ) );
+            r = role.getRole();
+        }
+        catch ( EntityAlreadyExistsException e )
+        {
+            LOG.info( "Role already exists! " + roleName + ", ignore" );
+            r =
+                iam.getRole( decorate( new GetRoleRequest().withRoleName( roleName ),
+                                       identity ) ).getRole();
+            roleExisted = true;
+        }
+
+        String policyName = roleName + "-policy";
+        boolean policyRequired = true;
+        if ( roleExisted )
+        {
+            try
+            {
+                iam.getRolePolicy( decorate( new GetRolePolicyRequest().withPolicyName( policyName ).withRoleName( roleName ),
+                                             identity ) );
+                policyRequired = false;
+                LOG.info( "Policy " + policyName + " already exists, exit" );
+            }
+            catch ( NoSuchEntityException e )
+            {
+            }
+        }
+        if ( policyRequired )
+        {
+            String rolePolicy = mergeDocument( policyTemplate, policyVariables );
+            LOG.info( "Attaching policy " + policyName + " with content "
+                + rolePolicy + " to role " + roleName );
+            iam.putRolePolicy( decorate( new PutRolePolicyRequest().withRoleName( roleName ).withPolicyName( policyName ).withPolicyDocument( rolePolicy ),
+                                         identity ) );
+        }
+        return r;
+    }
+
     static <T extends AmazonWebServiceRequest> T decorate( T request,
                                                            Identity id )
     {
@@ -89,18 +144,24 @@ class ActivityUtils
         }
     }
 
+    static String getAccountId( AmazonIdentityManagement iam, Identity identity )
+    {
+        String userArn =
+            iam.getUser( decorate( new GetUserRequest(), identity ) ).getUser().getArn();
+        return Pattern.compile( "^arn:aws:iam::(\\d+):user/.+$" ).matcher( userArn ).group( 1 );
+    }
+
     private static String mergeDocument( String template,
                                          Map<String, String> variables )
     {
         try
         {
-            String content =
+            String result =
                 IOUtils.toString( ActivityUtils.class.getClassLoader().getResource( template ) );
             if ( variables == null || variables.isEmpty() )
             {
-                return template;
+                return result;
             }
-            String result = template;
             for ( Map.Entry<String, String> entry : variables.entrySet() )
             {
                 result =
@@ -114,61 +175,5 @@ class ActivityUtils
             throw new RuntimeException( "Can't load template of policy "
                 + template );
         }
-    }
-
-    static Role createRole( String roleName, AmazonIdentityManagement iam,
-                            String policyTemplate,
-                            Map<String, String> policyVariables,
-                            String trustTemplate,
-                            Map<String, String> trustVariables,
-                            Identity identity )
-    {
-        boolean roleExisted = false;
-        Role r;
-        try
-        {
-            CreateRoleResult role =
-                iam.createRole( decorate( new CreateRoleRequest().withRoleName( roleName ).withAssumeRolePolicyDocument( mergeDocument( trustTemplate,
-                                                                                                                                        trustVariables ) ),
-                                          identity ) );
-            r = role.getRole();
-        }
-        catch ( EntityAlreadyExistsException e )
-        {
-            LOG.info( "Role already exists! " + roleName + ", ignore" );
-            r =
-                iam.getRole( decorate( new GetRoleRequest().withRoleName( roleName ),
-                                       identity ) ).getRole();
-            roleExisted = true;
-        }
-
-        String policyName = roleName + "-policy";
-        boolean policyRequired = true;
-        if ( roleExisted )
-        {
-            try
-            {
-                iam.getRolePolicy( decorate( new GetRolePolicyRequest().withPolicyName( policyName ).withRoleName( roleName ),
-                                             identity ) );
-                policyRequired = false;
-            }
-            catch ( NoSuchEntityException e )
-            {
-            }
-        }
-        if ( policyRequired )
-        {
-            iam.putRolePolicy( decorate( new PutRolePolicyRequest().withRoleName( roleName ).withPolicyName( policyName ).withPolicyDocument( mergeDocument( policyTemplate,
-                                                                                                                                                             policyVariables ) ),
-                                         identity ) );
-        }
-        return r;
-    }
-
-    static String getAccountId( AmazonIdentityManagement iam, Identity identity )
-    {
-        String userArn =
-            iam.getUser( decorate( new GetUserRequest(), identity ) ).getUser().getArn();
-        return Pattern.compile( "^arn:aws:iam::(\\d+):user/.+$" ).matcher( userArn ).group( 1 );
     }
 }

@@ -1,5 +1,7 @@
 package org.cyclopsgroup.datamung.swf.interfaces;
 
+import org.cyclopsgroup.datamung.api.types.Identity;
+
 import com.amazonaws.services.simpleworkflow.flow.annotations.Activities;
 import com.amazonaws.services.simpleworkflow.flow.annotations.ActivityRegistrationOptions;
 import com.amazonaws.services.simpleworkflow.flow.annotations.ExponentialRetry;
@@ -9,10 +11,11 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.ExponentialRetry;
 public interface ControlActivities
 {
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
-    String createAgentControllerRole( String roleName, String workflowTaskList );
+    String createAgentControllerRole( String roleName, String workflowTaskList,
+                                      Identity clientIdentity );
 
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
-    String createAgentUserData( String workflowTaskList );
+    String createAgentUserData( String roleArn, String workflowTaskList );
 
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
     String createDatabaseName( String snapshotName );

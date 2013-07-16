@@ -23,15 +23,46 @@
 
     <import resource="./context-${context:ec2}.xml" />
 
-    <bean id="amazonSqs" class="com.amazonaws.services.sqs.AmazonSQSClient">
+    <bean id="stsClient"
+        class="com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient">
         <constructor-arg ref="awsCredentials" />
     </bean>
-    <bean id="amazonS3" class="com.amazonaws.services.s3.AmazonS3Client">
-        <constructor-arg ref="awsCredentials" />
-    </bean>
-    <bean class="org.cyclopsgroup.datamung.agent.Bootstrap">
-        <constructor-arg ref="amazonSqs" />
-        <constructor-arg ref="amazonS3" />
+
+    <bean id="delegatedCredentials"
+        class="org.cyclopsgroup.datamung.agent.AssumedSessionCredentialsFactoryBean">
+        <constructor-arg ref="stsClient" />
         <constructor-arg ref="agentConfig" />
+    </bean>
+
+    <bean id="swfClient"
+        class="com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflowClient">
+        <constructor-arg ref="delegatedCredentials" />
+        <property name="endpoint" value="https://swf.us-east-1.amazonaws.com" />
+    </bean>
+
+    <bean id="swfDomain"
+        class="org.springframework.beans.factory.config.PropertyPathFactoryBean">
+        <property name="targetObject" ref="agentConfig" />
+        <property name="propertyPath" value="workflowDomain" />
+    </bean>
+
+    <bean id="swfTaskList"
+        class="org.springframework.beans.factory.config.PropertyPathFactoryBean">
+        <property name="targetObject" ref="agentConfig" />
+        <property name="propertyPath" value="workflowTaskList" />
+    </bean>
+
+    <bean class="com.amazonaws.services.simpleworkflow.flow.ActivityWorker"
+        init-method="start" destroy-method="shutdown">
+        <constructor-arg ref="swfClient" />
+        <constructor-arg ref="swfDomain" />
+        <constructor-arg ref="swfTaskList" />
+        <property name="disableTypeRegistrationOnStart" value="true" />
+        <property name="activitiesImplementations">
+            <list>
+                <bean
+                    class="org.cyclopsgroup.datamung.agent.AgentActivitiesImpl" />
+            </list>
+        </property>
     </bean>
 </beans>

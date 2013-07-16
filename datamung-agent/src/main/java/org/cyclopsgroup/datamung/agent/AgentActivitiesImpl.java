@@ -7,9 +7,7 @@ import org.apache.commons.logging.LogFactory;
 import org.cyclopsgroup.datamung.api.types.Job;
 import org.cyclopsgroup.datamung.api.types.JobResult;
 import org.cyclopsgroup.datamung.swf.interfaces.AgentActivities;
-import org.springframework.stereotype.Component;
 
-@Component( "agentActivities" )
 public class AgentActivitiesImpl
     implements AgentActivities
 {

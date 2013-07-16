@@ -1,0 +1,9 @@
+{
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Effect": "Allow",
+      "Resource": "@CONTROLLER_ROLE_ARN@"
+    }
+  ]
+}

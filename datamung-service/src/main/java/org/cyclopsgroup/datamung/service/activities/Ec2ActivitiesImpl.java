@@ -1,18 +1,14 @@
 package org.cyclopsgroup.datamung.service.activities;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.cyclopsgroup.datamung.api.types.Identity;
 import org.cyclopsgroup.datamung.swf.interfaces.Ec2Activities;
 import org.cyclopsgroup.datamung.swf.types.CreateInstanceOptions;
-import org.cyclopsgroup.datamung.swf.types.InstanceProfile;
-import org.cyclopsgroup.datamung.swf.types.Queue;
 import org.cyclopsgroup.datamung.swf.types.WorkerInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -30,19 +26,13 @@ import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagement;
 import com.amazonaws.services.identitymanagement.model.AddRoleToInstanceProfileRequest;
 import com.amazonaws.services.identitymanagement.model.CreateInstanceProfileRequest;
-import com.amazonaws.services.identitymanagement.model.CreateRoleRequest;
-import com.amazonaws.services.identitymanagement.model.CreateRoleResult;
 import com.amazonaws.services.identitymanagement.model.DeleteInstanceProfileRequest;
-import com.amazonaws.services.identitymanagement.model.DeleteRolePolicyRequest;
-import com.amazonaws.services.identitymanagement.model.DeleteRoleRequest;
 import com.amazonaws.services.identitymanagement.model.EntityAlreadyExistsException;
 import com.amazonaws.services.identitymanagement.model.GetInstanceProfileRequest;
 import com.amazonaws.services.identitymanagement.model.GetInstanceProfileResult;
-import com.amazonaws.services.identitymanagement.model.GetRolePolicyRequest;
-import com.amazonaws.services.identitymanagement.model.GetRoleRequest;
 import com.amazonaws.services.identitymanagement.model.NoSuchEntityException;
-import com.amazonaws.services.identitymanagement.model.PutRolePolicyRequest;
 import com.amazonaws.services.identitymanagement.model.RemoveRoleFromInstanceProfileRequest;
+import com.amazonaws.services.identitymanagement.model.Role;
 
 @Component( "workflow.Ec2Activities" )
 public class Ec2ActivitiesImpl
@@ -56,90 +46,31 @@ public class Ec2ActivitiesImpl
     @Autowired
     private AmazonIdentityManagement iam;
 
-    private String fetchPolicy( String templatePath,
-                                Map<String, String> placeHolders )
-    {
-        try
-        {
-            String template =
-                IOUtils.toString( getClass().getClassLoader().getResource( templatePath ) );
-            if ( placeHolders == null || placeHolders.isEmpty() )
-            {
-                return template;
-            }
-            String result = template;
-            for ( Map.Entry<String, String> entry : placeHolders.entrySet() )
-            {
-                result =
-                    result.replaceAll( "@" + entry.getKey() + "@",
-                                       entry.getValue() );
-            }
-            return result;
-        }
-        catch ( IOException e )
-        {
-            throw new RuntimeException( "Can't load template of policy "
-                + templatePath );
-        }
-    }
-
     /**
      * @inheritDoc
      */
     @Override
-    public InstanceProfile createInstanceProfileForSqs( String profileName,
-                                                        Queue queue,
-                                                        Identity identity )
+    public void createAgentInstanceProfile( String profileName,
+                                            String controlRoleArn,
+                                            Identity identity )
     {
         // Create role if necessary
-        String roleName = "role-" + profileName;
-        boolean roleExisted = false;
-        String rolePath;
-        try
-        {
-            CreateRoleResult role =
-                iam.createRole( ActivityUtils.decorate( new CreateRoleRequest().withRoleName( roleName ).withAssumeRolePolicyDocument( fetchPolicy( "datamung/agent-assume-policy.json",
-                                                                                                                                                    null ) ),
-                                                        identity ) );
-            rolePath = role.getRole().getPath();
-        }
-        catch ( EntityAlreadyExistsException e )
-        {
-            LOG.info( "Role already exists! " + roleName + ", ignore" );
-            rolePath =
-                iam.getRole( ActivityUtils.decorate( new GetRoleRequest().withRoleName( roleName ),
-                                                     identity ) ).getRole().getPath();
-            roleExisted = true;
-        }
+        String roleName = profileName + "-role";
 
-        // Attach policy to role if necessary
-        String policyName = "role-policy-" + profileName;
-        boolean policyRequired = true;
-        if ( roleExisted )
-        {
-            try
-            {
-                iam.getRolePolicy( new GetRolePolicyRequest().withPolicyName( policyName ).withRoleName( roleName ) );
-                policyRequired = false;
-            }
-            catch ( NoSuchEntityException e )
-            {
-            }
-        }
-        if ( policyRequired )
-        {
-            Map<String, String> params = new HashMap<String, String>();
-            params.put( "QUEUE_ARN", queue.getArn() );
-            String policyDocument =
-                fetchPolicy( "datamung/agent-instance-policy.json", params );
-            iam.putRolePolicy( new PutRolePolicyRequest().withRoleName( roleName ).withPolicyName( policyName ).withPolicyDocument( policyDocument ) );
-        }
+        Map<String, String> policyVariables = new HashMap<String, String>();
+        policyVariables.put( "CONTROLLER_ROLE_ARN", controlRoleArn );
+        Role role =
+            ActivityUtils.createRole( roleName, iam,
+                                      "datamung/agent-policy.json",
+                                      policyVariables,
+                                      "datamung/agent-trust.json", null,
+                                      identity );
 
         // Create instance profile and associate role if necessary
         boolean roleAssociationRequired = true;
         try
         {
-            iam.createInstanceProfile( ActivityUtils.decorate( new CreateInstanceProfileRequest().withInstanceProfileName( profileName ).withPath( rolePath ),
+            iam.createInstanceProfile( ActivityUtils.decorate( new CreateInstanceProfileRequest().withInstanceProfileName( profileName ).withPath( role.getPath() ),
                                                                identity ) );
         }
         catch ( EntityAlreadyExistsException e )
@@ -151,63 +82,42 @@ public class Ec2ActivitiesImpl
         }
         if ( roleAssociationRequired )
         {
+            LOG.info( "Adding role " + roleName + " to instance profile "
+                + profileName );
             iam.addRoleToInstanceProfile( ActivityUtils.decorate( new AddRoleToInstanceProfileRequest().withInstanceProfileName( profileName ).withRoleName( "role-"
                                                                                                                                                                  + profileName ),
                                                                   identity ) );
         }
-        InstanceProfile result = new InstanceProfile();
-        result.setName( profileName );
-        return result;
     }
 
     /**
      * @inheritDoc
      */
     @Override
-    public void deleteInstanceProfile( InstanceProfile profile,
-                                       Identity identity )
+    public void deleteInstanceProfile( String profileName, Identity identity )
     {
-        String roleName = "role-" + profile.getName();
+        String roleName = profileName + "-role";
 
         try
         {
-            iam.deleteRolePolicy( ActivityUtils.decorate( new DeleteRolePolicyRequest().withRoleName( roleName ).withPolicyName( "role-policy-"
-                                                                                                                                     + profile.getName() ),
-                                                          identity ) );
-        }
-        catch ( NoSuchEntityException e )
-        {
-            LOG.info( "Role policy " + "role-policy-" + profile.getName()
-                + " is already gone" );
-        }
-        try
-        {
             GetInstanceProfileResult profileResult =
-                iam.getInstanceProfile( ActivityUtils.decorate( new GetInstanceProfileRequest().withInstanceProfileName( profile.getName() ),
+                iam.getInstanceProfile( ActivityUtils.decorate( new GetInstanceProfileRequest().withInstanceProfileName( profileName ),
                                                                 identity ) );
 
             if ( !profileResult.getInstanceProfile().getRoles().isEmpty() )
             {
-                iam.removeRoleFromInstanceProfile( ActivityUtils.decorate( new RemoveRoleFromInstanceProfileRequest().withInstanceProfileName( profile.getName() ).withRoleName( roleName ),
+                iam.removeRoleFromInstanceProfile( ActivityUtils.decorate( new RemoveRoleFromInstanceProfileRequest().withInstanceProfileName( profileName ).withRoleName( roleName ),
                                                                            identity ) );
             }
 
-            iam.deleteInstanceProfile( ActivityUtils.decorate( new DeleteInstanceProfileRequest().withInstanceProfileName( profile.getName() ),
+            iam.deleteInstanceProfile( ActivityUtils.decorate( new DeleteInstanceProfileRequest().withInstanceProfileName( profileName ),
                                                                identity ) );
         }
         catch ( NoSuchEntityException e )
         {
-            LOG.info( "Instance profile is already gone: " + profile );
+            LOG.info( "Instance profile is already gone: " + profileName );
         }
-        try
-        {
-            iam.deleteRole( ActivityUtils.decorate( new DeleteRoleRequest().withRoleName( roleName ),
-                                                    identity ) );
-        }
-        catch ( NoSuchEntityException e )
-        {
-            LOG.info( "Role is already gone: " + roleName );
-        }
+        ActivityUtils.deleteRole( roleName, iam, identity );
     }
 
     /**
@@ -244,9 +154,9 @@ public class Ec2ActivitiesImpl
                                   Identity identity )
     {
         RunInstancesRequest request = new RunInstancesRequest();
-        if ( options.getProfile() != null )
+        if ( options.getInstanceProfileName() != null )
         {
-            request.setIamInstanceProfile( new IamInstanceProfileSpecification().withName( options.getProfile().getName() ) );
+            request.setIamInstanceProfile( new IamInstanceProfileSpecification().withName( options.getInstanceProfileName() ) );
         }
         if ( options.getNetwork() != null )
         {

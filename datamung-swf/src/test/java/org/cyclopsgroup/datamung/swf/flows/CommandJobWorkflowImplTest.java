@@ -12,8 +12,6 @@ import org.cyclopsgroup.datamung.swf.interfaces.Constants;
 import org.cyclopsgroup.datamung.swf.interfaces.ControlActivities;
 import org.cyclopsgroup.datamung.swf.interfaces.Ec2Activities;
 import org.cyclopsgroup.datamung.swf.types.CreateInstanceOptions;
-import org.cyclopsgroup.datamung.swf.types.InstanceProfile;
-import org.cyclopsgroup.datamung.swf.types.Queue;
 import org.cyclopsgroup.datamung.swf.types.WorkerInstance;
 import org.cyclopsgroup.kaufman.logging.InvocationLoggingDecorator;
 import org.jmock.Expectations;
@@ -45,7 +43,7 @@ public class CommandJobWorkflowImplTest
         workflowTest.addActivitiesImplementation( Constants.ACTIVITY_TASK_LIST,
                                                   InvocationLoggingDecorator.decorate( Ec2Activities.class,
                                                                                        ec2Activities ) );
-        workflowTest.addActivitiesImplementation( Constants.ACTIVITY_TASK_LIST,
+        workflowTest.addActivitiesImplementation( "dm-agent-tl-test",
                                                   InvocationLoggingDecorator.decorate( AgentActivities.class,
                                                                                        agentActivities ) );
         workflowTest.addActivitiesImplementation( Constants.ACTIVITY_TASK_LIST,
@@ -70,25 +68,25 @@ public class CommandJobWorkflowImplTest
 
         request.setJob( job );
 
-        final Queue queue = new Queue();
-        queue.setQueueUrl( "http://queue" );
-
-        final InstanceProfile profile = new InstanceProfile();
-
         final CreateInstanceOptions options = new CreateInstanceOptions();
         options.setNetwork( network );
-        options.setProfile( profile );
+        options.setInstanceProfileName( "dm-profile-test" );
         options.setUserData( "test-data" );
 
         context.checking( new Expectations()
         {
             {
-                one( ec2Activities ).createInstanceProfileForSqs( "dmip-test",
-                                                                  queue,
-                                                                  identity );
-                will( returnValue( profile ) );
+                one( controlActivities ).createAgentControllerRole( "dm-master-role-test",
+                                                                    "dm-agent-tl-test",
+                                                                    identity );
+                will( returnValue( "aws:test:arn" ) );
 
-                one( controlActivities ).createJobWorkerUserData( queue );
+                one( ec2Activities ).createAgentInstanceProfile( "dm-profile-test",
+                                                                 "aws:test:arn",
+                                                                 identity );
+
+                one( controlActivities ).createAgentUserData( "aws:test:arn",
+                                                              "dm-agent-tl-test" );
                 will( returnValue( "test-data" ) );
 
                 one( ec2Activities ).launchInstance( options, identity );
@@ -97,8 +95,13 @@ public class CommandJobWorkflowImplTest
                 one( ec2Activities ).describeInstance( "dmw-test", identity );
                 will( returnValue( new WorkerInstance().withInstanceStatus( "running" ) ) );
 
+                one( agentActivities ).runJob( job );
+                will( returnValue( null ) );
+
                 one( ec2Activities ).terminateInstance( "dmw-test", identity );
-                one( ec2Activities ).deleteInstanceProfile( profile, identity );
+                one( ec2Activities ).deleteInstanceProfile( "dm-profile-test",
+                                                            identity );
+                one( controlActivities ).deleteRole( "dm-master-role-test" );
             }
         } );
 
