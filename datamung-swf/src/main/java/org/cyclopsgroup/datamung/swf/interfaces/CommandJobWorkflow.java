@@ -1,6 +1,6 @@
 package org.cyclopsgroup.datamung.swf.interfaces;
 
-import org.cyclopsgroup.datamung.api.types.RunJobRequest;
+import org.cyclopsgroup.datamung.swf.types.RunJobRequest;
 
 import com.amazonaws.services.simpleworkflow.flow.annotations.Execute;
 import com.amazonaws.services.simpleworkflow.flow.annotations.Workflow;

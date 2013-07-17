@@ -4,14 +4,15 @@ import java.util.Arrays;
 
 import org.cyclopsgroup.datamung.api.types.Identity;
 import org.cyclopsgroup.datamung.api.types.InstanceNetwork;
-import org.cyclopsgroup.datamung.api.types.Job;
-import org.cyclopsgroup.datamung.api.types.RunJobRequest;
 import org.cyclopsgroup.datamung.swf.interfaces.AgentActivities;
 import org.cyclopsgroup.datamung.swf.interfaces.CommandJobWorkflowClientFactoryImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.Constants;
 import org.cyclopsgroup.datamung.swf.interfaces.ControlActivities;
 import org.cyclopsgroup.datamung.swf.interfaces.Ec2Activities;
+import org.cyclopsgroup.datamung.swf.types.CommandLineJob;
 import org.cyclopsgroup.datamung.swf.types.CreateInstanceOptions;
+import org.cyclopsgroup.datamung.swf.types.Job;
+import org.cyclopsgroup.datamung.swf.types.RunJobRequest;
 import org.cyclopsgroup.datamung.swf.types.WorkerInstance;
 import org.cyclopsgroup.kaufman.logging.InvocationLoggingDecorator;
 import org.jmock.Expectations;
@@ -62,8 +63,8 @@ public class CommandJobWorkflowImplTest
         RunJobRequest request = new RunJobRequest();
         request.setNetwork( network );
 
-        final Job job = new Job();
-        job.setTimeoutSeconds( 10 );
+        final Job job = new CommandLineJob();
+        request.setJobTimeoutSeconds( 10 );
         request.setIdentity( identity );
 
         request.setJob( job );

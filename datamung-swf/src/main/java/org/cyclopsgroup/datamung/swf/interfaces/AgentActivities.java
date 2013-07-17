@@ -1,7 +1,7 @@
 package org.cyclopsgroup.datamung.swf.interfaces;
 
-import org.cyclopsgroup.datamung.api.types.Job;
-import org.cyclopsgroup.datamung.api.types.JobResult;
+import org.cyclopsgroup.datamung.swf.types.Job;
+import org.cyclopsgroup.datamung.swf.types.JobResult;
 
 import com.amazonaws.services.simpleworkflow.flow.annotations.Activities;
 import com.amazonaws.services.simpleworkflow.flow.annotations.ActivityRegistrationOptions;

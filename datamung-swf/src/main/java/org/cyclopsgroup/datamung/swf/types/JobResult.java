@@ -1,4 +1,4 @@
-package org.cyclopsgroup.datamung.api.types;
+package org.cyclopsgroup.datamung.swf.types;
 
 import org.cyclopsgroup.kaufman.interfaces.BaseComparableBean;
 

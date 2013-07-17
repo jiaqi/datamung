@@ -1,8 +1,8 @@
 package org.cyclopsgroup.datamung.service.activities;
 
-import org.cyclopsgroup.datamung.api.types.Job;
-import org.cyclopsgroup.datamung.api.types.JobResult;
 import org.cyclopsgroup.datamung.swf.interfaces.AgentActivities;
+import org.cyclopsgroup.datamung.swf.types.Job;
+import org.cyclopsgroup.datamung.swf.types.JobResult;
 import org.springframework.stereotype.Component;
 
 @Component( "workflow.AgentActivities" )

@@ -1,6 +1,5 @@
 package org.cyclopsgroup.datamung.swf.flows;
 
-import org.cyclopsgroup.datamung.api.types.RunJobRequest;
 import org.cyclopsgroup.datamung.swf.interfaces.AgentActivitiesClient;
 import org.cyclopsgroup.datamung.swf.interfaces.AgentActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.CheckWaitWorkflowClientFactory;
@@ -12,6 +11,7 @@ import org.cyclopsgroup.datamung.swf.interfaces.Ec2ActivitiesClient;
 import org.cyclopsgroup.datamung.swf.interfaces.Ec2ActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.types.CheckAndWait;
 import org.cyclopsgroup.datamung.swf.types.CreateInstanceOptions;
+import org.cyclopsgroup.datamung.swf.types.RunJobRequest;
 
 import com.amazonaws.services.simpleworkflow.flow.ActivitySchedulingOptions;
 import com.amazonaws.services.simpleworkflow.flow.DecisionContextProvider;
@@ -77,7 +77,7 @@ public class CommandJobWorkflowImpl
                 Promise<Void> set = setWorkerId( workerId );
 
                 agentActivities.runJob( request.getJob(),
-                                        new ActivitySchedulingOptions().withTaskList( taskListName ).withStartToCloseTimeoutSeconds( (long) request.getJob().getTimeoutSeconds() ),
+                                        new ActivitySchedulingOptions().withTaskList( taskListName ).withStartToCloseTimeoutSeconds( request.getJobTimeoutSeconds() ),
                                         set, waitUntilWorkerReady( workerId ) );
             }
 

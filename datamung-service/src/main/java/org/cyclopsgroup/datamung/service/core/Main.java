@@ -6,10 +6,10 @@ import java.util.Arrays;
 
 import org.cyclopsgroup.datamung.api.types.Identity;
 import org.cyclopsgroup.datamung.api.types.InstanceNetwork;
-import org.cyclopsgroup.datamung.api.types.Job;
-import org.cyclopsgroup.datamung.api.types.RunJobRequest;
 import org.cyclopsgroup.datamung.swf.interfaces.CommandJobWorkflowClientExternalFactory;
 import org.cyclopsgroup.datamung.swf.interfaces.CommandJobWorkflowClientExternalFactoryImpl;
+import org.cyclopsgroup.datamung.swf.types.CommandLineJob;
+import org.cyclopsgroup.datamung.swf.types.RunJobRequest;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.PropertiesCredentials;
@@ -29,7 +29,7 @@ public class Main
     {
 
         RunJobRequest request = new RunJobRequest();
-        Job job = new Job();
+        CommandLineJob job = new CommandLineJob();
         job.setCommand( "echo 1 2 3 4 5 6" );
 
         AWSCredentials caseCreds =
