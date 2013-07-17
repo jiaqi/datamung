@@ -1,12 +1,8 @@
 package org.cyclopsgroup.datamung.swf.types;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.cyclopsgroup.datamung.api.types.InstanceNetwork;
 import org.cyclopsgroup.kaufman.interfaces.BaseComparableBean;
 
-@XmlRootElement( name = "DatabaseInstance" )
 public class DatabaseInstance
     extends BaseComparableBean
 {
@@ -28,55 +24,46 @@ public class DatabaseInstance
 
     private String publicHostName;
 
-    @XmlElement
     public int getAllocatedStorage()
     {
         return allocatedStorage;
     }
 
-    @XmlElement
     public String getAvailabilityZone()
     {
         return availabilityZone;
     }
 
-    @XmlElement
     public String getInstanceId()
     {
         return instanceId;
     }
 
-    @XmlElement
     public String getInstanceStatus()
     {
         return instanceStatus;
     }
 
-    @XmlElement
     public String getInstanceType()
     {
         return instanceType;
     }
 
-    @XmlElement
     public String getMasterUser()
     {
         return masterUser;
     }
 
-    @XmlElement
     public InstanceNetwork getNetwork()
     {
         return network;
     }
 
-    @XmlElement
     public int getPort()
     {
         return port;
     }
 
-    @XmlElement
     public String getPublicHostName()
     {
         return publicHostName;
