@@ -59,8 +59,9 @@ public class AgentActivitiesImpl
                                 JobResult result )
         throws IOException, InterruptedException, ExecutionException
     {
-        LOG.info( "Running command [" + commandLine + "] ..." );
-        Process proc = Runtime.getRuntime().exec( commandLine );
+        System.out.println( "Running command [" + commandLine + "] with sh" );
+        Process proc =
+            Runtime.getRuntime().exec( new String[] { "sh", "-c", commandLine } );
         Future<String> standardOutput =
             executor.submit( collectOutput( proc.getInputStream() ) );
         Future<String> errorOutput =
@@ -136,16 +137,21 @@ public class AgentActivitiesImpl
             InvocationLoggingDecorator.decorate( AmazonS3.class,
                                                  new AmazonS3Client( creds ) );
 
-        StringBuilder command = new StringBuilder( "mysqldump" );
+        StringBuilder command = new StringBuilder( "/usr/bin/mysqldump" );
         command.append( " -h " ).append( job.getDatabaseInstance().getPublicHostName() );
-        command.append( " -P " ).append( job.getDatabaseInstance().getPort() );
+        int port = job.getDatabaseInstance().getPort();
+        if ( port > 0 && port != 3306 )
+        {
+            command.append( " -P " ).append( job.getDatabaseInstance().getPort() );
+        }
         command.append( " -u " ).append( job.getDatabaseInstance().getMasterUser() );
         command.append( " --password=" ).append( job.getMasterPassword() );
-        command.append( " -A -q --compact | gzip" );
+        command.append( " --all-databases -q --compact --protocol=tcp | gzip" );
 
         File tempFile = File.createTempFile( "datamung-data-", ".gz" );
         try
         {
+            LOG.info( "Dumping database to file " + tempFile );
             String cmd =
                 command.append( " > " ).append( tempFile.getAbsolutePath() ).toString();
             int exitCode = runCommandLine( cmd, executor, result );
@@ -159,6 +165,7 @@ public class AgentActivitiesImpl
         }
         finally
         {
+            LOG.info( "Deleting temporary file " + tempFile );
             tempFile.delete();
         }
     }

@@ -8,8 +8,8 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.WorkflowRegistrati
 
 @Workflow
 @WorkflowRegistrationOptions( defaultExecutionStartToCloseTimeoutSeconds = 3600L * 8, defaultTaskList = Constants.WORKFLOW_TASK_LIST )
-public interface CommandJobWorkflow
+public interface JobWorkflow
 {
-    @Execute( name = "CommandJobWorkflow", version = "1.0" )
+    @Execute( name = "JobWorkflow", version = "1.0" )
     void executeCommand( RunJobRequest request );
 }

@@ -9,6 +9,8 @@ public abstract class ExportRequest
 
     private DataArchive destinationArchive;
 
+    private WorkerOptions workerOptions;
+
     @XmlElement
     public String getDatabaseMasterPassword()
     {
@@ -21,6 +23,12 @@ public abstract class ExportRequest
         return destinationArchive;
     }
 
+    @XmlElement
+    public WorkerOptions getWorkerOptions()
+    {
+        return workerOptions;
+    }
+
     public void setDatabaseMasterPassword( String databasePassword )
     {
         this.databaseMasterPassword = databasePassword;
@@ -29,5 +37,10 @@ public abstract class ExportRequest
     public void setDestinationArchive( DataArchive destinationArchive )
     {
         this.destinationArchive = destinationArchive;
+    }
+
+    public void setWorkerOptions( WorkerOptions workerOptions )
+    {
+        this.workerOptions = workerOptions;
     }
 }

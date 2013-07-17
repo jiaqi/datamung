@@ -4,7 +4,7 @@ import org.cyclopsgroup.datamung.swf.interfaces.AgentActivitiesClient;
 import org.cyclopsgroup.datamung.swf.interfaces.AgentActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.CheckWaitWorkflowClientFactory;
 import org.cyclopsgroup.datamung.swf.interfaces.CheckWaitWorkflowClientFactoryImpl;
-import org.cyclopsgroup.datamung.swf.interfaces.CommandJobWorkflow;
+import org.cyclopsgroup.datamung.swf.interfaces.JobWorkflow;
 import org.cyclopsgroup.datamung.swf.interfaces.ControlActivitiesClient;
 import org.cyclopsgroup.datamung.swf.interfaces.ControlActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.Ec2ActivitiesClient;
@@ -20,8 +20,8 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.Asynchronous;
 import com.amazonaws.services.simpleworkflow.flow.core.Promise;
 import com.amazonaws.services.simpleworkflow.flow.core.TryFinally;
 
-public class CommandJobWorkflowImpl
-    implements CommandJobWorkflow
+public class JobWorkflowImpl
+    implements JobWorkflow
 {
     private final AgentActivitiesClient agentActivities =
         new AgentActivitiesClientImpl();
@@ -127,9 +127,9 @@ public class CommandJobWorkflowImpl
         waitWorker.setCheckType( CheckAndWait.Type.WORKER_LAUNCH );
         waitWorker.setIdentity( request.getIdentity() );
         waitWorker.setObjectName( workerId.get() );
-        waitWorker.setExpireOn( waitWorker.getWaitIntervalSeconds()
-            * 4000L
-            + contextProvider.getDecisionContext().getWorkflowClock().currentTimeMillis() );
+        waitWorker.setWaitIntervalSeconds( 30 );
+        // Given 10 minutes for instance to start up
+        waitWorker.setExpireOn( 600 * 1000L + contextProvider.getDecisionContext().getWorkflowClock().currentTimeMillis() );
         return checkWaitWorkflow.getClient( "dmwf-" + workerId.get() + "-wait" ).checkAndWait( waitWorker );
     }
 }

@@ -6,10 +6,14 @@ import org.cyclopsgroup.datamung.swf.interfaces.CheckWaitWorkflowClientFactoryIm
 import org.cyclopsgroup.datamung.swf.interfaces.ControlActivitiesClient;
 import org.cyclopsgroup.datamung.swf.interfaces.ControlActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.ExportSnapshotWorkflow;
+import org.cyclopsgroup.datamung.swf.interfaces.JobWorkflowClientFactory;
+import org.cyclopsgroup.datamung.swf.interfaces.JobWorkflowClientFactoryImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.RdsActivitiesClient;
 import org.cyclopsgroup.datamung.swf.interfaces.RdsActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.types.CheckAndWait;
 import org.cyclopsgroup.datamung.swf.types.DatabaseInstance;
+import org.cyclopsgroup.datamung.swf.types.MySQLDumpJob;
+import org.cyclopsgroup.datamung.swf.types.RunJobRequest;
 
 import com.amazonaws.services.simpleworkflow.flow.DecisionContextProvider;
 import com.amazonaws.services.simpleworkflow.flow.DecisionContextProviderImpl;
@@ -26,6 +30,9 @@ public class ExportSnapshotWorkflowImpl
     private final ControlActivitiesClient controlActivities =
         new ControlActivitiesClientImpl();
 
+    private final JobWorkflowClientFactory jobFlowFactory =
+        new JobWorkflowClientFactoryImpl();
+
     private final RdsActivitiesClient rdsActivities =
         new RdsActivitiesClientImpl();
 
@@ -37,6 +44,25 @@ public class ExportSnapshotWorkflowImpl
     @Asynchronous
     private void dumpDatabase( Promise<DatabaseInstance> database )
     {
+        MySQLDumpJob job = new MySQLDumpJob();
+        job.setDataArchive( request.getDestinationArchive() );
+        job.setDatabaseInstance( database.get() );
+        job.setIdentity( request.getIdentity() );
+        job.setMasterPassword( request.getDatabaseMasterPassword() );
+
+        RunJobRequest runJob = new RunJobRequest();
+        runJob.setJob( job );
+        runJob.setIdentity( request.getIdentity() );
+
+        if ( request.getWorkerOptions() != null )
+        {
+            runJob.setJobTimeoutSeconds( request.getWorkerOptions().getJobTimeoutSeconds() );
+            runJob.setKeyPairName( request.getWorkerOptions().getKeyPairName() );
+            runJob.setNetwork( request.getWorkerOptions().getNetwork() );
+        }
+        String workflowId =
+            contextProvider.getDecisionContext().getWorkflowContext().getWorkflowExecution().getWorkflowId();
+        jobFlowFactory.getClient( workflowId + "-job" ).executeCommand( runJob );
     }
 
     /**

@@ -27,7 +27,7 @@
     </aop:config>
 
     <bean class="org.cyclopsgroup.datamung.service.ServiceConfig">
-        <property name="agentAmiId" value="ami-549ae43d" />
+        <property name="agentAmiId" value="ami-703b4219" />
     </bean>
 
     <!-- AWS resources -->
@@ -60,7 +60,7 @@
 
 
     <bean class="com.amazonaws.services.simpleworkflow.flow.WorkflowWorker"
-        init-method="start">
+        init-method="start" destroy-method="shutdown">
         <constructor-arg ref="aws.SimpleWorkflow" />
         <constructor-arg ref="aws.SwfDomain" />
         <constructor-arg value="datamung-workflow-tasks" />
@@ -83,7 +83,7 @@
     </bean>
 
     <bean class="com.amazonaws.services.simpleworkflow.flow.ActivityWorker"
-        init-method="start">
+        init-method="start" destroy-method="shutdown">
         <constructor-arg ref="aws.SimpleWorkflow" />
         <constructor-arg ref="aws.SwfDomain" />
         <constructor-arg value="datamung-activity-tasks" />

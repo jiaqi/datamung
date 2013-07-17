@@ -5,10 +5,10 @@ import java.util.Arrays;
 import org.cyclopsgroup.datamung.api.types.Identity;
 import org.cyclopsgroup.datamung.api.types.InstanceNetwork;
 import org.cyclopsgroup.datamung.swf.interfaces.AgentActivities;
-import org.cyclopsgroup.datamung.swf.interfaces.CommandJobWorkflowClientFactoryImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.Constants;
 import org.cyclopsgroup.datamung.swf.interfaces.ControlActivities;
 import org.cyclopsgroup.datamung.swf.interfaces.Ec2Activities;
+import org.cyclopsgroup.datamung.swf.interfaces.JobWorkflowClientFactoryImpl;
 import org.cyclopsgroup.datamung.swf.types.CommandLineJob;
 import org.cyclopsgroup.datamung.swf.types.CreateInstanceOptions;
 import org.cyclopsgroup.datamung.swf.types.Job;
@@ -23,7 +23,7 @@ import org.junit.runner.RunWith;
 import com.amazonaws.services.simpleworkflow.flow.junit.FlowBlockJUnit4ClassRunner;
 
 @RunWith( FlowBlockJUnit4ClassRunner.class )
-public class CommandJobWorkflowImplTest
+public class JobWorkflowImplTest
     extends AbstractWorkflowTestCase
 {
     private AgentActivities agentActivities;
@@ -40,7 +40,7 @@ public class CommandJobWorkflowImplTest
         controlActivities = context.mock( ControlActivities.class );
 
         workflowTest.addWorkflowImplementationType( CheckWaitWorkflowImpl.class );
-        workflowTest.addWorkflowImplementationType( CommandJobWorkflowImpl.class );
+        workflowTest.addWorkflowImplementationType( JobWorkflowImpl.class );
         workflowTest.addActivitiesImplementation( Constants.ACTIVITY_TASK_LIST,
                                                   InvocationLoggingDecorator.decorate( Ec2Activities.class,
                                                                                        ec2Activities ) );
@@ -106,6 +106,6 @@ public class CommandJobWorkflowImplTest
             }
         } );
 
-        new CommandJobWorkflowClientFactoryImpl().getClient( "test" ).executeCommand( request );
+        new JobWorkflowClientFactoryImpl().getClient( "test" ).executeCommand( request );
     }
 }
