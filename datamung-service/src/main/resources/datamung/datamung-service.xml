@@ -26,6 +26,9 @@
         </aop:aspect>
     </aop:config>
 
+    <bean class="org.cyclopsgroup.datamung.service.ServiceConfig">
+        <property name="agentAmiId" value="ami-549ae43d" />
+    </bean>
 
     <!-- AWS resources -->
     <bean class="com.amazonaws.services.rds.AmazonRDSClient">
@@ -89,7 +92,7 @@
                 <ref bean="workflow.ControlActivities" />
                 <ref bean="workflow.RdsActivities" />
                 <ref bean="workflow.Ec2Activities" />
-                <ref bean="workflow.SqsActivities" />
+                <ref bean="workflow.AgentActivities" />
             </list>
         </property>
     </bean>

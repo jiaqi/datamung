@@ -6,4 +6,7 @@
        http://www.springframework.org/schema/beans/spring-beans.xsd">
     <bean id="awsCredentials"
         class="com.amazonaws.auth.InstanceProfileCredentialsProvider" />
+    <bean id="aws.SwfDomain" class="java.lang.String">
+        <constructor-arg value="datamung-test" />
+    </bean>
 </beans>

@@ -2,9 +2,9 @@ package org.cyclopsgroup.datamung.service.activities;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.cyclopsgroup.datamung.api.types.Identity;
@@ -146,9 +146,10 @@ class ActivityUtils
 
     static String getAccountId( AmazonIdentityManagement iam, Identity identity )
     {
-        String userArn =
+        String arn =
             iam.getUser( decorate( new GetUserRequest(), identity ) ).getUser().getArn();
-        return Pattern.compile( "^arn:aws:iam::(\\d+):user/.+$" ).matcher( userArn ).group( 1 );
+        return StringUtils.removeStart( arn, "arn:aws:iam::" ).replaceAll( ":.+$",
+                                                                           "" );
     }
 
     private static String mergeDocument( String template,

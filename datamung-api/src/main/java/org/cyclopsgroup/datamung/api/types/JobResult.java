@@ -11,8 +11,6 @@ public class JobResult
 
     private int exitCode;
 
-    private Job job;
-
     private String runsOn;
 
     private String stackTrace;
@@ -36,11 +34,6 @@ public class JobResult
     public int getExitCode()
     {
         return exitCode;
-    }
-
-    public Job getJob()
-    {
-        return job;
     }
 
     public String getRunsOn()
@@ -81,11 +74,6 @@ public class JobResult
     public void setExitCode( int exitCode )
     {
         this.exitCode = exitCode;
-    }
-
-    public void setJob( Job job )
-    {
-        this.job = job;
     }
 
     public void setRunsOn( String runsOn )

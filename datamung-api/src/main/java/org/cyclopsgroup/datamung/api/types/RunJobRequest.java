@@ -11,6 +11,8 @@ public class RunJobRequest
 {
     private int failAfterRetries = 5;
 
+    private Identity identity;
+
     private Job job;
 
     private String keyPairName;
@@ -21,6 +23,12 @@ public class RunJobRequest
     public int getFailAfterRetries()
     {
         return failAfterRetries;
+    }
+
+    @XmlElement
+    public Identity getIdentity()
+    {
+        return identity;
     }
 
     @XmlElement
@@ -44,6 +52,11 @@ public class RunJobRequest
     public void setFailAfterRetries( int failAfterRetries )
     {
         this.failAfterRetries = failAfterRetries;
+    }
+
+    public void setIdentity( Identity identity )
+    {
+        this.identity = identity;
     }
 
     public void setJob( Job job )

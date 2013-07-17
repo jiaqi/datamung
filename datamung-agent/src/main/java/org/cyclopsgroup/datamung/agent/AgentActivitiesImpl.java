@@ -50,7 +50,6 @@ public class AgentActivitiesImpl
         ExecutorService executor = Executors.newFixedThreadPool( 2 );
 
         JobResult result = new JobResult();
-        result.setJob( job );
         result.setStarted( System.currentTimeMillis() );
         try
         {
@@ -77,12 +76,5 @@ public class AgentActivitiesImpl
             executor.shutdownNow();
         }
         return result;
-    }
-
-    public static void main( String[] args )
-    {
-        Job job = new Job();
-        job.setCommand( "whoami" );
-        System.out.println( new AgentActivitiesImpl().runJob( job ) );
     }
 }

@@ -62,26 +62,23 @@ public class CommandJobWorkflowImpl
                 Promise<String> masterRoleArn =
                     controlActivities.createAgentControllerRole( masterRoleName,
                                                                  taskListName,
-                                                                 request.getJob().getIdentity() );
+                                                                 request.getIdentity() );
 
                 Promise<Void> profileCreated =
                     ec2Activities.createAgentInstanceProfile( Promise.asPromise( agentProfileName ),
                                                               masterRoleArn,
-                                                              Promise.asPromise( request.getJob().getIdentity() ) );
+                                                              Promise.asPromise( request.getIdentity() ) );
                 Promise<String> userData =
                     controlActivities.createAgentUserData( masterRoleArn,
                                                            Promise.asPromise( taskListName ) );
 
-                // It takes a few seconds before instance profile becomes
-                // available. Unfortunately, there's no deterministic way to
-                // know when it is
                 Promise<String> workerId =
-                    runInstanceAndExecute( agentProfileName, userData,
-                                           timer( 10, profileCreated ) );
-                setWorkerId( workerId );
+                    launchInstances( agentProfileName, userData, profileCreated );
+                Promise<Void> set = setWorkerId( workerId );
+
                 agentActivities.runJob( request.getJob(),
-                                        new ActivitySchedulingOptions().withTaskList( taskListName ),
-                                        workerId );
+                                        new ActivitySchedulingOptions().withTaskList( taskListName ).withStartToCloseTimeoutSeconds( (long) request.getJob().getTimeoutSeconds() ),
+                                        set, waitUntilWorkerReady( workerId ) );
             }
 
             @Override
@@ -92,11 +89,11 @@ public class CommandJobWorkflowImpl
                 {
                     done =
                         ec2Activities.terminateInstance( workerId,
-                                                         request.getJob().getIdentity() );
+                                                         request.getIdentity() );
                 }
                 done =
                     ec2Activities.deleteInstanceProfile( agentProfileName,
-                                                         request.getJob().getIdentity(),
+                                                         request.getIdentity(),
                                                          done );
                 controlActivities.deleteRole( masterRoleName, done );
             }
@@ -104,26 +101,16 @@ public class CommandJobWorkflowImpl
     }
 
     @Asynchronous
-    private Promise<String> runInstanceAndExecute( String instanceProfile,
-                                                   Promise<String> userData,
-                                                   Promise<?>... waitFor )
+    private Promise<String> launchInstances( String instanceProfile,
+                                             Promise<String> userData,
+                                             Promise<?>... waitFor )
     {
         final CreateInstanceOptions options = new CreateInstanceOptions();
         options.setNetwork( request.getNetwork() );
         options.setInstanceProfileName( instanceProfile );
         options.setUserData( userData.get() );
         options.setKeyPairName( request.getKeyPairName() );
-
-        Promise<String> workerId =
-            ec2Activities.launchInstance( options,
-                                          request.getJob().getIdentity() );
-        return and( workerId, waitUntilWorkerReady( workerId ) );
-    }
-
-    @Asynchronous
-    private <T> Promise<T> and( Promise<T> result, Promise<?>... waitFor )
-    {
-        return result;
+        return ec2Activities.launchInstance( options, request.getIdentity() );
     }
 
     @Asynchronous
@@ -134,17 +121,11 @@ public class CommandJobWorkflowImpl
     }
 
     @Asynchronous
-    private Promise<Void> timer( int seconds, Promise<?>... waitFor )
-    {
-        return contextProvider.getDecisionContext().getWorkflowClock().createTimer( seconds );
-    }
-
-    @Asynchronous
     private Promise<Void> waitUntilWorkerReady( Promise<String> workerId )
     {
         CheckAndWait waitWorker = new CheckAndWait();
         waitWorker.setCheckType( CheckAndWait.Type.WORKER_LAUNCH );
-        waitWorker.setIdentity( request.getJob().getIdentity() );
+        waitWorker.setIdentity( request.getIdentity() );
         waitWorker.setObjectName( workerId.get() );
         waitWorker.setExpireOn( waitWorker.getWaitIntervalSeconds()
             * 4000L

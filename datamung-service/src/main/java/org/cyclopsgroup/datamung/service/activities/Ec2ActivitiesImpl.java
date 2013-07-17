@@ -7,6 +7,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.cyclopsgroup.datamung.api.types.Identity;
+import org.cyclopsgroup.datamung.service.ServiceConfig;
 import org.cyclopsgroup.datamung.swf.interfaces.Ec2Activities;
 import org.cyclopsgroup.datamung.swf.types.CreateInstanceOptions;
 import org.cyclopsgroup.datamung.swf.types.WorkerInstance;
@@ -46,6 +47,9 @@ public class Ec2ActivitiesImpl
     @Autowired
     private AmazonIdentityManagement iam;
 
+    @Autowired
+    private ServiceConfig config;
+
     /**
      * @inheritDoc
      */
@@ -84,8 +88,7 @@ public class Ec2ActivitiesImpl
         {
             LOG.info( "Adding role " + roleName + " to instance profile "
                 + profileName );
-            iam.addRoleToInstanceProfile( ActivityUtils.decorate( new AddRoleToInstanceProfileRequest().withInstanceProfileName( profileName ).withRoleName( "role-"
-                                                                                                                                                                 + profileName ),
+            iam.addRoleToInstanceProfile( ActivityUtils.decorate( new AddRoleToInstanceProfileRequest().withInstanceProfileName( profileName ).withRoleName( roleName ),
                                                                   identity ) );
         }
     }
@@ -170,7 +173,7 @@ public class Ec2ActivitiesImpl
         {
             request.setUserData( Base64.encodeBase64String( options.getUserData().getBytes() ) );
         }
-        request.withMinCount( 1 ).withMaxCount( 1 ).withImageId( "ami-72aed21b" ).withInstanceType( InstanceType.T1Micro );
+        request.withMinCount( 1 ).withMaxCount( 1 ).withImageId( config.getAgentAmiId() ).withInstanceType( InstanceType.T1Micro );
         request.setKeyName( options.getKeyPairName() );
         RunInstancesResult result =
             ec2.runInstances( ActivityUtils.decorate( request, identity ) );

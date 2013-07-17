@@ -64,7 +64,7 @@ public class CommandJobWorkflowImplTest
 
         final Job job = new Job();
         job.setTimeoutSeconds( 10 );
-        job.setIdentity( identity );
+        request.setIdentity( identity );
 
         request.setJob( job );
 

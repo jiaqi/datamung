@@ -1,10 +1,19 @@
 {
    "Statement" : [ {
       "Effect" : "Allow",
-      "Action" : "swf:*",
+      "Action" : "swf:PollForActivityTask",
       "Resource" : "arn:aws:swf:*:@CONTROLLER_ACCOUNT_ID@:/domain/@SWF_DOMAIN@",
       "Condition" : {
          "StringEquals" : { "swf:taskList.name" : "@TASK_LIST@" }
       }
+   },
+   {
+      "Effect" : "Allow",
+      "Action" : [ 
+          "swf:RespondActivityTaskCompleted", 
+          "swf:RespondActivityTaskFailed"
+          "swf:RespondActivityTaskCanceled"
+      ],
+      "Resource" : "arn:aws:swf:*:@CONTROLLER_ACCOUNT_ID@:/domain/@SWF_DOMAIN@"
    } ]
 } 

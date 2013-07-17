@@ -1,6 +1,7 @@
 package org.cyclopsgroup.datamung.service.core;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 
 import org.cyclopsgroup.datamung.api.types.Identity;
@@ -20,26 +21,35 @@ public class Main
     public static void main( String[] args )
         throws Exception
     {
-        AWSCredentials creds = new PropertiesCredentials( new File( args[0] ) );
-
+        runTestFlow();
     }
 
-    private static void runTestFlow( AWSCredentials creds, String resultBucket,
-                                     String resultKey )
+    private static void runTestFlow()
+        throws IOException
     {
-        AmazonSimpleWorkflow swf = new AmazonSimpleWorkflowClient( creds );
-        swf.setEndpoint( "https://swf.us-east-1.amazonaws.com" );
 
         RunJobRequest request = new RunJobRequest();
-
         Job job = new Job();
         job.setCommand( "echo 1 2 3 4 5 6" );
-        job.setIdentity( Identity.of( creds.getAWSAccessKeyId(),
-                                      creds.getAWSSecretKey(), null ) );
-        request.setJob( job );
-        request.setKeyPairName( "robokitten" );
-        request.setNetwork( InstanceNetwork.ofPublic( Arrays.asList( "sg-33efd25a" ) ) );
 
+        AWSCredentials caseCreds =
+            new PropertiesCredentials(
+                                       new File(
+                                                 "/Users/jguo/Dropbox/laogong/grpn/jguo-grpn-aws-creds.properties" ) );
+        request.setIdentity( Identity.of( caseCreds.getAWSAccessKeyId(),
+                                          caseCreds.getAWSSecretKey(), null ) );
+        request.setJob( job );
+        request.setKeyPairName( "timecrook" );
+        request.setNetwork( InstanceNetwork.ofPublic( Arrays.asList( "sg-56e9453d" ) ) );
+
+        AWSCredentials serviceCreds =
+            new PropertiesCredentials(
+                                       new File(
+                                                 "/Users/jguo/Dropbox/laogong/cg/jiaqi-root-aws-creds.properties" ) );
+
+        AmazonSimpleWorkflow swf =
+            new AmazonSimpleWorkflowClient( serviceCreds );
+        swf.setEndpoint( "https://swf.us-east-1.amazonaws.com" );
         CommandJobWorkflowClientExternalFactory fac =
             new CommandJobWorkflowClientExternalFactoryImpl( swf,
                                                              "datamung-test" );
