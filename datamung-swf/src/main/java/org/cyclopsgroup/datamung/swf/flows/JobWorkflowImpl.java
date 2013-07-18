@@ -4,11 +4,11 @@ import org.cyclopsgroup.datamung.swf.interfaces.AgentActivitiesClient;
 import org.cyclopsgroup.datamung.swf.interfaces.AgentActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.CheckWaitWorkflowClientFactory;
 import org.cyclopsgroup.datamung.swf.interfaces.CheckWaitWorkflowClientFactoryImpl;
-import org.cyclopsgroup.datamung.swf.interfaces.JobWorkflow;
 import org.cyclopsgroup.datamung.swf.interfaces.ControlActivitiesClient;
 import org.cyclopsgroup.datamung.swf.interfaces.ControlActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.Ec2ActivitiesClient;
 import org.cyclopsgroup.datamung.swf.interfaces.Ec2ActivitiesClientImpl;
+import org.cyclopsgroup.datamung.swf.interfaces.JobWorkflow;
 import org.cyclopsgroup.datamung.swf.types.CheckAndWait;
 import org.cyclopsgroup.datamung.swf.types.CreateInstanceOptions;
 import org.cyclopsgroup.datamung.swf.types.RunJobRequest;
@@ -77,7 +77,7 @@ public class JobWorkflowImpl
                 Promise<Void> set = setWorkerId( workerId );
 
                 agentActivities.runJob( request.getJob(),
-                                        new ActivitySchedulingOptions().withTaskList( taskListName ).withStartToCloseTimeoutSeconds( request.getJobTimeoutSeconds() ),
+                                        new ActivitySchedulingOptions().withTaskList( taskListName ).withStartToCloseTimeoutSeconds( request.getWorkerOptions().getJobTimeoutSeconds() ),
                                         set, waitUntilWorkerReady( workerId ) );
             }
 
@@ -106,10 +106,9 @@ public class JobWorkflowImpl
                                              Promise<?>... waitFor )
     {
         final CreateInstanceOptions options = new CreateInstanceOptions();
-        options.setNetwork( request.getNetwork() );
+        options.setWorkerOptions( request.getWorkerOptions() );
         options.setInstanceProfileName( instanceProfile );
         options.setUserData( userData.get() );
-        options.setKeyPairName( request.getKeyPairName() );
         return ec2Activities.launchInstance( options, request.getIdentity() );
     }
 
@@ -128,8 +127,8 @@ public class JobWorkflowImpl
         waitWorker.setIdentity( request.getIdentity() );
         waitWorker.setObjectName( workerId.get() );
         waitWorker.setWaitIntervalSeconds( 30 );
-        // Given 10 minutes for instance to start up
-        waitWorker.setExpireOn( 600 * 1000L + contextProvider.getDecisionContext().getWorkflowClock().currentTimeMillis() );
+        waitWorker.setExpireOn( contextProvider.getDecisionContext().getWorkflowClock().currentTimeMillis()
+            + request.getWorkerOptions().getLaunchTimeoutSeconds() * 1000L );
         return checkWaitWorkflow.getClient( "dmwf-" + workerId.get() + "-wait" ).checkAndWait( waitWorker );
     }
 }

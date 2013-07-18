@@ -12,7 +12,6 @@ import org.cyclopsgroup.datamung.api.types.Identity;
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagement;
 import com.amazonaws.services.identitymanagement.model.CreateRoleRequest;
 import com.amazonaws.services.identitymanagement.model.CreateRoleResult;
@@ -90,20 +89,9 @@ class ActivityUtils
     {
         if ( id != null )
         {
-            AWSCredentials creds;
-            if ( id.getAwsAccessToken() == null )
-            {
-                creds =
-                    new BasicAWSCredentials( id.getAwsAccessKeyId(),
-                                             id.getAwsSecretKey() );
-            }
-            else
-            {
-                creds =
-                    new BasicSessionCredentials( id.getAwsAccessKeyId(),
-                                                 id.getAwsSecretKey(),
-                                                 id.getAwsAccessToken() );
-            }
+            AWSCredentials creds =
+                new BasicAWSCredentials( id.getAwsAccessKeyId(),
+                                         id.getAwsSecretKey() );
             request.setRequestCredentials( creds );
         }
         return request;

@@ -53,13 +53,7 @@ public class ExportSnapshotWorkflowImpl
         RunJobRequest runJob = new RunJobRequest();
         runJob.setJob( job );
         runJob.setIdentity( request.getIdentity() );
-
-        if ( request.getWorkerOptions() != null )
-        {
-            runJob.setJobTimeoutSeconds( request.getWorkerOptions().getJobTimeoutSeconds() );
-            runJob.setKeyPairName( request.getWorkerOptions().getKeyPairName() );
-            runJob.setNetwork( request.getWorkerOptions().getNetwork() );
-        }
+        runJob.setWorkerOptions( request.getWorkerOptions() );
         String workflowId =
             contextProvider.getDecisionContext().getWorkflowContext().getWorkflowExecution().getWorkflowId();
         jobFlowFactory.getClient( workflowId + "-job" ).executeCommand( runJob );
@@ -74,11 +68,7 @@ public class ExportSnapshotWorkflowImpl
         this.request = request;
         final Promise<String> databaseName =
             controlActivities.createDatabaseName( request.getSnapshotName() );
-        Promise<DatabaseInstance> done =
-            rdsActivities.restoreSnapshot( Promise.asPromise( request.getSnapshotName() ),
-                                           databaseName,
-                                           Promise.asPromise( request.getIdentity() ) );
-        new TryFinally( done )
+        new TryFinally( databaseName )
         {
 
             @Override
@@ -91,8 +81,14 @@ public class ExportSnapshotWorkflowImpl
             @Override
             protected void doTry()
             {
+                Promise<DatabaseInstance> done =
+                    rdsActivities.restoreSnapshot( Promise.asPromise( request.getSnapshotName() ),
+                                                   databaseName,
+                                                   Promise.asPromise( request.getSubnetGroupName() ),
+                                                   Promise.asPromise( request.getIdentity() ) );
+
                 Promise<Void> sourceAvailable =
-                    waitUntilDatabaseAvailable( databaseName );
+                    waitUntilDatabaseAvailable( databaseName, done );
                 Promise<DatabaseInstance> source =
                     rdsActivities.describeInstance( databaseName,
                                                     Promise.asPromise( request.getIdentity() ),
@@ -106,13 +102,11 @@ public class ExportSnapshotWorkflowImpl
     private Promise<Void> waitUntilDatabaseAvailable( Promise<String> databaseId,
                                                       Promise<?>... waitFor )
     {
-        long now =
-            contextProvider.getDecisionContext().getWorkflowClock().currentTimeMillis();
-
         CheckAndWait check = new CheckAndWait();
         check.setCheckType( CheckAndWait.Type.DATABASE_CREATION );
         // Hardcoded 1 hour wait for now
-        check.setExpireOn( now + 3600 * 1000L );
+        check.setExpireOn( contextProvider.getDecisionContext().getWorkflowClock().currentTimeMillis()
+            + request.getSnapshotRestoreTimeoutSeconds() * 1000L );
         check.setIdentity( request.getIdentity() );
         check.setObjectName( databaseId.get() );
         return waitFlowFactory.getClient( "restore-db-" + databaseId.get() ).checkAndWait( check );

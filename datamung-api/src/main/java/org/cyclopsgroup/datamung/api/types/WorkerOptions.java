@@ -1,6 +1,9 @@
 package org.cyclopsgroup.datamung.api.types;
 
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
 
 import org.cyclopsgroup.kaufman.interfaces.BaseComparableBean;
@@ -9,11 +12,19 @@ import org.cyclopsgroup.kaufman.interfaces.BaseComparableBean;
 public class WorkerOptions
     extends BaseComparableBean
 {
-    private long jobTimeoutSeconds;
+    private static final long DEFAULT_JOB_TIMEOUT_SECONDS = 120L;
+
+    private static final long DEFAULT_LAUNCH_TIMEOUT_SECONDS = 300L;
+
+    private long jobTimeoutSeconds = DEFAULT_JOB_TIMEOUT_SECONDS;
 
     private String keyPairName;
 
-    private InstanceNetwork network;
+    private long launchTimeoutSeconds = DEFAULT_LAUNCH_TIMEOUT_SECONDS;
+
+    private List<String> securityGroupIds;
+
+    private String subnetId;
 
     @XmlElement
     public long getJobTimeoutSeconds()
@@ -28,9 +39,22 @@ public class WorkerOptions
     }
 
     @XmlElement
-    public InstanceNetwork getNetwork()
+    public long getLaunchTimeoutSeconds()
     {
-        return network;
+        return launchTimeoutSeconds;
+    }
+
+    @XmlElementWrapper
+    @XmlElement( name = "groupId" )
+    public List<String> getSecurityGroupIds()
+    {
+        return securityGroupIds;
+    }
+
+    @XmlElement
+    public String getSubnetId()
+    {
+        return subnetId;
     }
 
     public void setJobTimeoutSeconds( long jobTimeoutSeconds )
@@ -43,8 +67,18 @@ public class WorkerOptions
         this.keyPairName = keyPairName;
     }
 
-    public void setNetwork( InstanceNetwork network )
+    public void setLaunchTimeoutSeconds( long launchTimeoutSeconds )
     {
-        this.network = network;
+        this.launchTimeoutSeconds = launchTimeoutSeconds;
+    }
+
+    public void setSecurityGroupIds( List<String> securityGroupIds )
+    {
+        this.securityGroupIds = securityGroupIds;
+    }
+
+    public void setSubnetId( String subnetId )
+    {
+        this.subnetId = subnetId;
     }
 }

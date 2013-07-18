@@ -76,7 +76,7 @@
                     org.cyclopsgroup.datamung.swf.flows.ExportSnapshotWorkflowImpl
                 </value>
                 <value>
-                    org.cyclopsgroup.datamung.swf.flows.CommandJobWorkflowImpl
+                    org.cyclopsgroup.datamung.swf.flows.JobWorkflowImpl
                 </value>
             </list>
         </property>

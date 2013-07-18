@@ -161,20 +161,14 @@ public class Ec2ActivitiesImpl
         {
             request.setIamInstanceProfile( new IamInstanceProfileSpecification().withName( options.getInstanceProfileName() ) );
         }
-        if ( options.getNetwork() != null )
-        {
-            if ( options.getNetwork().getSubnetId() != null )
-            {
-                request.setSubnetId( options.getNetwork().getSubnetId() );
-            }
-            request.setSecurityGroupIds( options.getNetwork().getSecurityGroupIds() );
-        }
+        request.setSubnetId( options.getWorkerOptions().getSubnetId() );
+        request.setSecurityGroupIds( options.getWorkerOptions().getSecurityGroupIds() );
         if ( options.getUserData() != null )
         {
             request.setUserData( Base64.encodeBase64String( options.getUserData().getBytes() ) );
         }
         request.withMinCount( 1 ).withMaxCount( 1 ).withImageId( config.getAgentAmiId() ).withInstanceType( InstanceType.T1Micro );
-        request.setKeyName( options.getKeyPairName() );
+        request.setKeyName( options.getWorkerOptions().getKeyPairName() );
         RunInstancesResult result =
             ec2.runInstances( ActivityUtils.decorate( request, identity ) );
         return result.getReservation().getInstances().get( 0 ).getInstanceId();

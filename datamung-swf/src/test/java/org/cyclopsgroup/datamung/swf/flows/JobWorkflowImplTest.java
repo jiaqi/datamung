@@ -1,9 +1,7 @@
 package org.cyclopsgroup.datamung.swf.flows;
 
-import java.util.Arrays;
-
 import org.cyclopsgroup.datamung.api.types.Identity;
-import org.cyclopsgroup.datamung.api.types.InstanceNetwork;
+import org.cyclopsgroup.datamung.api.types.WorkerOptions;
 import org.cyclopsgroup.datamung.swf.interfaces.AgentActivities;
 import org.cyclopsgroup.datamung.swf.interfaces.Constants;
 import org.cyclopsgroup.datamung.swf.interfaces.ControlActivities;
@@ -55,22 +53,21 @@ public class JobWorkflowImplTest
     @Test
     public void testRun()
     {
-        final Identity identity = Identity.of( "a", "b", "c" );
-        InstanceNetwork network =
-            InstanceNetwork.ofVpc( "test-subset", "test-vpc",
-                                   Arrays.asList( "test-group" ) );
+        final Identity identity = Identity.of( "a", "b" );
+
+        WorkerOptions workerOptions = new WorkerOptions();
 
         RunJobRequest request = new RunJobRequest();
-        request.setNetwork( network );
+        request.setWorkerOptions( workerOptions );
 
         final Job job = new CommandLineJob();
-        request.setJobTimeoutSeconds( 10 );
+
         request.setIdentity( identity );
 
         request.setJob( job );
 
         final CreateInstanceOptions options = new CreateInstanceOptions();
-        options.setNetwork( network );
+        options.setWorkerOptions( workerOptions );
         options.setInstanceProfileName( "dm-profile-test" );
         options.setUserData( "test-data" );
 

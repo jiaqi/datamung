@@ -1,6 +1,5 @@
 package org.cyclopsgroup.datamung.swf.types;
 
-import org.cyclopsgroup.datamung.api.types.InstanceNetwork;
 import org.cyclopsgroup.kaufman.interfaces.BaseComparableBean;
 
 public class DatabaseInstance
@@ -18,11 +17,11 @@ public class DatabaseInstance
 
     private String masterUser;
 
-    private InstanceNetwork network;
-
     private int port;
 
     private String publicHostName;
+
+    private String subnetGroupName;
 
     public int getAllocatedStorage()
     {
@@ -54,11 +53,6 @@ public class DatabaseInstance
         return masterUser;
     }
 
-    public InstanceNetwork getNetwork()
-    {
-        return network;
-    }
-
     public int getPort()
     {
         return port;
@@ -67,6 +61,11 @@ public class DatabaseInstance
     public String getPublicHostName()
     {
         return publicHostName;
+    }
+
+    public String getSubnetGroupName()
+    {
+        return subnetGroupName;
     }
 
     public void setAllocatedStorage( int allocatedStorage )
@@ -99,11 +98,6 @@ public class DatabaseInstance
         this.masterUser = masterUser;
     }
 
-    public void setNetwork( InstanceNetwork network )
-    {
-        this.network = network;
-    }
-
     public void setPort( int port )
     {
         this.port = port;
@@ -112,5 +106,10 @@ public class DatabaseInstance
     public void setPublicHostName( String publicHostName )
     {
         this.publicHostName = publicHostName;
+    }
+
+    public void setSubnetGroupName( String subnetGroupName )
+    {
+        this.subnetGroupName = subnetGroupName;
     }
 }

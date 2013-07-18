@@ -11,17 +11,21 @@ public class CheckAndWait
         DATABASE_CREATION, SNAPSHOT_CREATION, WORKER_LAUNCH;
     }
 
+    private static final int DEFAULT_MAX_CHECKS_PER_EXECUTION = 10;
+
+    private static final long DEFAULT_WAIT_INTERVAL_SECONDS = 120L;
+
     private Type checkType;
 
     private long expireOn;
 
     private Identity identity;
 
-    private int maxChecksPerExecution = 10;
+    private int maxChecksPerExecution = DEFAULT_MAX_CHECKS_PER_EXECUTION;
 
     private String objectName;
 
-    private long waitIntervalSeconds = 300L;
+    private long waitIntervalSeconds = DEFAULT_WAIT_INTERVAL_SECONDS;
 
     public Type getCheckType()
     {

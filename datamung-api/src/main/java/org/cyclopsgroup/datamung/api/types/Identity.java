@@ -11,17 +11,13 @@ public class Identity
 {
     private String awsAccessKeyId;
 
-    private String awsAccessToken;
-
     private String awsSecretKey;
 
-    public static Identity of( String accessKeyId, String secretKey,
-                               String token )
+    public static Identity of( String accessKeyId, String secretKey )
     {
         Identity id = new Identity();
         id.awsAccessKeyId = accessKeyId;
         id.awsSecretKey = secretKey;
-        id.awsAccessToken = token;
         return id;
     }
 
@@ -29,12 +25,6 @@ public class Identity
     public String getAwsAccessKeyId()
     {
         return awsAccessKeyId;
-    }
-
-    @XmlElement
-    public String getAwsAccessToken()
-    {
-        return awsAccessToken;
     }
 
     @XmlElement
@@ -46,11 +36,6 @@ public class Identity
     public void setAwsAccessKeyId( String awsAccessKeyId )
     {
         this.awsAccessKeyId = awsAccessKeyId;
-    }
-
-    public void setAwsAccessToken( String awsAccessToken )
-    {
-        this.awsAccessToken = awsAccessToken;
     }
 
     public void setAwsSecretKey( String awsSecretKey )

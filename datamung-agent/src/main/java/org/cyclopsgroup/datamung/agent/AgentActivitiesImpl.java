@@ -25,7 +25,6 @@ import org.cyclopsgroup.kaufman.logging.InvocationLoggingDecorator;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 
@@ -118,21 +117,9 @@ public class AgentActivitiesImpl
         throws IOException, InterruptedException, ExecutionException
     {
         S3DataArchive dataArchive = (S3DataArchive) job.getDataArchive();
-        AWSCredentials creds;
-        if ( job.getIdentity().getAwsAccessToken() == null )
-        {
-            creds =
-                new BasicAWSCredentials( job.getIdentity().getAwsAccessKeyId(),
-                                         job.getIdentity().getAwsSecretKey() );
-        }
-        else
-        {
-            creds =
-                new BasicSessionCredentials(
-                                             job.getIdentity().getAwsAccessKeyId(),
-                                             job.getIdentity().getAwsSecretKey(),
-                                             job.getIdentity().getAwsAccessToken() );
-        }
+        AWSCredentials creds =
+            new BasicAWSCredentials( job.getIdentity().getAwsAccessKeyId(),
+                                     job.getIdentity().getAwsSecretKey() );
         AmazonS3 s3 =
             InvocationLoggingDecorator.decorate( AmazonS3.class,
                                                  new AmazonS3Client( creds ) );

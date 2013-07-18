@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.model.CreateDBSnapshotRequest;
 import com.amazonaws.services.rds.model.DBInstance;
+import com.amazonaws.services.rds.model.DBInstanceNotFoundException;
+import com.amazonaws.services.rds.model.DBSnapshot;
+import com.amazonaws.services.rds.model.DBSnapshotNotFoundException;
 import com.amazonaws.services.rds.model.DeleteDBInstanceRequest;
 import com.amazonaws.services.rds.model.DeleteDBSnapshotRequest;
 import com.amazonaws.services.rds.model.DescribeDBInstancesRequest;
@@ -21,6 +24,27 @@ import com.amazonaws.services.rds.model.RestoreDBInstanceFromDBSnapshotRequest;
 public class RdsActivitiesImpl
     implements RdsActivities
 {
+    private static DatabaseInstance toDatabaseInstance( DBInstance dbInstance )
+    {
+        DatabaseInstance i = new DatabaseInstance();
+        i.setAllocatedStorage( dbInstance.getAllocatedStorage() );
+        i.setAvailabilityZone( dbInstance.getAvailabilityZone() );
+        i.setInstanceId( dbInstance.getDBInstanceIdentifier() );
+        i.setInstanceStatus( dbInstance.getDBInstanceStatus() );
+        i.setInstanceType( dbInstance.getDBInstanceClass() );
+        i.setMasterUser( dbInstance.getMasterUsername() );
+        if ( dbInstance.getEndpoint() != null )
+        {
+            i.setPort( dbInstance.getEndpoint().getPort() );
+            i.setPublicHostName( dbInstance.getEndpoint().getAddress() );
+        }
+        if ( dbInstance.getDBSubnetGroup() != null )
+        {
+            i.setSubnetGroupName( dbInstance.getDBSubnetGroup().getDBSubnetGroupName() );
+        }
+        return i;
+    }
+
     @Autowired
     private AmazonRDS rds;
 
@@ -31,7 +55,15 @@ public class RdsActivitiesImpl
     public void createSnapshot( String snapshotName, String instanceName,
                                 Identity identity )
     {
-
+        try
+        {
+            rds.describeDBSnapshots( ActivityUtils.decorate( new DescribeDBSnapshotsRequest().withDBSnapshotIdentifier( snapshotName ),
+                                                             identity ) );
+            return;
+        }
+        catch ( DBSnapshotNotFoundException e )
+        {
+        }
         rds.createDBSnapshot( ActivityUtils.decorate( new CreateDBSnapshotRequest(
                                                                                    snapshotName,
                                                                                    instanceName ),
@@ -44,9 +76,15 @@ public class RdsActivitiesImpl
     @Override
     public void deleteSnapshot( String snapshotName, Identity identity )
     {
-        rds.deleteDBSnapshot( ActivityUtils.decorate( new DeleteDBSnapshotRequest(
-                                                                                   snapshotName ),
-                                                      identity ) );
+        try
+        {
+            rds.deleteDBSnapshot( ActivityUtils.decorate( new DeleteDBSnapshotRequest(
+                                                                                       snapshotName ),
+                                                          identity ) );
+        }
+        catch ( DBSnapshotNotFoundException e )
+        {
+        }
     }
 
     /**
@@ -64,17 +102,7 @@ public class RdsActivitiesImpl
             return null;
         }
         DBInstance result = results.getDBInstances().get( 0 );
-
-        DatabaseInstance i = new DatabaseInstance();
-        i.setAllocatedStorage( result.getAllocatedStorage() );
-        i.setAvailabilityZone( result.getAvailabilityZone() );
-        i.setInstanceId( result.getDBInstanceIdentifier() );
-        i.setInstanceStatus( result.getDBInstanceStatus() );
-        i.setInstanceType( result.getDBInstanceClass() );
-        i.setMasterUser( result.getMasterUsername() );
-        i.setPort( result.getEndpoint().getPort() );
-        i.setPublicHostName( result.getEndpoint().getAddress() );
-        return i;
+        return toDatabaseInstance( result );
     }
 
     /**
@@ -83,14 +111,17 @@ public class RdsActivitiesImpl
     @Override
     public String getSnapshotStatus( String snapshotName, Identity identity )
     {
-        DescribeDBSnapshotsResult result =
-            rds.describeDBSnapshots( ActivityUtils.decorate( new DescribeDBSnapshotsRequest().withDBSnapshotIdentifier( snapshotName ),
-                                                             identity ) );
-        if ( result.getDBSnapshots().isEmpty() )
+        try
+        {
+            DescribeDBSnapshotsResult result =
+                rds.describeDBSnapshots( ActivityUtils.decorate( new DescribeDBSnapshotsRequest().withDBSnapshotIdentifier( snapshotName ),
+                                                                 identity ) );
+            return result.getDBSnapshots().get( 0 ).getStatus();
+        }
+        catch ( DBSnapshotNotFoundException e )
         {
             return null;
         }
-        return result.getDBSnapshots().get( 0 ).getStatus();
     }
 
     /**
@@ -99,21 +130,56 @@ public class RdsActivitiesImpl
     @Override
     public DatabaseInstance restoreSnapshot( String snapshotName,
                                              String instanceName,
+                                             String subnetGroupName,
                                              Identity identity )
     {
-        // TODO Set security group properly
+        try
+        {
+            DescribeDBInstancesResult results =
+                rds.describeDBInstances( ActivityUtils.decorate( new DescribeDBInstancesRequest().withDBInstanceIdentifier( instanceName ),
+                                                                 identity ) );
+            return toDatabaseInstance( results.getDBInstances().get( 0 ) );
+        }
+        catch ( DBInstanceNotFoundException e )
+        {
+        }
+
+        DescribeDBSnapshotsResult result =
+            rds.describeDBSnapshots( ActivityUtils.decorate( new DescribeDBSnapshotsRequest().withDBSnapshotIdentifier( snapshotName ),
+                                                             identity ) );
+        if ( result.getDBSnapshots().isEmpty() )
+        {
+            throw new IllegalArgumentException( "Snapshot  " + snapshotName
+                + " is not found" );
+        }
+        DBSnapshot snapshot = result.getDBSnapshots().get( 0 );
+
+        RestoreDBInstanceFromDBSnapshotRequest request =
+            new RestoreDBInstanceFromDBSnapshotRequest( instanceName,
+                                                        snapshotName );
+
+        if ( snapshot.getVpcId() == null )
+        {
+            request.setPubliclyAccessible( true );
+        }
+        else
+        {
+            request.setDBSubnetGroupName( subnetGroupName );
+        }
+
         DBInstance ins =
-            rds.restoreDBInstanceFromDBSnapshot( ActivityUtils.decorate( new RestoreDBInstanceFromDBSnapshotRequest(
-                                                                                                                     instanceName,
-                                                                                                                     snapshotName ).withPubliclyAccessible( true ),
+            rds.restoreDBInstanceFromDBSnapshot( ActivityUtils.decorate( request,
                                                                          identity ) );
         DatabaseInstance desc = new DatabaseInstance();
         desc.setAllocatedStorage( ins.getAllocatedStorage() );
         desc.setAvailabilityZone( ins.getAvailabilityZone() );
         desc.setInstanceId( ins.getDBInstanceIdentifier() );
         desc.setInstanceType( ins.getDBInstanceClass() );
-        desc.setPublicHostName( ins.getEndpoint().getAddress() );
-        desc.setPort( ins.getEndpoint().getPort() );
+        if ( ins.getEndpoint() != null )
+        {
+            desc.setPublicHostName( ins.getEndpoint().getAddress() );
+            desc.setPort( ins.getEndpoint().getPort() );
+        }
         desc.setMasterUser( ins.getMasterUsername() );
         return desc;
     }
@@ -124,8 +190,14 @@ public class RdsActivitiesImpl
     @Override
     public void terminateInstance( String instanceName, Identity identity )
     {
-        rds.deleteDBInstance( ActivityUtils.decorate( new DeleteDBInstanceRequest(
-                                                                                   instanceName ),
-                                                      identity ).withSkipFinalSnapshot( true ) );
+        try
+        {
+            rds.deleteDBInstance( ActivityUtils.decorate( new DeleteDBInstanceRequest(
+                                                                                       instanceName ),
+                                                          identity ).withSkipFinalSnapshot( true ) );
+        }
+        catch ( DBInstanceNotFoundException e )
+        {
+        }
     }
 }

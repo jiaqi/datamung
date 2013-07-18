@@ -26,7 +26,7 @@ public interface RdsActivities
 
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
     DatabaseInstance restoreSnapshot( String snapshotName, String instanceName,
-                                      Identity identity );
+                                      String subnetId, Identity identity );
 
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
     void terminateInstance( String instanceName, Identity identity );

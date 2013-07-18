@@ -1,6 +1,6 @@
 package org.cyclopsgroup.datamung.swf.types;
 
-import org.cyclopsgroup.datamung.api.types.InstanceNetwork;
+import org.cyclopsgroup.datamung.api.types.WorkerOptions;
 import org.cyclopsgroup.kaufman.interfaces.BaseComparableBean;
 
 public class CreateInstanceOptions
@@ -8,25 +8,13 @@ public class CreateInstanceOptions
 {
     private String instanceProfileName;
 
-    private String keyPairName;
-
-    private InstanceNetwork network;
-
     private String userData;
+
+    private WorkerOptions workerOptions;
 
     public String getInstanceProfileName()
     {
         return instanceProfileName;
-    }
-
-    public String getKeyPairName()
-    {
-        return keyPairName;
-    }
-
-    public InstanceNetwork getNetwork()
-    {
-        return network;
     }
 
     public String getUserData()
@@ -34,23 +22,23 @@ public class CreateInstanceOptions
         return userData;
     }
 
+    public WorkerOptions getWorkerOptions()
+    {
+        return workerOptions;
+    }
+
     public void setInstanceProfileName( String instanceProfileName )
     {
         this.instanceProfileName = instanceProfileName;
     }
 
-    public void setKeyPairName( String keyPairName )
-    {
-        this.keyPairName = keyPairName;
-    }
-
-    public void setNetwork( InstanceNetwork network )
-    {
-        this.network = network;
-    }
-
     public void setUserData( String userData )
     {
         this.userData = userData;
+    }
+
+    public void setWorkerOptions( WorkerOptions workerOptions )
+    {
+        this.workerOptions = workerOptions;
     }
 }
