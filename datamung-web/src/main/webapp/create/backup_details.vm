@@ -1,10 +1,10 @@
 <div>
     <h2>Instance backup details</h2>
-    <form method="post">
+    <form method="post"
+        action="$link.absolute('create/do_save_backup_details.html')">
         <input type="hidden" name="formBean"
-            value="org.cyclopsgroup.datamung.web.form.SourceDestinationForm" />
+            value="org.cyclopsgroup.datamung.web.form.SourceAndDestination" />
         <input type="hidden" name="inputData" value="$inputData" />
-        <input type="hidden" name="actionType" value="$input.actionType" />
         <table cellpadding="0" cellpading="2" border="0" width="100%">
             <tr>
                 <td width="5%"></td>
@@ -14,14 +14,8 @@
                 <td colspan="2">
                     #if($input.actionType.name()=="BACKUP_INSTANCE")
                     <h3>Back up from</h3>
-                    <p>
-                        Choose an RDS MySQL instance to backup.
-                </p>
                     #else
                     <h3>Convert from</h3>
-                    <p>
-                        Choose an RDS MySQL snapshot.
-                </p>
                     #end
                     <p>
                         DataMung does not persist database password. It
@@ -34,7 +28,7 @@
                         away after
                         process
                         completes.
-                </p>
+                    </p>
                 </td>
             </tr>
             #if($input.actionType.name()=="BACKUP_INSTANCE")
@@ -45,11 +39,20 @@
                         <option value="">--Select an instance--
                         </option>
                         #foreach($instance in $allInstances)
+                        #if($instance.dBInstanceIdentifier==$input.sourceAndDestination.databaseInstanceId)
+                        <option selected="selected"
+                            value="$instance.dBInstanceIdentifier">
+                            $instance.dBInstanceIdentifier
+                            ($instance.allocatedStorage Gb,
+                            $instance.dBInstanceStatus)
+                        </option>
+                        #else
                         <option value="$instance.dBInstanceIdentifier">
                             $instance.dBInstanceIdentifier
                             ($instance.allocatedStorage Gb,
                             $instance.dBInstanceStatus)
                         </option>
+                        #end
                         #end
                     </select>
                 </td>
@@ -66,6 +69,13 @@
                         <option value="">--Select a snapshot--
                         </option>
                         #foreach($snapshot in $allSnapshots)
+                        #if($snapshot.dBSnapshotIdentifier==$input.sourceAndDestination.databaseSnapshotId)
+                        <option selected="selected"
+                            value="$snapshot.dBSnapshotIdentifier">
+                            $snapshot.dBSnapshotIdentifier
+                            ($snapshot.status)
+                        </option>
+                        #else
                         <option value="$snapshot.dBSnapshotIdentifier">
                             $snapshot.dBSnapshotIdentifier
                             ($snapshot.status)
@@ -83,18 +93,26 @@
                 <td nowrap="nowrap">Master password:</td>
                 <td>
                     <input type="password" name="databaseMasterPassword"
-                        size="20" />
+                        size="20"
+                        value="$!input.sourceAndDestination.masterUserPassword" />
                 </td>
             </tr>
             <tr>
                 <td></td>
                 <td class="error" u:for="databaseMasterPassword" />
             </tr>
+            #if($input.actionType.name()=="BACKUP_INSTANCE")
+            <tr>
+                <td nowrap="nowrap">Touchless:</td>
+                <td></td>
+            </tr>
+            #end
             <tr>
                 <td colspan="2">
                     <h3>#if($input.actionType.name()=="BACKUP_INSTANCE")
                         Backup
-                        #else Convert #end to</h3>
+                        #else Convert #end to
+                    </h3>
                     <p>
                         Specify where the mysqldump result file should be
                         persisted
@@ -108,7 +126,7 @@
                         <option value="">--Select an bucket--
                         </option>
                         #foreach($bucket in $allBuckets)
-                        #if($bucket.name==$input.archiveBucketName))
+                        #if($bucket.name==$input.sourceAndDestination.archiveBucketName))
                         <option value="$bucket.name" selected="selected">
                             $bucket.name
                         </option>
@@ -129,7 +147,8 @@
                 <td nowrap="nowrap">S3 object key:</td>
                 <td>
                     <input type="text" name="archiveObjectKey"
-                        size="60" value="$!input.archiveObjectKey" />
+                        size="60"
+                        value="$!input.sourceAndDestination.archiveObjectKey" />
                 </td>
             </tr>
             <tr>
@@ -142,7 +161,7 @@
             </tr>
             <tr>
                 <td colspan="2">
-                    #set($getStartedUrl=$link.absolute("/get_started.html"))
+                    #set($getStartedUrl=$link.absolute("/create/get_started.html"))
                     <button type="submit"
                         onclick="this.form.action='$getStartedUrl'">Back</button>
                     <button type="submit"

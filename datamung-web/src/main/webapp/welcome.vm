@@ -15,32 +15,23 @@
                 Launch an EC2 instance that can reach new RDS instance
             </li>
             <li>
-                If RDS instance is big enough, launch an HDFS cluster
-            </li>
-            <li>
                 Execute mysqldump command on EC2 instance against new
                 RDS instance and save result to disk or HDFS cluster
             </li>
             <li>Upload mysqldump result to specified S3</li>
             <li>
-                If the 2 steps above fails, repeat them above until
-                successful or retry limit is breached
-            </li>
-            <li>
-                Terminate new RDS instance, EC2 instance and optional
-                HDFS cluster
+                Terminate new RDS instance and EC2 instance
             </li>
         </ol>
     </p>
     <p>
-        To restore RDS instance from S3 object, similar but reversed
-        steps are followed.
+        Each step is retried upon failure.
     </p>
     <p>
         This website is a quick demo of DataMung. Here you may try
         backing up a MySQL RDS instance under your AWS account. If it
         does sound like a solution of your problem, why not
-        <a href="$link.absolute('/get_started.html')">have a try</a>
+        <a href="$link.absolute('/create')">have a try</a>
         ?
     </p>
 </div>

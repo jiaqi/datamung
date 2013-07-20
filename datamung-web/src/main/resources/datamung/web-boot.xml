@@ -9,12 +9,16 @@
        http://www.springframework.org/schema/context/spring-context.xsd
        http://www.springframework.org/schema/aop
        http://www.springframework.org/schema/aop/spring-aop.xsd">
-    <context:property-placeholder />
+
+    <import resource="./context-${stage:alpha}.xml" />
     <aop:aspectj-autoproxy />
     <aop:config>
         <aop:aspect ref="loggingAdvice" order="1">
             <aop:around
                 pointcut="execution(* org.cyclopsgroup.datamung.api.*Service.*(..))"
+                method="execute" />
+            <aop:around
+                pointcut="execution(* com.amazonaws.services.*.*Client.*(..))"
                 method="execute" />
         </aop:aspect>
     </aop:config>
@@ -22,4 +26,21 @@
         class="org.cyclopsgroup.kaufman.logging.InvocationLoggingAdvice" />
     <bean
         class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean" />
+
+
+    <!-- AWS resources -->
+    <bean class="com.amazonaws.services.rds.AmazonRDSClient">
+        <constructor-arg ref="aws.Credentials" />
+    </bean>
+    <bean class="com.amazonaws.services.ec2.AmazonEC2Client">
+        <constructor-arg ref="aws.Credentials" />
+    </bean>
+    <bean class="com.amazonaws.services.s3.AmazonS3Client">
+        <constructor-arg ref="aws.Credentials" />
+    </bean>
+    <bean id="aws.SimpleWorkflow"
+        class="com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflowClient">
+        <constructor-arg ref="aws.Credentials" />
+        <property name="endpoint" value="https://swf.us-east-1.amazonaws.com" />
+    </bean>
 </beans>

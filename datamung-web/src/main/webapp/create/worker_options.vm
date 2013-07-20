@@ -1,0 +1,24 @@
+<div>
+    <h2>Worker options</h2>
+    <form method="post"
+        action="$link.absolute('create/do_save_worker_options.html')">
+        <input type="hidden" name="formBean"
+            value="org.cyclopsgroup.datamung.web.form.WorkerInstanceOptions" />
+        <input type="hidden" name="inputData" value="$inputData" />
+        <table>
+            <tr>
+                <td></td>
+                <td class="error" u:for="form"></td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    #set($backupDetailsUrl=$link.absolute("/create/backup_details.html"))
+                    <button type="submit"
+                        onclick="this.form.action='$backupDetailsUrl'">Back</button>
+                    <button type="submit"
+                        onclick="return validateForm(this.form);">Continue...</button>
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>

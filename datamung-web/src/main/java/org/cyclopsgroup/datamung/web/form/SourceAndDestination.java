@@ -3,10 +3,10 @@ package org.cyclopsgroup.datamung.web.form;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-public class SourceDestinationForm
+public class SourceAndDestination
 {
     @NotNull
-    private CredentialsAndAction.ActionType actionType;
+    private ActionType actionType;
 
     @Size( min = 1, message = "Bucket name can't be empty" )
     private String archiveBucketName;
@@ -22,7 +22,9 @@ public class SourceDestinationForm
 
     private String databaseSnapshotId;
 
-    public CredentialsAndAction.ActionType getActionType()
+    private boolean liveInstanceTouched;
+
+    public ActionType getActionType()
     {
         return actionType;
     }
@@ -52,7 +54,12 @@ public class SourceDestinationForm
         return databaseSnapshotId;
     }
 
-    public void setActionType( CredentialsAndAction.ActionType actionType )
+    public boolean isLiveInstanceTouched()
+    {
+        return liveInstanceTouched;
+    }
+
+    public void setActionType( ActionType actionType )
     {
         this.actionType = actionType;
     }
@@ -80,5 +87,10 @@ public class SourceDestinationForm
     public void setDatabaseSnapshotId( String databaseSnapshotId )
     {
         this.databaseSnapshotId = databaseSnapshotId;
+    }
+
+    public void setLiveInstanceTouched( boolean liveInstanceTouched )
+    {
+        this.liveInstanceTouched = liveInstanceTouched;
     }
 }

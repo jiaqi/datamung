@@ -9,9 +9,9 @@
         <td align="right" valign="bottom">
             <a href="$link.absolute('')">Home</a>
             &nbsp;&nbsp;&nbsp;&nbsp;
-            <a href="$link.absolute('/get_started.html')">Get started</a>
+            <a href="$link.absolute('/create')">Get started</a>
             &nbsp;&nbsp;&nbsp;&nbsp;
-            <a href="$link.absolute('/jobs.html')">Active jobs</a>
+            <a href="$link.absolute('/jobs')">Active jobs</a>
             &nbsp;&nbsp;&nbsp;&nbsp;
             <a href="$link.absolute('/about.html')">Learn more</a>
         </td>

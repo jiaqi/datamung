@@ -4,20 +4,17 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.SerializationUtils;
 
-import com.amazonaws.regions.Regions;
+import com.amazonaws.services.simpleworkflow.flow.JsonDataConverter;
 
 public class JobInput
-    implements Serializable
 {
-    private static final long serialVersionUID = 1L;
+    private static final JsonDataConverter CONVERTER = new JsonDataConverter();
 
     public static JobInput deserializeFrom( String input )
         throws IOException
@@ -27,7 +24,7 @@ public class JobInput
         GZIPInputStream zip = new GZIPInputStream( in );
         try
         {
-            return (JobInput) SerializationUtils.deserialize( zip );
+            return CONVERTER.fromData( IOUtils.toString( zip ), JobInput.class );
         }
         finally
         {
@@ -35,67 +32,25 @@ public class JobInput
         }
     }
 
-    private CredentialsAndAction.ActionType actionType;
+    private ActionType actionType;
 
-    private String archiveBucketName;
+    private CredentialsAndAction credsAndAction;
 
-    private String archiveObjectKey;
+    private SourceAndDestination sourceAndDestination;
 
-    private String awsAccessKeyId;
-
-    private Regions awsRegion;
-
-    private String awsSecretKey;
-
-    private String databaseInstanceId;
-
-    private String databaseMasterPassword;
-
-    private String databaseSnapshotId;
-
-    public CredentialsAndAction.ActionType getActionType()
+    public ActionType getActionType()
     {
         return actionType;
     }
 
-    public String getArchiveBucketName()
+    public CredentialsAndAction getCredsAndAction()
     {
-        return archiveBucketName;
+        return credsAndAction;
     }
 
-    public String getArchiveObjectKey()
+    public SourceAndDestination getSourceAndDestination()
     {
-        return archiveObjectKey;
-    }
-
-    public String getAwsAccessKeyId()
-    {
-        return awsAccessKeyId;
-    }
-
-    public Regions getAwsRegion()
-    {
-        return awsRegion;
-    }
-
-    public String getAwsSecretKey()
-    {
-        return awsSecretKey;
-    }
-
-    public String getDatabaseInstanceId()
-    {
-        return databaseInstanceId;
-    }
-
-    public String getDatabaseMasterPassword()
-    {
-        return databaseMasterPassword;
-    }
-
-    public String getDatabaseSnapshotId()
-    {
-        return databaseSnapshotId;
+        return sourceAndDestination;
     }
 
     public String serializeTo()
@@ -105,7 +60,7 @@ public class JobInput
         GZIPOutputStream zip = new GZIPOutputStream( out );
         try
         {
-            SerializationUtils.serialize( this, zip );
+            out.write( CONVERTER.toData( this ).getBytes() );
             zip.flush();
             zip.close();
             return new String( Base64.encodeBase64( out.toByteArray() ) );
@@ -116,48 +71,18 @@ public class JobInput
         }
     }
 
-    public void setActionType( CredentialsAndAction.ActionType actionType )
+    public void setActionType( ActionType actionType )
     {
         this.actionType = actionType;
     }
 
-    public void setArchiveBucketName( String archiveBucketName )
+    public void setCredsAndAction( CredentialsAndAction credsAndAction )
     {
-        this.archiveBucketName = archiveBucketName;
+        this.credsAndAction = credsAndAction;
     }
 
-    public void setArchiveObjectKey( String archiveObjectKey )
+    public void setSourceAndDestination( SourceAndDestination sourceAndDestination )
     {
-        this.archiveObjectKey = archiveObjectKey;
-    }
-
-    public void setAwsAccessKeyId( String accessKeyId )
-    {
-        this.awsAccessKeyId = accessKeyId;
-    }
-
-    public void setAwsRegion( Regions awsRegion )
-    {
-        this.awsRegion = awsRegion;
-    }
-
-    public void setAwsSecretKey( String secretKey )
-    {
-        this.awsSecretKey = secretKey;
-    }
-
-    public void setDatabaseInstanceId( String databaseInstanceId )
-    {
-        this.databaseInstanceId = databaseInstanceId;
-    }
-
-    public void setDatabaseMasterPassword( String masterPassword )
-    {
-        this.databaseMasterPassword = masterPassword;
-    }
-
-    public void setDatabaseSnapshotId( String databaseSnapshotId )
-    {
-        this.databaseSnapshotId = databaseSnapshotId;
+        this.sourceAndDestination = sourceAndDestination;
     }
 }

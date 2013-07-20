@@ -34,9 +34,6 @@
     <bean class="com.amazonaws.services.rds.AmazonRDSClient">
         <constructor-arg ref="aws.Credentials" />
     </bean>
-    <bean class="com.amazonaws.services.sqs.AmazonSQSClient">
-        <constructor-arg ref="aws.Credentials" />
-    </bean>
     <bean class="com.amazonaws.services.ec2.AmazonEC2Client">
         <constructor-arg ref="aws.Credentials" />
     </bean>
