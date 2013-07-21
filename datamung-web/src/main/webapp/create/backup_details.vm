@@ -39,7 +39,7 @@
                         <option value="">--Select an instance--
                         </option>
                         #foreach($instance in $allInstances)
-                        #if($instance.dBInstanceIdentifier==$input.sourceAndDestination.databaseInstanceId)
+                        #if($instance.dBInstanceIdentifier==$sourceAndDestination.databaseInstanceId)
                         <option selected="selected"
                             value="$instance.dBInstanceIdentifier">
                             $instance.dBInstanceIdentifier
@@ -69,7 +69,7 @@
                         <option value="">--Select a snapshot--
                         </option>
                         #foreach($snapshot in $allSnapshots)
-                        #if($snapshot.dBSnapshotIdentifier==$input.sourceAndDestination.databaseSnapshotId)
+                        #if($snapshot.dBSnapshotIdentifier==$sourceAndDestination.databaseSnapshotId)
                         <option selected="selected"
                             value="$snapshot.dBSnapshotIdentifier">
                             $snapshot.dBSnapshotIdentifier
@@ -95,7 +95,7 @@
                 <td>
                     <input type="password" name="databaseMasterPassword"
                         size="20"
-                        value="$!input.sourceAndDestination.databaseMasterPassword" />
+                        value="$!sourceAndDestination.databaseMasterPassword" />
                 </td>
             </tr>
             <tr>
@@ -105,9 +105,49 @@
             #if($input.actionType.name()=="BACKUP_INSTANCE")
             <tr>
                 <td nowrap="nowrap">Touchless:</td>
-                <td></td>
+                <td>
+                    #if($sourceAndDestination.liveInstanceTouched)
+                    <input type="radio" name="liveInstanceTouched"
+                        value="true" id="liveInstanceTouched_true"
+                        checked="checked" />
+                    #else
+                    <input type="radio" name="liveInstanceTouched"
+                        value="true" id="liveInstanceTouched_true" />
+                    #end
+                    <label for="liveInstanceTouched_true">
+                        Run mysqldump against live database
+                        directly
+                    </label>
+                    <br />
+                    #if($sourceAndDestination.liveInstanceTouched)
+                    <input type="radio" name="liveInstanceTouched"
+                        value="false" id="liveInstanceTouched_false" />
+                    #else
+                    <input type="radio" name="liveInstanceTouched"
+                        value="false" id="liveInstanceTouched_false"
+                        checked="checked" />
+                    #end
+                    <label for="liveInstanceTouched_false">
+                        Take snapshot of database and run
+                        mysqldump against snapshot instead of live
+                        database
+                    </label>
+                </td>
             </tr>
             #end
+            <tr>
+                <td nowrap="nowrap">Snapshot timeout:</td>
+                <td>
+                    <input type="text" name="snapshotTimeoutSeconds"
+                        size="6"
+                        value="$!sourceAndDestination.snapshotTimeoutSeconds" />
+                    seconds
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="error" u:for="snapshotTimeoutSeconds" />
+            </tr>
             <tr>
                 <td colspan="2">
                     <h3>#if($input.actionType.name()=="BACKUP_INSTANCE")
@@ -127,7 +167,7 @@
                         <option value="">--Select an bucket--
                         </option>
                         #foreach($bucket in $allBuckets)
-                        #if($bucket.name==$input.sourceAndDestination.archiveBucketName))
+                        #if($bucket.name==$sourceAndDestination.archiveBucketName))
                         <option value="$bucket.name" selected="selected">
                             $bucket.name
                         </option>
@@ -148,8 +188,7 @@
                 <td nowrap="nowrap">S3 object key:</td>
                 <td>
                     <input type="text" name="archiveObjectKey"
-                        size="60"
-                        value="$!input.sourceAndDestination.archiveObjectKey" />
+                        size="60" value="$!sourceAndDestination.archiveObjectKey" />
                 </td>
             </tr>
             <tr>

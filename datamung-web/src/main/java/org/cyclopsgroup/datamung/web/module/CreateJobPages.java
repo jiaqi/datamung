@@ -21,6 +21,7 @@ import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.ec2.AmazonEC2;
+import com.amazonaws.services.ec2.model.DescribeKeyPairsRequest;
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.model.DescribeDBInstancesRequest;
 import com.amazonaws.services.rds.model.DescribeDBSnapshotsRequest;
@@ -84,7 +85,11 @@ public class CreateJobPages
         ModelAndView mav =
             new ModelAndView().addObject( "input", input ).addObject( "inputData",
                                                                       input.serializeTo() );
-
+        if ( input.getSourceAndDestination() == null )
+        {
+            SourceAndDestination defaultDetails = new SourceAndDestination();
+            input.setSourceAndDestination( defaultDetails );
+        }
         switch ( input.getActionType() )
         {
             case BACKUP_INSTANCE:
@@ -102,6 +107,8 @@ public class CreateJobPages
                 mav.addObject( "allBuckets",
                                s3.listBuckets( decorate( new ListBucketsRequest(),
                                                          creds ) ) );
+                mav.addObject( "sourceAndDestination",
+                               input.getSourceAndDestination() );
                 return mav;
             default:
                 throw new AssertionError( "Unexpected action type "
@@ -138,6 +145,7 @@ public class CreateJobPages
                                                           input.serializeTo() );
     }
 
+    @RequestMapping( value = "/worker_options.html", method = RequestMethod.POST )
     public ModelAndView showWorkerInstanceOptions( @RequestParam( value = "inputData" )
                                                    String inputData )
         throws IOException
@@ -154,7 +162,13 @@ public class CreateJobPages
             new ModelAndView( "create/worker_options.vm" ).addObject( "input",
                                                                       input ).addObject( "inputData",
                                                                                          input.serializeTo() );
-
+        AWSCredentials creds =
+            new BasicAWSCredentials( input.getAwsAccessKeyId(),
+                                     input.getAwsSecretKey() );
+        mav.addObject( "allKeyPairs",
+                       ec2.describeKeyPairs( decorate( new DescribeKeyPairsRequest(),
+                                                       creds ) ).getKeyPairs() );
+        mav.addObject( "workerOptions", input.getWorkerInstanceOptions() );
         return mav;
     }
 }

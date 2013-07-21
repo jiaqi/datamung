@@ -7,6 +7,37 @@
         <input type="hidden" name="inputData" value="$inputData" />
         <table>
             <tr>
+                <td coslpan="2">
+                    <h3>Worker security options</h3>
+                    <p>
+                        Key pair is optional. However it allows user to
+                        SSH into the worker instance to see the log
+                        files and troubleshoot. If user intend to set
+                        keypair and log into worker instance, a security
+                        group that allows SSH access must be specified
+                        as well.
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <td>Keypair:</td>
+                <td>
+                    <select name="keypairName">
+                        <option value="">--none--</option>
+                        #foreach($keypair in $allKeyPairs)
+                        #if($workerOptions.keypairName==$keypair.keyName)
+                        <option value="$keypair.keyName"
+                            selected="selected">
+                            $keypair.keyName
+                        </option>
+                        #else
+                        <option value="$keypair.keyName">$keypair.keyName</option>
+                        #end
+                        #end
+                    </select>
+                </td>
+            </tr>
+            <tr>
                 <td></td>
                 <td class="error" u:for="form"></td>
             </tr>
