@@ -4,12 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.cyclopsgroup.datamung.api.types.ExportInstanceRequest;
 import org.cyclopsgroup.datamung.api.types.Identity;
-import org.cyclopsgroup.datamung.api.types.InstanceNetwork;
-import org.cyclopsgroup.datamung.swf.interfaces.CommandJobWorkflowClientExternalFactory;
-import org.cyclopsgroup.datamung.swf.interfaces.CommandJobWorkflowClientExternalFactoryImpl;
-import org.cyclopsgroup.datamung.swf.types.CommandLineJob;
-import org.cyclopsgroup.datamung.swf.types.RunJobRequest;
+import org.cyclopsgroup.datamung.api.types.S3DataArchive;
+import org.cyclopsgroup.datamung.api.types.WorkerOptions;
+import org.cyclopsgroup.datamung.swf.interfaces.ExportInstanceWorkflowClientExternalFactory;
+import org.cyclopsgroup.datamung.swf.interfaces.ExportInstanceWorkflowClientExternalFactoryImpl;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.PropertiesCredentials;
@@ -27,20 +27,26 @@ public class Main
     private static void runTestFlow()
         throws IOException
     {
-
-        RunJobRequest request = new RunJobRequest();
-        CommandLineJob job = new CommandLineJob();
-        job.setCommand( "echo 1 2 3 4 5 6" );
-
         AWSCredentials caseCreds =
             new PropertiesCredentials(
                                        new File(
                                                  "/Users/jguo/Dropbox/laogong/grpn/jguo-grpn-aws-creds.properties" ) );
+
+        ExportInstanceRequest request = new ExportInstanceRequest();
         request.setIdentity( Identity.of( caseCreds.getAWSAccessKeyId(),
-                                          caseCreds.getAWSSecretKey(), null ) );
-        request.setJob( job );
-        request.setKeyPairName( "timecrook" );
-        request.setNetwork( InstanceNetwork.ofPublic( Arrays.asList( "sg-56e9453d" ) ) );
+                                          caseCreds.getAWSSecretKey() ) );
+        WorkerOptions options = new WorkerOptions();
+        options.setKeyPairName( "timecrook" );
+        options.setSubnetId( "subnet-ee530383" );
+        options.setSecurityGroupIds( Arrays.asList( "sg-4cd62923",
+                                                    "sg-60d6290f" ) );
+        request.setWorkerOptions( options );
+
+        request.setDestinationArchive( S3DataArchive.of( "superuser-test",
+                                                         "for-real.gz" ) );
+        request.setDatabaseMasterPassword( "600wchicago" );
+        request.setInstanceName( "lifeguard-uat" );
+        request.setLiveInstanceTouched( false );
 
         AWSCredentials serviceCreds =
             new PropertiesCredentials(
@@ -50,9 +56,9 @@ public class Main
         AmazonSimpleWorkflow swf =
             new AmazonSimpleWorkflowClient( serviceCreds );
         swf.setEndpoint( "https://swf.us-east-1.amazonaws.com" );
-        CommandJobWorkflowClientExternalFactory fac =
-            new CommandJobWorkflowClientExternalFactoryImpl( swf,
-                                                             "datamung-test" );
-        fac.getClient( "test" ).executeCommand( request );
+        ExportInstanceWorkflowClientExternalFactory fac =
+            new ExportInstanceWorkflowClientExternalFactoryImpl( swf,
+                                                                 "datamung-test" );
+        fac.getClient( "test-2" ).export( request );
     }
 }

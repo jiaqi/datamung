@@ -5,9 +5,6 @@ import javax.validation.constraints.Size;
 
 public class SourceAndDestination
 {
-    @NotNull
-    private ActionType actionType;
-
     @Size( min = 1, message = "Bucket name can't be empty" )
     private String archiveBucketName;
 
@@ -23,11 +20,6 @@ public class SourceAndDestination
     private String databaseSnapshotId;
 
     private boolean liveInstanceTouched;
-
-    public ActionType getActionType()
-    {
-        return actionType;
-    }
 
     public String getArchiveBucketName()
     {
@@ -57,11 +49,6 @@ public class SourceAndDestination
     public boolean isLiveInstanceTouched()
     {
         return liveInstanceTouched;
-    }
-
-    public void setActionType( ActionType actionType )
-    {
-        this.actionType = actionType;
     }
 
     public void setArchiveBucketName( String archiveBucketName )

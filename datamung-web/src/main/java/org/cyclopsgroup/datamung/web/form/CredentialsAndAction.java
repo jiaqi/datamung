@@ -3,9 +3,6 @@ package org.cyclopsgroup.datamung.web.form;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.BasicAWSCredentials;
-
 @ValidAwsCredential( message = "AWS credentials has problem, perhaps it doesn't have required permissions" )
 public class CredentialsAndAction
 {
@@ -46,10 +43,5 @@ public class CredentialsAndAction
     public void setAwsSecretKey( String awsSecretKey )
     {
         this.awsSecretKey = awsSecretKey;
-    }
-
-    public AWSCredentials toAwsCredential()
-    {
-        return new BasicAWSCredentials( awsAccessKeyId, awsSecretKey );
     }
 }

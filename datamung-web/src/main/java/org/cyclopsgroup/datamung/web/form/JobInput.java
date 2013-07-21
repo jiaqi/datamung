@@ -13,6 +13,7 @@ import org.apache.commons.io.IOUtils;
 import com.amazonaws.services.simpleworkflow.flow.JsonDataConverter;
 
 public class JobInput
+    extends CredentialsAndAction
 {
     private static final JsonDataConverter CONVERTER = new JsonDataConverter();
 
@@ -32,25 +33,18 @@ public class JobInput
         }
     }
 
-    private ActionType actionType;
-
-    private CredentialsAndAction credsAndAction;
-
     private SourceAndDestination sourceAndDestination;
 
-    public ActionType getActionType()
-    {
-        return actionType;
-    }
-
-    public CredentialsAndAction getCredsAndAction()
-    {
-        return credsAndAction;
-    }
+    private WorkerInstanceOptions workerInstanceOptions;
 
     public SourceAndDestination getSourceAndDestination()
     {
         return sourceAndDestination;
+    }
+
+    public WorkerInstanceOptions getWorkerInstanceOptions()
+    {
+        return workerInstanceOptions;
     }
 
     public String serializeTo()
@@ -60,7 +54,7 @@ public class JobInput
         GZIPOutputStream zip = new GZIPOutputStream( out );
         try
         {
-            out.write( CONVERTER.toData( this ).getBytes() );
+            zip.write( CONVERTER.toData( this ).getBytes() );
             zip.flush();
             zip.close();
             return new String( Base64.encodeBase64( out.toByteArray() ) );
@@ -71,18 +65,13 @@ public class JobInput
         }
     }
 
-    public void setActionType( ActionType actionType )
-    {
-        this.actionType = actionType;
-    }
-
-    public void setCredsAndAction( CredentialsAndAction credsAndAction )
-    {
-        this.credsAndAction = credsAndAction;
-    }
-
     public void setSourceAndDestination( SourceAndDestination sourceAndDestination )
     {
         this.sourceAndDestination = sourceAndDestination;
+    }
+
+    public void setWorkerInstanceOptions( WorkerInstanceOptions workerInstanceOptions )
+    {
+        this.workerInstanceOptions = workerInstanceOptions;
     }
 }

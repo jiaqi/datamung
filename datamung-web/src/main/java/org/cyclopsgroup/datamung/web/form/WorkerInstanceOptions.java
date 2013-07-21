@@ -4,9 +4,11 @@ import java.util.List;
 
 public class WorkerInstanceOptions
 {
+    private static final long DEFAULT_LAUNCH_TIMEOUT = 300;
+
     private String keypairName;
 
-    private long launchTimeoutSeconds;
+    private long launchTimeoutSeconds = DEFAULT_LAUNCH_TIMEOUT;
 
     private List<String> securityGroupIds;
 

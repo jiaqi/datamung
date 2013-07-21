@@ -81,6 +81,7 @@
                             ($snapshot.status)
                         </option>
                         #end
+                        #end
                     </select>
                 </td>
             </tr>
@@ -94,7 +95,7 @@
                 <td>
                     <input type="password" name="databaseMasterPassword"
                         size="20"
-                        value="$!input.sourceAndDestination.masterUserPassword" />
+                        value="$!input.sourceAndDestination.databaseMasterPassword" />
                 </td>
             </tr>
             <tr>

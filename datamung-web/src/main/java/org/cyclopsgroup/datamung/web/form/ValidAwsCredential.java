@@ -15,6 +15,7 @@ import org.apache.commons.lang.StringUtils;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.AmazonRDSClient;
 import com.amazonaws.services.rds.model.DescribeDBInstancesRequest;
@@ -40,7 +41,9 @@ public @interface ValidAwsCredential
         public boolean isValid( CredentialsAndAction value,
                                 ConstraintValidatorContext context )
         {
-            AWSCredentials creds = value.toAwsCredential();
+            AWSCredentials creds =
+                new BasicAWSCredentials( value.getAwsAccessKeyId(),
+                                         value.getAwsSecretKey() );
             if ( StringUtils.isBlank( creds.getAWSAccessKeyId() )
                 || StringUtils.isBlank( creds.getAWSSecretKey() ) )
             {

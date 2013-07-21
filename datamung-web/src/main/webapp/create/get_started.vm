@@ -41,7 +41,7 @@
                 <td>AWS access key id: </td>
                 <td>
                     <input type="text" name="awsAccessKeyId" size="30"
-                        value="$!input.credsAndAction.awsAccessKeyId" />
+                        value="$!input.awsAccessKeyId" />
                 </td>
             </tr>
             <tr>
@@ -52,7 +52,7 @@
                 <td>AWS secret key: </td>
                 <td>
                     <input type="text" name="awsSecretKey" size="64"
-                        value="$!input.credsAndAction.awsSecretKey" />
+                        value="$!input.awsSecretKey" />
                 </td>
             </tr>
             <tr>
