@@ -7,7 +7,11 @@
         <input type="hidden" name="inputData" value="$inputData" />
         <table>
             <tr>
-                <td coslpan="2">
+                <td width="5%"></td>
+                <td width="95%"></td>
+            </tr>
+            <tr>
+                <td colspan="2">
                     <h3>Worker security options</h3>
                     <p>
                         Key pair is optional. However it allows user to
