@@ -1,6 +1,8 @@
 package org.cyclopsgroup.datamung.web.module;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.validation.Valid;
 
@@ -22,7 +24,13 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.DescribeKeyPairsRequest;
+import com.amazonaws.services.ec2.model.DescribeSecurityGroupsRequest;
+import com.amazonaws.services.ec2.model.DescribeSubnetsRequest;
+import com.amazonaws.services.ec2.model.SecurityGroup;
+import com.amazonaws.services.ec2.model.Subnet;
 import com.amazonaws.services.rds.AmazonRDS;
+import com.amazonaws.services.rds.model.DBInstance;
+import com.amazonaws.services.rds.model.DBSnapshot;
 import com.amazonaws.services.rds.model.DescribeDBInstancesRequest;
 import com.amazonaws.services.rds.model.DescribeDBSnapshotsRequest;
 import com.amazonaws.services.s3.AmazonS3;
@@ -69,11 +77,18 @@ public class CreateJobPages
     {
         JobInput input = JobInput.deserializeFrom( inputData );
         input.setSourceAndDestination( form );
-        ModelAndView mav =
-            new ModelAndView( "create/worker_options.vm" ).addObject( "input",
-                                                                      input ).addObject( "inputData",
-                                                                                         input.serializeTo() );
-        return mav;
+        return showWorkerInstanceOptions( input );
+    }
+
+    @RequestMapping( value = "/do_save_worker_options.html", method = RequestMethod.POST )
+    public ModelAndView doSaveWorkerOptions( @Valid
+    WorkerInstanceOptions form, @RequestParam( value = "inputData" )
+    String inputData )
+        throws IOException
+    {
+        JobInput input = JobInput.deserializeFrom( inputData );
+        input.setWorkerInstanceOptions( form );
+        return showConfirm( input );
     }
 
     private ModelAndView showBackupDetails( JobInput input )
@@ -124,6 +139,23 @@ public class CreateJobPages
         return showBackupDetails( JobInput.deserializeFrom( inputData ) );
     }
 
+    private ModelAndView showConfirm( JobInput input )
+        throws IOException
+    {
+        ModelAndView mav =
+            new ModelAndView( "create/confirm.vm" ).addObject( "input", input ).addObject( "inputData",
+                                                                                           input.serializeTo() );
+        return mav;
+    }
+
+    @RequestMapping( value = "/confirm.html", method = RequestMethod.POST )
+    public ModelAndView showConfirm( @RequestParam( value = "inputData" )
+    String inputData )
+        throws IOException
+    {
+        return showConfirm( JobInput.deserializeFrom( inputData ) );
+    }
+
     @RequestMapping( value = { "", "/index.html", "/get_started.html" } )
     public ModelAndView showGetStarted( @RequestParam( value = "inputData", required = false )
                                         String inputData )
@@ -145,13 +177,9 @@ public class CreateJobPages
                                                           input.serializeTo() );
     }
 
-    @RequestMapping( value = "/worker_options.html", method = RequestMethod.POST )
-    public ModelAndView showWorkerInstanceOptions( @RequestParam( value = "inputData" )
-                                                   String inputData )
+    private ModelAndView showWorkerInstanceOptions( JobInput input )
         throws IOException
     {
-        JobInput input = JobInput.deserializeFrom( inputData );
-
         if ( input.getWorkerInstanceOptions() == null )
         {
             WorkerInstanceOptions defaultOptions = new WorkerInstanceOptions();
@@ -165,10 +193,73 @@ public class CreateJobPages
         AWSCredentials creds =
             new BasicAWSCredentials( input.getAwsAccessKeyId(),
                                      input.getAwsSecretKey() );
+
+        // Fetch all keypairs
         mav.addObject( "allKeyPairs",
                        ec2.describeKeyPairs( decorate( new DescribeKeyPairsRequest(),
                                                        creds ) ).getKeyPairs() );
+
+        // Fetch all security groups
+        String vpcId = null;
+        switch ( input.getActionType() )
+        {
+            case BACKUP_INSTANCE:
+                DBInstance instance =
+                    rds.describeDBInstances( decorate( new DescribeDBInstancesRequest().withDBInstanceIdentifier( input.getSourceAndDestination().getDatabaseInstanceId() ),
+                                                       creds ) ).getDBInstances().get( 0 );
+                mav.addObject( "sourceDatabaseInstance", instance );
+                if ( instance.getDBSubnetGroup() != null )
+                {
+                    vpcId = instance.getDBSubnetGroup().getVpcId();
+                }
+                break;
+            case CONVERT_SNAPSHOT:
+                DBSnapshot snapshot =
+                    rds.describeDBSnapshots( decorate( new DescribeDBSnapshotsRequest().withDBSnapshotIdentifier( input.getSourceAndDestination().getDatabaseSnapshotId() ),
+                                                       creds ) ).getDBSnapshots().get( 0 );
+                mav.addObject( "sourceDatabaseSnapshot", snapshot );
+                vpcId = snapshot.getVpcId();
+                break;
+            default:
+                throw new IllegalStateException( "Action type "
+                    + input.getActionType() + " is not expected" );
+        }
+        mav.addObject( "vpcId", vpcId );
+
+        List<SecurityGroup> availableGroups = new ArrayList<SecurityGroup>();
+        for ( SecurityGroup group : ec2.describeSecurityGroups( decorate( new DescribeSecurityGroupsRequest(),
+                                                                          creds ) ).getSecurityGroups() )
+        {
+            if ( StringUtils.equals( vpcId, group.getVpcId() ) )
+            {
+                availableGroups.add( group );
+            }
+        }
+        mav.addObject( "allSecurityGroups", availableGroups );
+
+        if ( vpcId != null )
+        {
+            List<Subnet> availableSubnets = new ArrayList<Subnet>();
+            for ( Subnet subnet : ec2.describeSubnets( decorate( new DescribeSubnetsRequest(),
+                                                                 creds ) ).getSubnets() )
+            {
+                if ( StringUtils.equals( subnet.getVpcId(), vpcId ) )
+                {
+                    availableSubnets.add( subnet );
+                }
+            }
+            mav.addObject( "allSubnets", availableSubnets );
+        }
+
         mav.addObject( "workerOptions", input.getWorkerInstanceOptions() );
         return mav;
+    }
+
+    @RequestMapping( value = "/worker_options.html", method = RequestMethod.POST )
+    public ModelAndView showWorkerInstanceOptions( @RequestParam( value = "inputData" )
+                                                   String inputData )
+        throws IOException
+    {
+        return showWorkerInstanceOptions( JobInput.deserializeFrom( inputData ) );
     }
 }

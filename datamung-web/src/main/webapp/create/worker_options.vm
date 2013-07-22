@@ -21,10 +21,17 @@
                         group that allows SSH access must be specified
                         as well.
                     </p>
+                    #if($vpcId)
+                    <p>
+                        Since the database or snapshot to backup is in
+                        VPC $vpcId, you can only choose security groups
+                        and subnet in the same VPC.
+                    </p>
+                    #end
                 </td>
             </tr>
             <tr>
-                <td>Keypair:</td>
+                <td nowrap="nowrap">Keypair:</td>
                 <td>
                     <select name="keypairName">
                         <option value="">--none--</option>
@@ -40,6 +47,76 @@
                         #end
                     </select>
                 </td>
+            </tr>
+
+            <tr>
+                <td nowrap="nowrap">Security groups:</td>
+                <td>
+                    <ul style="list-style-type: none;">
+                        #foreach($group in $allSecurityGroups)
+                        <li>
+                            #if($workerOptions.securityGroupIds.contains($group.groupId))
+                            <input type="checkbox" name="securityGroups"
+                                value="$group.groupId" id="securityGroup_$group.groupId"
+                                checked="checked" />
+                            #else
+                            <input type="checkbox" name="securityGroups"
+                                value="$group.groupId" id="securityGroup_$group.groupId" />
+                            #end
+                            <label for="securityGroup_$group.groupId"
+                                title="$!group.description">
+                                $group.groupId -
+                                $group.groupName
+                            </label>
+                        </li>
+                        #end
+                    </ul>
+                </td>
+            </tr>
+            #if($vpcId)
+            <tr>
+                <td nowrap="nowrap">Subnet:</td>
+                <td>
+                    <select name="subnetId">
+                        #foreach($subnet in $allSubnets)
+                        #if($subnet.subnetId==$workerOptions.subnetId)
+                        <option value="$subnet.subnetId"
+                            selected="selected">
+                            $subnet.subnetId
+                            ($subnet.cidrBlock,
+                            $subnet.availableIpAddressCount IPs
+                            available in AZ $subnet.availabilityZone)
+                        </option>
+                        #else
+                        <option value="$subnet.subnetId">
+                            $subnet.subnetId
+                            ($subnet.cidrBlock,
+                            $subnet.availableIpAddressCount IPs
+                            available in AZ $subnet.availabilityZone)
+                        </option>
+                        #end
+                        #end
+                    </select>
+                </td>
+            </tr>
+            #end
+            <tr>
+                <td colspan="2">
+                    <h3>Launch worker timeout</h3>
+                </td>
+            </tr>
+            <tr>
+                <td>Timeout:</td>
+                <td>
+                    <input type="text" name="launchTimeoutSeconds"
+                        value="$workerOptions.launchTimeoutSeconds"
+                        size="6" />
+                    seconds
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="error" u:for="launchTimeoutSeconds"></td>
             </tr>
             <tr>
                 <td></td>
