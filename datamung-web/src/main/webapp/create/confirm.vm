@@ -64,16 +64,13 @@
         <p>
             #if($input.sourceAndDestination.liveInstanceTouched)
             The job
-            will
-            take snapshot of database
+            will run mysqldump command directly against database
+            instance $input.sourceAndDestination.databaseInstanceId.
+            #else
+            The job will take snapshot of database
             $input.sourceAndDestination.databaseInstanceId, launch new
             database instance from snapshot and run mysqldump command
             against new database instance.
-            #else
-            The job will run
-            mysqldump
-            command directly against database instance
-            $input.sourceAndDestination.databaseInstanceId.
             #end
         </p>
         #end

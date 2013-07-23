@@ -29,12 +29,31 @@
         <p>
             The credential must have permissions to:
             <ol>
-                <li>List, launch, modify and terminate RDS instances
+                <li>
+                    Describe, launch, modify and terminate RDS instances
                 </li>
-                <li>List, create and delete RDS snapshot</li>
+                <li>Desribe, create and delete RDS snapshot</li>
                 <li>List S3 buckets</li>
                 <li>Upload, download and delete S3 object</li>
+                <li>
+                    Describe, create and delete role and EC2 instance
+                    profile
+                </li>
+                <li>Describe, launch and terminate EC2 instance</li>
+                <li>
+                    Describe EC2 security groups, subsets and keypairs
+                </li>
             </ol>
+        </p>
+        <p>
+            If you are not sure how to create IAM with proper permission,
+            it's easier to use the root credentials. This demo website
+            does not store any information
+            permanently. IAM and all
+            other
+            information about RDS, EC2 and S3 will
+            be temporarily stored
+            in memory until workflow completes.
         </p>
         <table border="0" cellpadding="2" cellspading="4">
             <tr>
@@ -60,12 +79,6 @@
                 <td class="error" u:for="awsSecretKey"></td>
             </tr>
         </table>
-        <p>
-            The demo website does not store any information
-            permanently.
-            The IAM and all other information about RDS, EC2 and S3 will
-            be temporarily stored in memory until workflow completes.
-        </p>
         <p class="error" u:for="form"></p>
         <p>
             <button type="submit">Save and continue...</button>
