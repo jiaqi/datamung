@@ -1,7 +1,8 @@
 <div>
     <h2>Instance backup details</h2>
     <form method="post"
-        action="$link.absolute('create/do_save_backup_details.html')">
+        action="$link.absolute('create/do_save_backup_details.html')"
+        onsubmit="return validateForm(this)">
         <input type="hidden" name="formBean"
             value="org.cyclopsgroup.datamung.web.form.SourceAndDestination" />
         <input type="hidden" name="inputData" value="$inputData" />
@@ -201,11 +202,12 @@
             </tr>
             <tr>
                 <td colspan="2">
-                    #set($getStartedUrl=$link.absolute("/create/get_started.html"))
-                    <button type="submit"
-                        onclick="this.form.action='$getStartedUrl'">Back</button>
-                    <button type="submit"
-                        onclick="return validateForm(this.form);">Continue...</button>
+                    <button type="button"
+                        onclick="location.href=$(this).attr('u:href')"
+                        u:href='$link.absolute("/create/get_started.html").addQueryData("inputData", $inputData)'>
+                        Back
+                    </button>
+                    <button type="submit">Save and continue...</button>
                 </td>
             </tr>
         </table>

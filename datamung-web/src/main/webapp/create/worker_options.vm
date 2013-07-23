@@ -1,7 +1,8 @@
 <div>
     <h2>Worker options</h2>
     <form method="post"
-        action="$link.absolute('create/do_save_worker_options.html')">
+        action="$link.absolute('create/do_save_worker_options.html')"
+        onsubmit="return validateForm(this)">
         <input type="hidden" name="formBean"
             value="org.cyclopsgroup.datamung.web.form.WorkerInstanceOptions" />
         <input type="hidden" name="inputData" value="$inputData" />
@@ -56,11 +57,11 @@
                         #foreach($group in $allSecurityGroups)
                         <li>
                             #if($workerOptions.securityGroupIds.contains($group.groupId))
-                            <input type="checkbox" name="securityGroups"
+                            <input type="checkbox" name="securityGroupIds"
                                 value="$group.groupId" id="securityGroup_$group.groupId"
                                 checked="checked" />
                             #else
-                            <input type="checkbox" name="securityGroups"
+                            <input type="checkbox" name="securityGroupIds"
                                 value="$group.groupId" id="securityGroup_$group.groupId" />
                             #end
                             <label for="securityGroup_$group.groupId"
@@ -124,11 +125,12 @@
             </tr>
             <tr>
                 <td colspan="2">
-                    #set($backupDetailsUrl=$link.absolute("/create/backup_details.html"))
-                    <button type="submit"
-                        onclick="this.form.action='$backupDetailsUrl'">Back</button>
-                    <button type="submit"
-                        onclick="return validateForm(this.form);">Continue...</button>
+                    <button type="button"
+                        onclick="location.href=$(this).attr('u:href')"
+                        u:href='$link.absolute("/create/backup_details.html").addQueryData("inputData", $inputData)'>
+                        Back
+                    </button>
+                    <button type="submit">Save and continue...</button>
                 </td>
             </tr>
         </table>

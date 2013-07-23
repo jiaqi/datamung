@@ -68,7 +68,7 @@
         </p>
         <p class="error" u:for="form"></p>
         <p>
-            <button type="submit">Continue...</button>
+            <button type="submit">Save and continue...</button>
         </p>
     </form>
 </div>
