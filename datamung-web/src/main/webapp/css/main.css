@@ -1,66 +1,70 @@
 body {
-    font-family: "Trebuchet MS", Helvetica, sans-serif;
-    margin: 0px;
-    padding: 0px;
-    background-color: #1F424F;
+	font-family: "Trebuchet MS", Helvetica, sans-serif;
+	margin: 0px;
+	padding: 0px;
+	background-color: #1F424F;
 }
 
-h1,h2 {
-    font-family: 'Marmelad', sans-serif;
-    font-weight: normal;
+h1,h2,h3 {
+	font-family: 'Marmelad', sans-serif;
+	font-weight: lighter;
 }
 
 a:link,a:visited {
-    color: #7E6831;
-}
-
-hr {
-    border-style: solid;
-    border-color: #A67600;
+	color: #7E6831;
 }
 
 #bodyWrapper {
-    text-align: center;
-    margin: 0px;
+	text-align: center;
+	margin: 0px;
 }
 
 .contentWrapper {
-    margin: 0px auto;
-    text-align: left;
-    max-width: 960px;
-    text-align: left;
-    margin: 0px auto;
+	margin: 0px auto;
+	text-align: left;
+	max-width: 960px;
+	text-align: left;
+	margin: 0px auto;
 }
 
 #headerContent {
-    background-color: #E1D6BC;
+	background-color: #E1D6BC;
 }
 
 #headerContent h1 {
-    margin: 0px;
+	margin: 0px;
 }
 
 #bodyContent {
-    border-width: 2px 0px 2px 0px;
-    border-style: solid;
-    border-color: #A67600;
-    background-color: white;
-    min-height: 480px;
+	border-width: 2px 0px 2px 0px;
+	border-style: solid;
+	border-color: #A67600;
+	background-color: white;
+	min-height: 480px;
 }
 
 #bodyContent h2 {
-    color: #7E3F31;
+	color: #7E3F31;
+}
+
+#bodyContent h3 {
+	color: #666;
+	margin: 0px;
 }
 
 #footerContent {
-    color: #E1D9C6;
+	color: #E1D9C6;
 }
 
 #footerContent a:link,#footerContent a:visited {
-    color: white;
+	color: white;
 }
 
 .error {
-    color: red;
-    font-size: small;
+	color: red;
+	font-size: small;
+}
+
+.lightBox {
+	background-color: #eee;
 }

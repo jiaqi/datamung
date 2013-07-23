@@ -1,5 +1,5 @@
 <div>
-    <h2>Instance backup details</h2>
+    <h2>Source and destination</h2>
     <form method="post"
         action="$link.absolute('create/do_save_backup_details.html')"
         onsubmit="return validateForm(this)">
@@ -14,9 +14,9 @@
             <tr>
                 <td colspan="2">
                     #if($input.actionType.name()=="BACKUP_INSTANCE")
-                    <h3>Back up from</h3>
+                    <h3>Database instance to backup</h3>
                     #else
-                    <h3>Convert from</h3>
+                    <h3>Database snapshot to convert</h3>
                     #end
                     <p>
                         DataMung does not persist database password. It

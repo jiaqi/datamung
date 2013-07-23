@@ -3,9 +3,10 @@
     <form method="post" action="$link.absolute('/create/do_create_job.html')">
         <input type="hidden" name="inputData" value="$inputData" />
 
-        <p>Please review following details before starting the job.
+        <p>
+            Please review following details before starting the job.
         </p>
-        <table width="100%" border="0">
+        <table width="100%" border="0" padding="0" cellspacing="0">
             <tr>
                 <td>
                     <h3>Type of job</h3>
@@ -20,10 +21,10 @@
                 </td>
             </tr>
         </table>
-        <hr />
         <p>$input.actionType.description</p>
-        <p />
-        <table width="100%" border="0">
+        <p>&nbsp;
+        </p>
+        <table width="100%" border="0" padding="0" cellspacing="0">
             <tr>
                 <td>
                     <h3>Source and destination</h3>
@@ -38,7 +39,6 @@
                 </td>
             </tr>
         </table>
-        <hr />
         <p>
             #if($input.actionType.name()=="BACKUP_INSTANCE")
             Backup RDS
@@ -87,8 +87,9 @@
             seconds.
         </p>
         #end
-        <p />
-        <table width="100%" border="0">
+        <p>&nbsp;
+        </p>
+        <table width="100%" border="0" padding="0" cellspacing="0">
             <tr>
                 <td>
                     <h3>Worker options</h3>
@@ -103,7 +104,6 @@
                 </td>
             </tr>
         </table>
-        <hr />
         <p>
             A worker EC2 instance running mysqldump command will be
             launched
@@ -122,9 +122,9 @@
             in the same VPC.
         </p>
         #end
-        <p />
+        <p>&nbsp;
+        </p>
         <h3>Confirmation</h3>
-        <hr />
         <p>
             If everything looks correct, press the button below to start
             the
