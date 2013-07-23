@@ -57,9 +57,8 @@ public class CreateJobPages
     private AmazonS3 s3;
 
     @RequestMapping( value = "/do_get_started.html", method = RequestMethod.POST )
-    public ModelAndView doGetStarted( @Valid
-    CredentialsAndAction form, @RequestParam( value = "inputData" )
-    String inputData )
+    public ModelAndView doGetStarted( @Valid CredentialsAndAction form,
+                                      @RequestParam( value = "inputData" ) String inputData )
         throws IOException
     {
         JobInput input = JobInput.deserializeFrom( inputData );
@@ -70,9 +69,8 @@ public class CreateJobPages
     }
 
     @RequestMapping( value = "/do_save_backup_details.html", method = RequestMethod.POST )
-    public ModelAndView doSaveBackupDetails( @Valid
-    SourceAndDestination form, @RequestParam( value = "inputData" )
-    String inputData )
+    public ModelAndView doSaveBackupDetails( @Valid SourceAndDestination form,
+                                             @RequestParam( value = "inputData" ) String inputData )
         throws IOException
     {
         JobInput input = JobInput.deserializeFrom( inputData );
@@ -81,9 +79,8 @@ public class CreateJobPages
     }
 
     @RequestMapping( value = "/do_save_worker_options.html", method = RequestMethod.POST )
-    public ModelAndView doSaveWorkerOptions( @Valid
-    WorkerInstanceOptions form, @RequestParam( value = "inputData" )
-    String inputData )
+    public ModelAndView doSaveWorkerOptions( @Valid WorkerInstanceOptions form,
+                                             @RequestParam( value = "inputData" ) String inputData )
         throws IOException
     {
         JobInput input = JobInput.deserializeFrom( inputData );
@@ -131,9 +128,8 @@ public class CreateJobPages
         }
     }
 
-    @RequestMapping( value = "/backup_details.html", method = RequestMethod.POST )
-    public ModelAndView showBackupDetails( @RequestParam( value = "inputData" )
-    String inputData )
+    @RequestMapping( "/backup_details.html" )
+    public ModelAndView showBackupDetails( @RequestParam( value = "inputData" ) String inputData )
         throws IOException
     {
         return showBackupDetails( JobInput.deserializeFrom( inputData ) );
@@ -148,17 +144,15 @@ public class CreateJobPages
         return mav;
     }
 
-    @RequestMapping( value = "/confirm.html", method = RequestMethod.POST )
-    public ModelAndView showConfirm( @RequestParam( value = "inputData" )
-    String inputData )
+    @RequestMapping( "/confirm.html" )
+    public ModelAndView showConfirm( @RequestParam( value = "inputData" ) String inputData )
         throws IOException
     {
         return showConfirm( JobInput.deserializeFrom( inputData ) );
     }
 
     @RequestMapping( value = { "", "/index.html", "/get_started.html" } )
-    public ModelAndView showGetStarted( @RequestParam( value = "inputData", required = false )
-                                        String inputData )
+    public ModelAndView showGetStarted( @RequestParam( value = "inputData", required = false ) String inputData )
         throws IOException
     {
         ModelAndView mav =
@@ -255,9 +249,8 @@ public class CreateJobPages
         return mav;
     }
 
-    @RequestMapping( value = "/worker_options.html", method = RequestMethod.POST )
-    public ModelAndView showWorkerInstanceOptions( @RequestParam( value = "inputData" )
-                                                   String inputData )
+    @RequestMapping( "/worker_options.html" )
+    public ModelAndView showWorkerInstanceOptions( @RequestParam( value = "inputData" ) String inputData )
         throws IOException
     {
         return showWorkerInstanceOptions( JobInput.deserializeFrom( inputData ) );

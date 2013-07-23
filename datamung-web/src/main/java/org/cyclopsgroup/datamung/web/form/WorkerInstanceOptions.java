@@ -12,7 +12,7 @@ public class WorkerInstanceOptions
 
     private List<String> securityGroupIds;
 
-    private String subsetId;
+    private String subnetId;
 
     public String getKeypairName()
     {
@@ -29,9 +29,9 @@ public class WorkerInstanceOptions
         return securityGroupIds;
     }
 
-    public String getSubsetId()
+    public String getSubnetId()
     {
-        return subsetId;
+        return subnetId;
     }
 
     public void setKeypairName( String keypairName )
@@ -49,8 +49,8 @@ public class WorkerInstanceOptions
         this.securityGroupIds = securityGroupIds;
     }
 
-    public void setSubsetId( String subsetId )
+    public void setSubnetId( String subnetId )
     {
-        this.subsetId = subsetId;
+        this.subnetId = subnetId;
     }
 }

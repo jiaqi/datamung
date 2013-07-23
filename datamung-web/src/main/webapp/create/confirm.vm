@@ -2,5 +2,136 @@
     <h2>Confirm job</h2>
     <form method="post" action="$link.absolute('/create/do_create_job.html')">
         <input type="hidden" name="inputData" value="$inputData" />
+
+        <p>Please review following details before starting the job.
+        </p>
+        <table width="100%" border="0">
+            <tr>
+                <td>
+                    <h3>Type of job</h3>
+                </td>
+                <td align="right">
+                    <p>
+                        <a
+                            href='$link.absolute("/create/get_started.html").addQueryData("inputData", $inputData)'>
+                            Modify
+                        </a>
+                    </p>
+                </td>
+            </tr>
+        </table>
+        <hr />
+        <p>$input.actionType.description</p>
+        <p />
+        <table width="100%" border="0">
+            <tr>
+                <td>
+                    <h3>Source and destination</h3>
+                </td>
+                <td align="right">
+                    <p>
+                        <a
+                            href='$link.absolute("/create/backup_details.html").addQueryData("inputData", $inputData)'>
+                            Modify
+                        </a>
+                    </p>
+                </td>
+            </tr>
+        </table>
+        <hr />
+        <p>
+            #if($input.actionType.name()=="BACKUP_INSTANCE")
+            Backup RDS
+            MySQL
+            database instance
+            <big>$input.sourceAndDestination.databaseInstanceId</big>
+            to
+            #elseif($input.actionType.name()=="CONVERT_SNAPSHOT")
+            Convert
+            RDS
+            MySQL snapshot
+            <big>$input.sourceAndDestination.databaseSnapshotId</big>
+            into
+            #end
+            S3 object
+            <big>$input.sourceAndDestination.archiveObjectKey</big>
+            in bucket
+            <big>$input.sourceAndDestination.archiveBucketName</big>
+            by
+            running mysqldump command.
+        </p>
+        #if($input.actionType.name()=="BACKUP_INSTANCE")
+        <p>
+            #if($input.sourceAndDestination.liveInstanceTouched)
+            The job
+            will
+            take snapshot of database
+            $input.sourceAndDestination.databaseInstanceId, launch new
+            database instance from snapshot and run mysqldump command
+            against new database instance.
+            #else
+            The job will run
+            mysqldump
+            command directly against database instance
+            $input.sourceAndDestination.databaseInstanceId.
+            #end
+        </p>
+        #end
+        #if($input.actionType.name()=="BACKUP_INSTANCE"&&$input.sourceAndDestination.liveInstanceTouched)
+        #else
+        <p>
+            Timeout and database snapshot creation, database instance
+            launch
+            is set to
+            $input.sourceAndDestination.snapshotTimeoutSeconds
+            seconds.
+        </p>
+        #end
+        <p />
+        <table width="100%" border="0">
+            <tr>
+                <td>
+                    <h3>Worker options</h3>
+                </td>
+                <td align="right">
+                    <p>
+                        <a
+                            href='$link.absolute("/create/worker_options.html").addQueryData("inputData", $inputData)'>
+                            Modify
+                        </a>
+                    </p>
+                </td>
+            </tr>
+        </table>
+        <hr />
+        <p>
+            A worker EC2 instance running mysqldump command will be
+            launched
+            with timeout set to
+            $input.workerInstanceOptions.launchTimeoutSeconds seconds.
+        </p>
+        <p>
+            Security group(s) of worker instance will be
+            $input.workerInstanceOptions.securityGroupIds.
+        </p>
+        #if($input.workerInstanceOptions.subnetId)
+        <p>
+            Because database or snapshot is in a VPC, the worker instance
+            will be launched in subnet
+            $input.workerInstanceOptions.subnetId
+            in the same VPC.
+        </p>
+        #end
+        <p />
+        <h3>Confirmation</h3>
+        <hr />
+        <p>
+            If everything looks correct, press the button below to start
+            the
+            job.
+        </p>
+        <p>
+            <button type="submit">Confirm and start job</button>
+        </p>
     </form>
 </div>

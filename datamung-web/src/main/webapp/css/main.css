@@ -14,6 +14,11 @@ a:link,a:visited {
     color: #7E6831;
 }
 
+hr {
+    border-style: solid;
+    border-color: #A67600;
+}
+
 #bodyWrapper {
     text-align: center;
     margin: 0px;
