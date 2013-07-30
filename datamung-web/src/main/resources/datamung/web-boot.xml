@@ -2,13 +2,17 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
     xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:http-conf="http://cxf.apache.org/transports/http/configuration"
+
     xsi:schemaLocation="
        http://www.springframework.org/schema/beans
        http://www.springframework.org/schema/beans/spring-beans.xsd
        http://www.springframework.org/schema/context
        http://www.springframework.org/schema/context/spring-context.xsd
        http://www.springframework.org/schema/aop
-       http://www.springframework.org/schema/aop/spring-aop.xsd">
+       http://www.springframework.org/schema/aop/spring-aop.xsd
+       http://cxf.apache.org/transports/http/configuration
+       http://cxf.apache.org/schemas/configuration/http-conf.xsd">
 
     <import resource="./context-${stage:alpha}.xml" />
     <aop:aspectj-autoproxy />
@@ -43,4 +47,10 @@
         <constructor-arg ref="aws.Credentials" />
         <property name="endpoint" value="https://swf.us-east-1.amazonaws.com" />
     </bean>
+
+    <!-- CXF client -->
+    <http-conf:conduit name="*.http-conduit">
+        <http-conf:client Connection="Keep-Alive"
+            ConnectionTimeout="2000" ReceiveTimeout="5000" />
+    </http-conf:conduit>
 </beans>

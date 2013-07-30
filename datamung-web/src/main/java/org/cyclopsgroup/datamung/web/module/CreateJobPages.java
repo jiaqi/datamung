@@ -6,7 +6,14 @@ import java.util.List;
 
 import javax.validation.Valid;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
+import org.cyclopsgroup.datamung.api.DataMungService;
+import org.cyclopsgroup.datamung.api.types.ExportInstanceRequest;
+import org.cyclopsgroup.datamung.api.types.ExportSnapshotRequest;
+import org.cyclopsgroup.datamung.api.types.Identity;
+import org.cyclopsgroup.datamung.api.types.S3DataArchive;
+import org.cyclopsgroup.datamung.api.types.WorkerOptions;
 import org.cyclopsgroup.datamung.web.form.ActionType;
 import org.cyclopsgroup.datamung.web.form.CredentialsAndAction;
 import org.cyclopsgroup.datamung.web.form.JobInput;
@@ -48,6 +55,9 @@ public class CreateJobPages
     }
 
     @Autowired
+    private DataMungService dataMungService;
+
+    @Autowired
     private AmazonEC2 ec2;
 
     @Autowired
@@ -58,7 +68,7 @@ public class CreateJobPages
 
     @RequestMapping( value = "/do_get_started.html", method = RequestMethod.POST )
     public ModelAndView doGetStarted( @Valid
-    CredentialsAndAction form, @RequestParam( value = "inputData" )
+    CredentialsAndAction form, @RequestParam( "inputData" )
     String inputData )
         throws IOException
     {
@@ -71,7 +81,7 @@ public class CreateJobPages
 
     @RequestMapping( value = "/do_save_backup_details.html", method = RequestMethod.POST )
     public ModelAndView doSaveBackupDetails( @Valid
-    SourceAndDestination form, @RequestParam( value = "inputData" )
+    SourceAndDestination form, @RequestParam( "inputData" )
     String inputData )
         throws IOException
     {
@@ -82,13 +92,66 @@ public class CreateJobPages
 
     @RequestMapping( value = "/do_save_worker_options.html", method = RequestMethod.POST )
     public ModelAndView doSaveWorkerOptions( @Valid
-    WorkerInstanceOptions form, @RequestParam( value = "inputData" )
+    WorkerInstanceOptions form, @RequestParam( "inputData" )
     String inputData )
         throws IOException
     {
         JobInput input = JobInput.deserializeFrom( inputData );
         input.setWorkerInstanceOptions( form );
         return showConfirm( input );
+    }
+
+    @RequestMapping( value = "/do_start_job.html", method = RequestMethod.POST )
+    public String doStartJob( @RequestParam( "inputData" )
+    String inputData )
+        throws IOException
+    {
+        JobInput input = JobInput.deserializeFrom( inputData );
+        String workflowId = RandomStringUtils.randomAlphanumeric( 8 );
+
+        S3DataArchive dest =
+            S3DataArchive.of( input.getSourceAndDestination().getArchiveBucketName(),
+                              input.getSourceAndDestination().getArchiveObjectKey() );
+        Identity identity =
+            Identity.of( input.getAwsAccessKeyId(), input.getAwsSecretKey() );
+
+        WorkerOptions options = new WorkerOptions();
+        options.setKeyPairName( input.getWorkerInstanceOptions().getKeypairName() );
+        options.setLaunchTimeoutSeconds( input.getWorkerInstanceOptions().getLaunchTimeoutSeconds() );
+        options.setSecurityGroupIds( input.getWorkerInstanceOptions().getSecurityGroupIds() );
+        options.setSubnetId( input.getWorkerInstanceOptions().getSubnetId() );
+
+        switch ( input.getActionType() )
+        {
+            case BACKUP_INSTANCE:
+                ExportInstanceRequest exportInstance =
+                    new ExportInstanceRequest();
+                exportInstance.setDatabaseMasterPassword( input.getSourceAndDestination().getDatabaseMasterPassword() );
+                exportInstance.setDestinationArchive( dest );
+                exportInstance.setIdentity( identity );
+                exportInstance.setLiveInstanceTouched( input.getSourceAndDestination().isLiveInstanceTouched() );
+                exportInstance.setSnapshotCreationTimeoutSeconds( input.getSourceAndDestination().getSnapshotTimeoutSeconds() );
+                exportInstance.setInstanceName( input.getSourceAndDestination().getDatabaseInstanceId() );
+                exportInstance.setWorkerOptions( options );
+                dataMungService.exportInstance( workflowId, exportInstance );
+                break;
+            case CONVERT_SNAPSHOT:
+                ExportSnapshotRequest exportSnapshot =
+                    new ExportSnapshotRequest();
+                exportSnapshot.setDatabaseMasterPassword( input.getSourceAndDestination().getDatabaseMasterPassword() );
+                exportSnapshot.setDestinationArchive( dest );
+                exportSnapshot.setIdentity( identity );
+                exportSnapshot.setSnapshotRestoreTimeoutSeconds( input.getSourceAndDestination().getSnapshotTimeoutSeconds() );
+                exportSnapshot.setSnapshotName( input.getSourceAndDestination().getDatabaseSnapshotId() );
+                exportSnapshot.setWorkerOptions( options );
+                dataMungService.exportSnapshot( workflowId, exportSnapshot );
+                break;
+            default:
+                throw new IllegalStateException( "Unexpected action type "
+                    + input.getActionType() );
+        }
+
+        return "/browse.html?highlight=" + workflowId;
     }
 
     private ModelAndView showBackupDetails( JobInput input )
@@ -132,7 +195,7 @@ public class CreateJobPages
     }
 
     @RequestMapping( "/backup_details.html" )
-    public ModelAndView showBackupDetails( @RequestParam( value = "inputData" )
+    public ModelAndView showBackupDetails( @RequestParam( "inputData" )
     String inputData )
         throws IOException
     {
@@ -149,7 +212,7 @@ public class CreateJobPages
     }
 
     @RequestMapping( "/confirm.html" )
-    public ModelAndView showConfirm( @RequestParam( value = "inputData" )
+    public ModelAndView showConfirm( @RequestParam( "inputData" )
     String inputData )
         throws IOException
     {
@@ -257,8 +320,8 @@ public class CreateJobPages
     }
 
     @RequestMapping( "/worker_options.html" )
-    public ModelAndView showWorkerInstanceOptions( @RequestParam( value = "inputData" )
-                                                   String inputData )
+    public ModelAndView showWorkerInstanceOptions( @RequestParam( "inputData" )
+    String inputData )
         throws IOException
     {
         return showWorkerInstanceOptions( JobInput.deserializeFrom( inputData ) );
