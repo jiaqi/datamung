@@ -1,6 +1,7 @@
 package org.cyclopsgroup.datamung.api.types;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElements;
 
 public abstract class ExportRequest
     extends IdentityAwareObject
@@ -17,7 +18,7 @@ public abstract class ExportRequest
         return databaseMasterPassword;
     }
 
-    @XmlElement
+    @XmlElements( { @XmlElement( name = "s3Archive", type = S3DataArchive.class ) } )
     public DataArchive getDestinationArchive()
     {
         return destinationArchive;

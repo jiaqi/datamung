@@ -1,6 +1,6 @@
 <div>
     <h2>Confirm job</h2>
-    <form method="post" action="$link.absolute('/create/do_create_job.html')">
+    <form method="post" action="$link.absolute('/create/do_start_job.html')">
         <input type="hidden" name="inputData" value="$inputData" />
 
         <p>
