@@ -4,7 +4,7 @@
     xsi:schemaLocation="
        http://www.springframework.org/schema/beans
        http://www.springframework.org/schema/beans/spring-beans.xsd">
-    <bean id="awsCredentials"
+    <bean id="aws.Credentials"
         class="com.amazonaws.auth.InstanceProfileCredentialsProvider" />
     <bean id="aws.SwfDomain" class="java.lang.String">
         <constructor-arg value="datamung-test" />

@@ -8,9 +8,6 @@
        http://cxf.apache.org/schemas/jaxrs.xsd">
     <bean id="awsCredentials"
         class="com.amazonaws.auth.InstanceProfileCredentialsProvider" />
-    <bean id="aws.SwfDomain" class="java.lang.String">
-        <constructor-arg value="datamung-test" />
-    </bean>
     <jaxrs:client id="dataMungService"
         serviceClass="org.cyclopsgroup.datamung.api.DataMungService"
         address="http://cg-datamung-srv-beta.elasticbeanstalk.com/v1/" />

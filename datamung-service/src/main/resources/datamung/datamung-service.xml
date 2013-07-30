@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
     xmlns:context="http://www.springframework.org/schema/context"
-    xmlns:aop="http://www.springframework.org/schema/aop" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:aop="http://www.springframework.org/schema/aop" xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="
        http://www.springframework.org/schema/beans
        http://www.springframework.org/schema/beans/spring-beans.xsd
        http://www.springframework.org/schema/context
        http://www.springframework.org/schema/context/spring-context.xsd
        http://www.springframework.org/schema/aop
-       http://www.springframework.org/schema/aop/spring-aop.xsd">
+       http://www.springframework.org/schema/aop/spring-aop.xsd
+       http://cxf.apache.org/jaxrs
+       http://cxf.apache.org/schemas/jaxrs.xsd">
     <import resource="./context-${stage:alpha}.xml" />
 
     <!-- Logging configuration -->
@@ -28,6 +31,7 @@
 
     <bean class="org.cyclopsgroup.datamung.service.ServiceConfig">
         <property name="agentAmiId" value="ami-703b4219" />
+        <property name="swfDomainName" ref="aws.SwfDomain" />
     </bean>
 
     <!-- AWS resources -->
@@ -51,6 +55,7 @@
     </bean>
 
 
+    <context:component-scan base-package="org.cyclopsgroup.datamung.service.core" />
     <!-- SWF workers -->
     <context:component-scan
         base-package="org.cyclopsgroup.datamung.service.activities" />
@@ -61,6 +66,7 @@
         <constructor-arg ref="aws.SimpleWorkflow" />
         <constructor-arg ref="aws.SwfDomain" />
         <constructor-arg value="datamung-workflow-tasks" />
+        <property name="disableTypeRegistrationOnStart" value="true" />
         <property name="workflowImplementationTypes">
             <list>
                 <value>
@@ -84,6 +90,7 @@
         <constructor-arg ref="aws.SimpleWorkflow" />
         <constructor-arg ref="aws.SwfDomain" />
         <constructor-arg value="datamung-activity-tasks" />
+        <property name="disableTypeRegistrationOnStart" value="true" />
         <property name="activitiesImplementations">
             <list>
                 <ref bean="workflow.ControlActivities" />
@@ -93,4 +100,17 @@
             </list>
         </property>
     </bean>
+
+    <!-- CXF service support -->
+    <import resource="classpath:META-INF/cxf/cxf.xml" />
+    <import resource="classpath:META-INF/cxf/cxf-servlet.xml" />
+    <jaxrs:server id="datamung" address="/v1/">
+        <jaxrs:serviceBeans>
+            <ref bean="dataMungService" />
+            <ref bean="systemService" />
+        </jaxrs:serviceBeans>
+        <jaxrs:providers>
+            <bean class="org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider" />
+        </jaxrs:providers>
+    </jaxrs:server>
 </beans>

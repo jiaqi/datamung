@@ -17,11 +17,6 @@
             </bean>
         </constructor-arg>
     </bean>
-
-    <bean id="aws.SwfDomain" class="java.lang.String">
-        <constructor-arg value="datamung-test" />
-    </bean>
-
     <jaxrs:client id="dataMungService"
         serviceClass="org.cyclopsgroup.datamung.api.DataMungService"
         address="http://localhost:1080/datamung-service/v1/" />
