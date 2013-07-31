@@ -1,0 +1,23 @@
+<tr>
+    <td>
+        <a
+            href='$link.absolute("/browse/$workflow.workflowId").addQueryData("runId", $workflow.runId)'
+            title="Click to see more details">
+            $workflow.workflowId
+        </a>
+    </td>
+    <td>
+        #if($workflow.workflowType=="ExportInstanceWorkflow")
+        Database
+        backup
+        #elseif($workflow.workflowType=="ExportSnapshotWorkflow")
+        Snapshot conversion
+        #end
+    </td>
+    <td>
+        $workflow.startDate
+    </td>
+    <td>
+        $workflow.workflowStatus
+    </td>
+</tr>

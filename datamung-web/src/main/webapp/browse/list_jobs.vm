@@ -1,0 +1,25 @@
+<div>
+    <h2>Jobs in last 8 hours</h2>
+    <table with="100%" border="0">
+        #if($openWorkflows.size()>0)
+        <tr>
+            <td colspan="4">
+                <h3>Open</h3>
+            </td>
+        </tr>
+        #foreach($workflow in $openWorkflows)
+        #parse("browse/workflow_row.vm")
+        #end
+        #end
+        #if($closedWorkflows.size()>0)
+        <tr>
+            <td colspan="4">
+                <h3>Closed</h3>
+            </td>
+        </tr>
+        #foreach($workflow in $closedWorkflows)
+        #parse("browse/workflow_row.vm")
+        #end
+        #end
+    </table>
+</div>
