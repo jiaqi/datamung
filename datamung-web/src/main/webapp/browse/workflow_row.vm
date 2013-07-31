@@ -3,7 +3,12 @@
         <a
             href='$link.absolute("/browse/$workflow.workflowId").addQueryData("runId", $workflow.runId)'
             title="Click to see more details">
+
+            #if($workflow.workflowId==$highlight)
+            <b>$workflow.workflowId</b>
+            #else
             $workflow.workflowId
+            #end
         </a>
     </td>
     <td>
@@ -15,7 +20,7 @@
         #end
     </td>
     <td>
-        $workflow.startDate
+        $workflow.startDate.toString("MM/dd HH:mm z")
     </td>
     <td>
         $workflow.workflowStatus

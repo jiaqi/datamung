@@ -151,7 +151,7 @@ public class CreateJobPages
                     + input.getActionType() );
         }
 
-        return "/browse?highlight=" + workflowId;
+        return "redirect:/browse?highlight=" + workflowId;
     }
 
     private ModelAndView showBackupDetails( JobInput input )

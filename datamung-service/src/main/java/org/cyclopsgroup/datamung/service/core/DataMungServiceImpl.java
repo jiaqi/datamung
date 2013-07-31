@@ -1,13 +1,18 @@
 package org.cyclopsgroup.datamung.service.core;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.cyclopsgroup.datamung.api.DataMungService;
 import org.cyclopsgroup.datamung.api.types.ExportHandler;
 import org.cyclopsgroup.datamung.api.types.ExportInstanceRequest;
 import org.cyclopsgroup.datamung.api.types.ExportSnapshotRequest;
 import org.cyclopsgroup.datamung.api.types.Workflow;
+import org.cyclopsgroup.datamung.api.types.WorkflowActivity;
 import org.cyclopsgroup.datamung.api.types.WorkflowDetail;
 import org.cyclopsgroup.datamung.api.types.WorkflowList;
 import org.cyclopsgroup.datamung.service.ServiceConfig;
@@ -22,8 +27,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflow;
+import com.amazonaws.services.simpleworkflow.flow.JsonDataConverter;
 import com.amazonaws.services.simpleworkflow.model.DescribeWorkflowExecutionRequest;
+import com.amazonaws.services.simpleworkflow.model.EventType;
 import com.amazonaws.services.simpleworkflow.model.ExecutionTimeFilter;
+import com.amazonaws.services.simpleworkflow.model.GetWorkflowExecutionHistoryRequest;
+import com.amazonaws.services.simpleworkflow.model.History;
+import com.amazonaws.services.simpleworkflow.model.HistoryEvent;
 import com.amazonaws.services.simpleworkflow.model.ListClosedWorkflowExecutionsRequest;
 import com.amazonaws.services.simpleworkflow.model.ListOpenWorkflowExecutionsRequest;
 import com.amazonaws.services.simpleworkflow.model.WorkflowExecution;
@@ -35,6 +45,46 @@ import com.amazonaws.services.simpleworkflow.model.WorkflowTypeFilter;
 public class DataMungServiceImpl
     implements DataMungService
 {
+    private static class ActivityComparator
+        implements Comparator<WorkflowActivity>
+    {
+        @Override
+        public int compare( WorkflowActivity o1, WorkflowActivity o2 )
+        {
+            return o1.getStartDate().compareTo( o2.getStartDate() );
+        }
+    }
+
+    private static void updateActivityEvent( long originalActivityId,
+                                             String workflowId,
+                                             WorkflowActivity.Status newStatus,
+                                             HistoryEvent event,
+                                             Map<String, WorkflowActivity> activityMap )
+    {
+        WorkflowActivity activity =
+            activityMap.get( workflowId + "/" + originalActivityId );
+        if ( activity == null )
+        {
+            return;
+        }
+        activity.setActivityStatus( newStatus );
+        if ( newStatus != WorkflowActivity.Status.RUNNING )
+        {
+            activity.setCompleteDate( new DateTime( event.getEventTimestamp() ) );
+        }
+        if ( newStatus == WorkflowActivity.Status.FAILED )
+        {
+            activity.setErrorDetail( event.getActivityTaskFailedEventAttributes().getDetails() );
+            activity.setErrorReason( event.getActivityTaskFailedEventAttributes().getReason() );
+        }
+        else if ( newStatus == WorkflowActivity.Status.COMPLETED )
+        {
+            activity.setResult( event.getActivityTaskCompletedEventAttributes().getResult() );
+        }
+    }
+
+    private final JsonDataConverter converter = new JsonDataConverter();
+
     private final ExportInstanceWorkflowClientExternalFactory instanceWorkflowFactory;
 
     private final ExportSnapshotWorkflowClientExternalFactory snapshotWorkflowFactory;
@@ -106,13 +156,26 @@ public class DataMungServiceImpl
     @Override
     public WorkflowDetail getWorkflow( String workflowId, String runId )
     {
+        WorkflowExecution exec =
+            new WorkflowExecution().withWorkflowId( workflowId ).withRunId( runId );
+
         WorkflowExecutionDetail detail =
-            swfService.describeWorkflowExecution( new DescribeWorkflowExecutionRequest().withDomain( swfDomain ).withExecution( new WorkflowExecution().withWorkflowId( workflowId ).withRunId( runId ) ) );
+            swfService.describeWorkflowExecution( new DescribeWorkflowExecutionRequest().withDomain( swfDomain ).withExecution( exec ) );
         Workflow workflow =
             createWorkflow( detail.getExecutionInfo(),
                             detail.getExecutionInfo().getExecutionStatus().equalsIgnoreCase( "CLOSED" ) );
         WorkflowDetail result = new WorkflowDetail();
         result.setWorkflow( workflow );
+
+        Map<String, WorkflowActivity> activityMap =
+            new HashMap<String, WorkflowActivity>();
+        traverseHistory( exec, activityMap );
+
+        List<WorkflowActivity> history =
+            new ArrayList<WorkflowActivity>( activityMap.values() );
+        Collections.sort( history,
+                          Collections.reverseOrder( new ActivityComparator() ) );
+        result.setHistory( history );
         return result;
     }
 
@@ -150,5 +213,72 @@ public class DataMungServiceImpl
             workflows.add( createWorkflow( info, closed ) );
         }
         return WorkflowList.of( workflows );
+    }
+
+    private void traverseHistory( WorkflowExecution exec,
+                                  Map<String, WorkflowActivity> activityMap )
+    {
+        String nextToken = null;
+        do
+        {
+            History history =
+                swfService.getWorkflowExecutionHistory( new GetWorkflowExecutionHistoryRequest().withDomain( swfDomain ).withExecution( exec ).withNextPageToken( nextToken ).withMaximumPageSize( 100 ) );
+            nextToken = history.getNextPageToken();
+
+            for ( HistoryEvent event : history.getEvents() )
+            {
+                switch ( EventType.fromValue( event.getEventType() ) )
+                {
+                    case ChildWorkflowExecutionStarted:
+                        traverseHistory( event.getChildWorkflowExecutionStartedEventAttributes().getWorkflowExecution(),
+                                         activityMap );
+                        break;
+                    case ActivityTaskScheduled:
+                        String activityId =
+                            exec.getWorkflowId() + "/" + event.getEventId();
+                        WorkflowActivity activity = new WorkflowActivity();
+                        activity.setActivityId( activityId );
+                        activity.setActivityStatus( WorkflowActivity.Status.OPEN );
+                        activity.setStartDate( new DateTime(
+                                                             event.getEventTimestamp() ) );
+                        activity.setTitle( event.getActivityTaskScheduledEventAttributes().getActivityType().getName() );
+                        activityMap.put( activityId, activity );
+                        break;
+                    case ActivityTaskStarted:
+                        updateActivityEvent( event.getActivityTaskStartedEventAttributes().getScheduledEventId(),
+                                             exec.getWorkflowId(),
+                                             WorkflowActivity.Status.RUNNING,
+                                             event, activityMap );
+                        break;
+                    case ActivityTaskCompleted:
+                        updateActivityEvent( event.getActivityTaskCompletedEventAttributes().getScheduledEventId(),
+                                             exec.getWorkflowId(),
+                                             WorkflowActivity.Status.COMPLETED,
+                                             event, activityMap );
+                        break;
+                    case ActivityTaskFailed:
+                        updateActivityEvent( event.getActivityTaskFailedEventAttributes().getScheduledEventId(),
+                                             exec.getWorkflowId(),
+                                             WorkflowActivity.Status.FAILED,
+                                             event, activityMap );
+                        break;
+                    case ActivityTaskTimedOut:
+                        updateActivityEvent( event.getActivityTaskTimedOutEventAttributes().getScheduledEventId(),
+                                             exec.getWorkflowId(),
+                                             WorkflowActivity.Status.TIMEOUT,
+                                             event, activityMap );
+                        break;
+                    case ActivityTaskCanceled:
+                        updateActivityEvent( event.getActivityTaskCanceledEventAttributes().getScheduledEventId(),
+                                             exec.getWorkflowId(),
+                                             WorkflowActivity.Status.CANCELED,
+                                             event, activityMap );
+                        break;
+                    default:
+                        // Nothing, ignore result
+                }
+            }
+        }
+        while ( nextToken != null );
     }
 }

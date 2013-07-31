@@ -1,0 +1,21 @@
+<div>
+    <h2>Job $job.workflow.workflowId</h2>
+    <table width="100%" border="0">
+        <tr>
+            <th>Time</th>
+            <th>Action</th>
+            <th>Status</th>
+            <th>Reason of failure</th>
+        </tr>
+        #foreach($activity in $job.history)
+        <tr>
+            <td nowrap="nowrap">$activity.startDate.toString("HH:mm z")</td>
+            <td>$activity.title</td>
+            <td>$activity.activityStatus</td>
+            <td>
+                <small>$!activity.errorReason</small>
+            </td>
+        </tr>
+        #end
+    </table>
+</div>
