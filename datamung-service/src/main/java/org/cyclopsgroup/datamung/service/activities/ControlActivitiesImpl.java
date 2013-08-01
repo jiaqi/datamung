@@ -8,6 +8,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.cyclopsgroup.datamung.api.types.AgentConfig;
 import org.cyclopsgroup.datamung.api.types.Identity;
+import org.cyclopsgroup.datamung.service.ServiceConfig;
 import org.cyclopsgroup.datamung.swf.interfaces.ControlActivities;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,10 +37,11 @@ public class ControlActivitiesImpl
         new ActivityExecutionContextProviderImpl();
 
     @Autowired
-    public ControlActivitiesImpl( AmazonIdentityManagement iam )
+    public ControlActivitiesImpl( AmazonIdentityManagement iam,
+                                  ServiceConfig config )
     {
         this.iam = iam;
-        this.accountId = ActivityUtils.getAccountId( iam, null );
+        this.accountId = config.getAwsAccountId();
         LOG.info( "AWS account id is " + accountId );
     }
 

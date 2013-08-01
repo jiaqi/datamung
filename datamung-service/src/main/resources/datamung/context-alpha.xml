@@ -18,4 +18,9 @@
     <bean id="aws.SwfDomain" class="java.lang.String">
         <constructor-arg value="datamung-test" />
     </bean>
+
+    <bean id="aws.AccountId"
+        class="org.cyclopsgroup.datamung.service.activities.IamAccountIdFactoryBean">
+        <constructor-arg ref="aws.Credentials" />
+    </bean>
 </beans>

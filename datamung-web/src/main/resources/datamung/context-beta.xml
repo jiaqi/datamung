@@ -6,9 +6,9 @@
        http://www.springframework.org/schema/beans/spring-beans.xsd
        http://cxf.apache.org/jaxrs
        http://cxf.apache.org/schemas/jaxrs.xsd">
-    <bean id="awsCredentials"
+    <bean id="aws.Credentials"
         class="com.amazonaws.auth.InstanceProfileCredentialsProvider" />
     <jaxrs:client id="dataMungService"
         serviceClass="org.cyclopsgroup.datamung.api.DataMungService"
-        address="http://cg-datamung-srv-beta.elasticbeanstalk.com/v1/" />
+        address="http://cg-datamung-svc-beta.elasticbeanstalk.com/v1/" />
 </beans>

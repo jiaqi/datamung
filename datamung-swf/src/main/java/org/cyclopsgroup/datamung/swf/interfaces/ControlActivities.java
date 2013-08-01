@@ -10,6 +10,7 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.ExponentialRetry;
 @ActivityRegistrationOptions( defaultTaskStartToCloseTimeoutSeconds = 600, defaultTaskScheduleToStartTimeoutSeconds = 600, defaultTaskList = Constants.ACTIVITY_TASK_LIST )
 public interface ControlActivities
 {
+    @Description( value = "Create role $params.get(0) with permission to SWF task list $params.get(1) that caller account can assume", result = "Role with ARN $output" )
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
     String createAgentControllerRole( String roleName, String workflowTaskList,
                                       Identity clientIdentity );
@@ -23,6 +24,7 @@ public interface ControlActivities
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
     String createSnapshotName( String databaseName );
 
+    @Description( "Delete role $params.get(0)" )
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
     void deleteRole( String roleName );
 }

@@ -7,11 +7,18 @@ public class ServiceConfig
 {
     private String agentAmiId;
 
+    private String awsAccountId;
+
     private String swfDomainName;
 
     public String getAgentAmiId()
     {
         return agentAmiId;
+    }
+
+    public String getAwsAccountId()
+    {
+        return awsAccountId;
     }
 
     public String getSwfDomainName()
@@ -22,6 +29,11 @@ public class ServiceConfig
     public void setAgentAmiId( String agentAmiId )
     {
         this.agentAmiId = agentAmiId;
+    }
+
+    public void setAwsAccountId( String awsAccountId )
+    {
+        this.awsAccountId = awsAccountId;
     }
 
     public void setSwfDomainName( String swfDomainName )

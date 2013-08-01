@@ -32,6 +32,7 @@
     <bean class="org.cyclopsgroup.datamung.service.ServiceConfig">
         <property name="agentAmiId" value="ami-703b4219" />
         <property name="swfDomainName" ref="aws.SwfDomain" />
+        <property name="awsAccountId" ref="aws.AccountId" />
     </bean>
 
     <!-- AWS resources -->
@@ -53,7 +54,6 @@
         <constructor-arg ref="aws.Credentials" />
         <property name="endpoint" value="https://swf.us-east-1.amazonaws.com" />
     </bean>
-
 
     <context:component-scan base-package="org.cyclopsgroup.datamung.service.core" />
     <!-- SWF workers -->
