@@ -29,7 +29,7 @@
         <dependency>
             <groupId>org.cyclopsgroup</groupId>
             <artifactId>kaufman-tests</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>0.0.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

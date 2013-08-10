@@ -120,7 +120,7 @@
         <dependency>
             <groupId>org.cyclopsgroup</groupId>
             <artifactId>kaufman-beans</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>0.0.1</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -148,7 +148,7 @@
                                 <artifactItem>
                                     <groupId>org.cyclopsgroup</groupId>
                                     <artifactId>kaufman-web</artifactId>
-                                    <version>1.0.0-SNAPSHOT</version>
+                                    <version>0.0.1</version>
                                     <type>jar</type>
                                     <overWrite>false</overWrite>
                                     <includes>**/*.js,**/*.png,**/*.css</includes>

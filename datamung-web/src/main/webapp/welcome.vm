@@ -2,36 +2,19 @@
     <h2>What is it</h2>
     <p>
         Open source service that backs up MySQL RDS instances in form of
-        S3 objects, which allows to replicate RDS across regions or AWS
-        accounts. Driven by
-        <a href="http://aws.amazon.com/swf">AWS Simple Workflow</a>
-        , it does so by
+        S3 objects, which allows to replicate RDS across regions, VPC,
+        AWS accounts or outside of AWS network.
     </p>
     <p>
-        <ol>
-            <li>Take a snapshot of RDS instance to backup</li>
-            <li>Launch a new RDS instance with snapshot</li>
-            <li>
-                Launch an EC2 instance that can reach new RDS instance
-            </li>
-            <li>
-                Execute mysqldump command on EC2 instance against new
-                RDS instance and save result to disk or HDFS cluster
-            </li>
-            <li>Upload mysqldump result to specified S3</li>
-            <li>
-                Terminate new RDS instance and EC2 instance
-            </li>
-        </ol>
-    </p>
-    <p>
-        Each step is retried upon failure.
+        <a href="http://wiki.cyclopsgroup.org/datamung">
+            Check out the wiki page to learn more about Datamung.
+        </a>
     </p>
     <p>
         This website is a quick demo of DataMung. Here you may try
         backing up a MySQL RDS instance under your AWS account. If it
         does sound like a solution of your problem, why not
-        <a href="$link.absolute('/create')">have a try</a>
+        <a href="$link.absolute('/create')">give it a try</a>
         ?
     </p>
 </div>

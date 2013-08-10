@@ -13,7 +13,9 @@
             &nbsp;&nbsp;&nbsp;&nbsp;
             <a href="$link.absolute('/browse')">Jobs</a>
             &nbsp;&nbsp;&nbsp;&nbsp;
-            <a href="$link.absolute('/about.html')">Learn more</a>
+            <a href="http://wiki.cyclopsgroup.org/datamung">
+                Wiki
+            </a>
         </td>
     </tr>
 </table>
