@@ -47,6 +47,8 @@ public class ExportInstanceWorkflowImpl
     private final CheckWaitWorkflowClientFactory waitFlowFactory =
         new CheckWaitWorkflowClientFactoryImpl();
 
+    private String workflowId;
+
     @Asynchronous
     private Promise<ExportSnapshotRequest> createExportSnapshotRequest( Promise<String> snapshotName,
                                                                         Promise<DatabaseInstance> database )
@@ -69,6 +71,8 @@ public class ExportInstanceWorkflowImpl
     public void export( final ExportInstanceRequest request )
     {
         this.request = request;
+        this.workflowId =
+            contextProvider.getDecisionContext().getWorkflowContext().getWorkflowExecution().getWorkflowId();
 
         if ( request.isLiveInstanceTouched() )
         {
@@ -96,8 +100,6 @@ public class ExportInstanceWorkflowImpl
         runJob.setJob( job );
         runJob.setIdentity( request.getIdentity() );
         runJob.setWorkerOptions( request.getWorkerOptions() );
-        String workflowId =
-            contextProvider.getDecisionContext().getWorkflowContext().getWorkflowExecution().getWorkflowId();
         jobFlowFactory.getClient( workflowId + "-job" ).executeCommand( runJob );
     }
 
@@ -130,8 +132,7 @@ public class ExportInstanceWorkflowImpl
                 Promise<Void> done = waitUntilSnapshotAvailable( snapshotName );
                 Promise<ExportSnapshotRequest> snapshotRequest =
                     createExportSnapshotRequest( snapshotName, database );
-                exportSnapshotFlowFactory.getClient( "snapshot-export-"
-                                                         + snapshotName.get() ).export( snapshotRequest,
+                exportSnapshotFlowFactory.getClient( workflowId + "-snapshot" ).export( snapshotRequest,
                                                                                         done );
             }
         };
@@ -148,7 +149,6 @@ public class ExportInstanceWorkflowImpl
             + request.getSnapshotCreationTimeoutSeconds() * 1000L );
         check.setIdentity( request.getIdentity() );
         check.setObjectName( snapshotName.get() );
-        return waitFlowFactory.getClient( "snapshot-creation-"
-                                              + snapshotName.get() ).checkAndWait( check );
+        return waitFlowFactory.getClient( workflowId + "-snapshot-creation" ).checkAndWait( check );
     }
 }

@@ -42,6 +42,8 @@ public class JobWorkflowImpl
 
     private String workerId;
 
+    private String workflowId;
+
     /**
      * @inheritDoc
      */
@@ -49,7 +51,7 @@ public class JobWorkflowImpl
     public void executeCommand( final RunJobRequest request )
     {
         this.request = request;
-        final String workflowId =
+        this.workflowId =
             contextProvider.getDecisionContext().getWorkflowContext().getWorkflowExecution().getWorkflowId();
         final String masterRoleName = "dm-master-role-" + workflowId;
         final String agentProfileName = "dm-profile-" + workflowId;
@@ -129,6 +131,6 @@ public class JobWorkflowImpl
         waitWorker.setWaitIntervalSeconds( 30 );
         waitWorker.setExpireOn( contextProvider.getDecisionContext().getWorkflowClock().currentTimeMillis()
             + request.getWorkerOptions().getLaunchTimeoutSeconds() * 1000L );
-        return checkWaitWorkflow.getClient( "dmwf-" + workerId.get() + "-wait" ).checkAndWait( waitWorker );
+        return checkWaitWorkflow.getClient( workflowId + "-wait-worker" ).checkAndWait( waitWorker );
     }
 }

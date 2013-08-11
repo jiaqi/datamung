@@ -41,6 +41,8 @@ public class ExportSnapshotWorkflowImpl
     private final CheckWaitWorkflowClientFactory waitFlowFactory =
         new CheckWaitWorkflowClientFactoryImpl();
 
+    private String workflowId;
+
     @Asynchronous
     private void dumpDatabase( Promise<DatabaseInstance> database )
     {
@@ -54,8 +56,6 @@ public class ExportSnapshotWorkflowImpl
         runJob.setJob( job );
         runJob.setIdentity( request.getIdentity() );
         runJob.setWorkerOptions( request.getWorkerOptions() );
-        String workflowId =
-            contextProvider.getDecisionContext().getWorkflowContext().getWorkflowExecution().getWorkflowId();
         jobFlowFactory.getClient( workflowId + "-job" ).executeCommand( runJob );
     }
 
@@ -66,6 +66,9 @@ public class ExportSnapshotWorkflowImpl
     public void export( final ExportSnapshotRequest request )
     {
         this.request = request;
+        this.workflowId =
+            contextProvider.getDecisionContext().getWorkflowContext().getWorkflowExecution().getWorkflowId();
+
         final Promise<String> databaseName =
             controlActivities.createDatabaseName( request.getSnapshotName() );
         new TryFinally( databaseName )
@@ -109,6 +112,6 @@ public class ExportSnapshotWorkflowImpl
             + request.getSnapshotRestoreTimeoutSeconds() * 1000L );
         check.setIdentity( request.getIdentity() );
         check.setObjectName( databaseId.get() );
-        return waitFlowFactory.getClient( "restore-db-" + databaseId.get() ).checkAndWait( check );
+        return waitFlowFactory.getClient( workflowId + "-restore-db" ).checkAndWait( check );
     }
 }

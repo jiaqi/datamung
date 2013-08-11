@@ -20,10 +20,8 @@ import org.cyclopsgroup.datamung.service.ServiceConfig;
 import org.cyclopsgroup.datamung.swf.interfaces.AgentActivities;
 import org.cyclopsgroup.datamung.swf.interfaces.ControlActivities;
 import org.cyclopsgroup.datamung.swf.interfaces.Ec2Activities;
-import org.cyclopsgroup.datamung.swf.interfaces.ExportInstanceWorkflow;
 import org.cyclopsgroup.datamung.swf.interfaces.ExportInstanceWorkflowClientExternalFactory;
 import org.cyclopsgroup.datamung.swf.interfaces.ExportInstanceWorkflowClientExternalFactoryImpl;
-import org.cyclopsgroup.datamung.swf.interfaces.ExportSnapshotWorkflow;
 import org.cyclopsgroup.datamung.swf.interfaces.ExportSnapshotWorkflowClientExternalFactory;
 import org.cyclopsgroup.datamung.swf.interfaces.ExportSnapshotWorkflowClientExternalFactoryImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.RdsActivities;
@@ -33,6 +31,7 @@ import org.springframework.stereotype.Component;
 
 import com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflow;
 import com.amazonaws.services.simpleworkflow.flow.JsonDataConverter;
+import com.amazonaws.services.simpleworkflow.flow.StartWorkflowOptions;
 import com.amazonaws.services.simpleworkflow.model.DescribeWorkflowExecutionRequest;
 import com.amazonaws.services.simpleworkflow.model.EventType;
 import com.amazonaws.services.simpleworkflow.model.ExecutionTimeFilter;
@@ -41,10 +40,10 @@ import com.amazonaws.services.simpleworkflow.model.History;
 import com.amazonaws.services.simpleworkflow.model.HistoryEvent;
 import com.amazonaws.services.simpleworkflow.model.ListClosedWorkflowExecutionsRequest;
 import com.amazonaws.services.simpleworkflow.model.ListOpenWorkflowExecutionsRequest;
+import com.amazonaws.services.simpleworkflow.model.TagFilter;
 import com.amazonaws.services.simpleworkflow.model.WorkflowExecution;
 import com.amazonaws.services.simpleworkflow.model.WorkflowExecutionDetail;
 import com.amazonaws.services.simpleworkflow.model.WorkflowExecutionInfo;
-import com.amazonaws.services.simpleworkflow.model.WorkflowTypeFilter;
 
 @Component( "dataMungService" )
 public class DataMungServiceImpl
@@ -147,7 +146,10 @@ public class DataMungServiceImpl
     public ExportHandler exportInstance( String exportId,
                                          ExportInstanceRequest request )
     {
-        instanceWorkflowFactory.getClient( exportId ).export( request );
+        StartWorkflowOptions options = new StartWorkflowOptions();
+        options.setTagList( Arrays.asList( "job", "access-"
+            + request.getIdentity().getAwsAccessKeyId() ) );
+        instanceWorkflowFactory.getClient( exportId ).export( request, options );
         return ExportHandler.of( exportId, null );
     }
 
@@ -158,7 +160,10 @@ public class DataMungServiceImpl
     public ExportHandler exportSnapshot( String exportId,
                                          ExportSnapshotRequest request )
     {
-        snapshotWorkflowFactory.getClient( exportId ).export( request );
+        StartWorkflowOptions options = new StartWorkflowOptions();
+        options.setTagList( Arrays.asList( "job", "access-"
+            + request.getIdentity().getAwsAccessKeyId() ) );
+        snapshotWorkflowFactory.getClient( exportId ).export( request, options );
         return ExportHandler.of( exportId, null );
     }
 
@@ -197,28 +202,22 @@ public class DataMungServiceImpl
     @Override
     public WorkflowList listWorkflows( boolean closed )
     {
-        WorkflowTypeFilter instanceTypeFilter =
-            new WorkflowTypeFilter().withName( ExportInstanceWorkflow.WORKFLOW_TYPE ).withVersion( ExportInstanceWorkflow.WORKFLOW_VERSION );
-        WorkflowTypeFilter snapshotTypeFilter =
-            new WorkflowTypeFilter().withName( ExportSnapshotWorkflow.WORKFLOW_TYPE ).withVersion( ExportSnapshotWorkflow.WORKFLOW_VERSION );
-
         DateTime now = new DateTime();
         ExecutionTimeFilter last8Hours =
             new ExecutionTimeFilter().withLatestDate( now.toDate() ).withOldestDate( now.minusHours( 8 ).toDate() );
+        TagFilter tagFilter = new TagFilter().withTag( "job" );
 
-        List<WorkflowExecutionInfo> infos =
-            new ArrayList<WorkflowExecutionInfo>();
+        List<WorkflowExecutionInfo> infos;
         if ( closed )
         {
-            infos.addAll( swfService.listClosedWorkflowExecutions( new ListClosedWorkflowExecutionsRequest().withDomain( swfDomain ).withTypeFilter( instanceTypeFilter ).withStartTimeFilter( last8Hours ) ).getExecutionInfos() );
-            infos.addAll( swfService.listClosedWorkflowExecutions( new ListClosedWorkflowExecutionsRequest().withDomain( swfDomain ).withTypeFilter( snapshotTypeFilter ).withStartTimeFilter( last8Hours ) ).getExecutionInfos() );
+            infos =
+                swfService.listClosedWorkflowExecutions( new ListClosedWorkflowExecutionsRequest().withDomain( swfDomain ).withStartTimeFilter( last8Hours ).withTagFilter( tagFilter ) ).getExecutionInfos();
         }
         else
         {
-            infos.addAll( swfService.listOpenWorkflowExecutions( new ListOpenWorkflowExecutionsRequest().withDomain( swfDomain ).withTypeFilter( instanceTypeFilter ).withStartTimeFilter( last8Hours ) ).getExecutionInfos() );
-            infos.addAll( swfService.listOpenWorkflowExecutions( new ListOpenWorkflowExecutionsRequest().withDomain( swfDomain ).withTypeFilter( snapshotTypeFilter ).withStartTimeFilter( last8Hours ) ).getExecutionInfos() );
+            infos =
+                swfService.listOpenWorkflowExecutions( new ListOpenWorkflowExecutionsRequest().withDomain( swfDomain ).withStartTimeFilter( last8Hours ).withTagFilter( tagFilter ) ).getExecutionInfos();
         }
-
         List<Workflow> workflows = new ArrayList<Workflow>( infos.size() );
         for ( WorkflowExecutionInfo info : infos )
         {
