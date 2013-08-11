@@ -4,6 +4,7 @@
         <tr>
             <th>Time</th>
             <th>Action</th>
+            <th>Result</th>
             <th>Status</th>
             <th>Reason of failure</th>
         </tr>
@@ -11,6 +12,7 @@
         <tr>
             <td nowrap="nowrap">$activity.startDate.toString("HH:mm z")</td>
             <td>$activity.title</td>
+            <td>$!activity.result</td>
             <td>$activity.activityStatus</td>
             <td>
                 <small>$!activity.errorReason</small>

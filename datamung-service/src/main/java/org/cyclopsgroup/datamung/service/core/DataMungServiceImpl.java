@@ -1,6 +1,7 @@
 package org.cyclopsgroup.datamung.service.core;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -16,12 +17,16 @@ import org.cyclopsgroup.datamung.api.types.WorkflowActivity;
 import org.cyclopsgroup.datamung.api.types.WorkflowDetail;
 import org.cyclopsgroup.datamung.api.types.WorkflowList;
 import org.cyclopsgroup.datamung.service.ServiceConfig;
+import org.cyclopsgroup.datamung.swf.interfaces.AgentActivities;
+import org.cyclopsgroup.datamung.swf.interfaces.ControlActivities;
+import org.cyclopsgroup.datamung.swf.interfaces.Ec2Activities;
 import org.cyclopsgroup.datamung.swf.interfaces.ExportInstanceWorkflow;
 import org.cyclopsgroup.datamung.swf.interfaces.ExportInstanceWorkflowClientExternalFactory;
 import org.cyclopsgroup.datamung.swf.interfaces.ExportInstanceWorkflowClientExternalFactoryImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.ExportSnapshotWorkflow;
 import org.cyclopsgroup.datamung.swf.interfaces.ExportSnapshotWorkflowClientExternalFactory;
 import org.cyclopsgroup.datamung.swf.interfaces.ExportSnapshotWorkflowClientExternalFactoryImpl;
+import org.cyclopsgroup.datamung.swf.interfaces.RdsActivities;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -55,17 +60,17 @@ public class DataMungServiceImpl
         }
     }
 
-    private static void updateActivityEvent( long originalActivityId,
-                                             String workflowId,
-                                             WorkflowActivity.Status newStatus,
-                                             HistoryEvent event,
-                                             Map<String, WorkflowActivity> activityMap )
+    private static WorkflowActivity updateActivityEvent( long originalActivityId,
+                                                         String workflowId,
+                                                         WorkflowActivity.Status newStatus,
+                                                         HistoryEvent event,
+                                                         Map<String, WorkflowActivity> activityMap )
     {
         WorkflowActivity activity =
             activityMap.get( workflowId + "/" + originalActivityId );
         if ( activity == null )
         {
-            return;
+            return null;
         }
         activity.setActivityStatus( newStatus );
         if ( newStatus != WorkflowActivity.Status.RUNNING )
@@ -81,7 +86,14 @@ public class DataMungServiceImpl
         {
             activity.setResult( event.getActivityTaskCompletedEventAttributes().getResult() );
         }
+        return activity;
     }
+
+    private final ActivityInvocationDescriber activityDescriber =
+        new ActivityInvocationDescriber( AgentActivities.class,
+                                         ControlActivities.class,
+                                         Ec2Activities.class,
+                                         RdsActivities.class );
 
     private final JsonDataConverter converter = new JsonDataConverter();
 
@@ -234,14 +246,25 @@ public class DataMungServiceImpl
                                          activityMap );
                         break;
                     case ActivityTaskScheduled:
+                        String activityName =
+                            event.getActivityTaskScheduledEventAttributes().getActivityType().getName();
+                        if ( !activityDescriber.hasActivity( activityName ) )
+                        {
+                            break;
+                        }
                         String activityId =
                             exec.getWorkflowId() + "/" + event.getEventId();
                         WorkflowActivity activity = new WorkflowActivity();
+                        activity.setActivityName( activityName );
                         activity.setActivityId( activityId );
                         activity.setActivityStatus( WorkflowActivity.Status.OPEN );
                         activity.setStartDate( new DateTime(
                                                              event.getEventTimestamp() ) );
-                        activity.setTitle( event.getActivityTaskScheduledEventAttributes().getActivityType().getName() );
+                        Object[] params =
+                            converter.fromData( event.getActivityTaskScheduledEventAttributes().getInput(),
+                                                Object[].class );
+                        activity.setTitle( activityDescriber.describeInvocation( activityName,
+                                                                                 Arrays.asList( params ) ) );
                         activityMap.put( activityId, activity );
                         break;
                     case ActivityTaskStarted:
@@ -251,10 +274,27 @@ public class DataMungServiceImpl
                                              event, activityMap );
                         break;
                     case ActivityTaskCompleted:
-                        updateActivityEvent( event.getActivityTaskCompletedEventAttributes().getScheduledEventId(),
-                                             exec.getWorkflowId(),
-                                             WorkflowActivity.Status.COMPLETED,
-                                             event, activityMap );
+                        activity =
+                            updateActivityEvent( event.getActivityTaskCompletedEventAttributes().getScheduledEventId(),
+                                                 exec.getWorkflowId(),
+                                                 WorkflowActivity.Status.COMPLETED,
+                                                 event, activityMap );
+                        if ( activity != null )
+                        {
+                            activityName = activity.getActivityName();
+                            Class<?> resultType =
+                                activityDescriber.getActivityResultType( activityName );
+                            if ( resultType == Void.class )
+                            {
+                                activity.setResult( "void" );
+                                break;
+                            }
+                            Object result =
+                                converter.fromData( event.getActivityTaskCompletedEventAttributes().getResult(),
+                                                    resultType );
+                            activity.setResult( activityDescriber.describeResult( activityName,
+                                                                                  result ) );
+                        }
                         break;
                     case ActivityTaskFailed:
                         updateActivityEvent( event.getActivityTaskFailedEventAttributes().getScheduledEventId(),

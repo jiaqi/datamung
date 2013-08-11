@@ -26,6 +26,8 @@ public class WorkflowActivity
 
     private String activityId;
 
+    private String activityName;
+
     private Status activityStatus;
 
     private DateTime completeDate;
@@ -44,6 +46,12 @@ public class WorkflowActivity
     public String getActivityId()
     {
         return activityId;
+    }
+
+    @XmlElement
+    public String getActivityName()
+    {
+        return activityName;
     }
 
     @XmlElement
@@ -93,6 +101,11 @@ public class WorkflowActivity
     public void setActivityId( String activityId )
     {
         this.activityId = activityId;
+    }
+
+    public void setActivityName( String activityName )
+    {
+        this.activityName = activityName;
     }
 
     public void setActivityStatus( Status activityStatus )

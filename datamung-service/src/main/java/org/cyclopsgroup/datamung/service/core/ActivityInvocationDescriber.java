@@ -17,13 +17,26 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.Activity;
 
 class ActivityInvocationDescriber
 {
-    private final Map<String, Description> invocationMap;
+    private static class Invocation
+    {
+        private final Description description;
+
+        private final Method method;
+
+        private Invocation( Method method )
+        {
+            this.method = method;
+            this.description = method.getAnnotation( Description.class );
+        }
+    }
+
+    private final Map<String, Invocation> invocationMap;
 
     private final VelocityEngine velocity = new VelocityEngine();
 
     ActivityInvocationDescriber( Class<?>... activityTypes )
     {
-        Map<String, Description> map = new HashMap<String, Description>();
+        Map<String, Invocation> map = new HashMap<String, Invocation>();
         for ( Class<?> activityType : activityTypes )
         {
             Activities activities =
@@ -50,7 +63,7 @@ class ActivityInvocationDescriber
                 {
                     name = activity.name();
                 }
-                map.put( prefix + name, desc );
+                map.put( prefix + name, new Invocation( method ) );
             }
         }
         this.invocationMap = Collections.unmodifiableMap( map );
@@ -58,7 +71,7 @@ class ActivityInvocationDescriber
 
     String describeInvocation( String activityName, List<Object> parameters )
     {
-        Description i = invocationMap.get( activityName );
+        Invocation i = invocationMap.get( activityName );
         if ( i == null )
         {
             return null;
@@ -67,27 +80,39 @@ class ActivityInvocationDescriber
         context.put( "params", parameters );
         StringWriter out = new StringWriter();
         velocity.evaluate( new VelocityContext( context ), out, "internal",
-                           i.value() );
+                           i.description.value() );
         return out.toString();
     }
 
     String describeResult( String activityName, Object result )
     {
-        Description i = invocationMap.get( activityName );
-        if ( i == null || StringUtils.isBlank( i.result() ) )
+        Invocation i = invocationMap.get( activityName );
+        if ( i == null || StringUtils.isBlank( i.description.result() ) )
         {
             return null;
         }
         Map<String, Object> context = new HashMap<String, Object>();
-        context.put( "result", result );
+        context.put( "output", result );
         StringWriter out = new StringWriter();
         velocity.evaluate( new VelocityContext( context ), out, "internal",
-                           i.value() );
+                           i.description.result() );
         return out.toString();
+    }
+
+    Class<?> getActivityResultType( String activityName )
+    {
+        Invocation i = invocationMap.get( activityName );
+        if ( i == null )
+        {
+            throw new IllegalArgumentException( "Activity name " + activityName
+                + " is not expected" );
+        }
+        return i.method.getReturnType();
     }
 
     boolean hasActivity( String activityName )
     {
         return invocationMap.containsKey( activityName );
     }
+
 }
