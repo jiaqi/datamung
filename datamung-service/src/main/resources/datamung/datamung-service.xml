@@ -66,7 +66,7 @@
         <constructor-arg ref="aws.SimpleWorkflow" />
         <constructor-arg ref="aws.SwfDomain" />
         <constructor-arg value="datamung-workflow-tasks" />
-        <property name="disableTypeRegistrationOnStart" value="true" />
+        <property name="disableTypeRegistrationOnStart" value="${disableSwfTypeRegistration:false}" />
         <property name="workflowImplementationTypes">
             <list>
                 <value>
@@ -90,7 +90,7 @@
         <constructor-arg ref="aws.SimpleWorkflow" />
         <constructor-arg ref="aws.SwfDomain" />
         <constructor-arg value="datamung-activity-tasks" />
-        <property name="disableTypeRegistrationOnStart" value="true" />
+        <property name="disableTypeRegistrationOnStart" value="${disableSwfTypeRegistration:false}" />
         <property name="activitiesImplementations">
             <list>
                 <ref bean="workflow.ControlActivities" />
