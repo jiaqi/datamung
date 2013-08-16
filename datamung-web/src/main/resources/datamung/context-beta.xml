@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-    xmlns:jaxrs="http://cxf.apache.org/jaxrs" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
     xsi:schemaLocation="
        http://www.springframework.org/schema/beans
        http://www.springframework.org/schema/beans/spring-beans.xsd
-       http://cxf.apache.org/jaxrs
-       http://cxf.apache.org/schemas/jaxrs.xsd">
+
+       http://www.springframework.org/schema/util
+       http://www.springframework.org/schema/util/spring-util.xsd">
+
+    <util:properties id="appProperties">
+        <prop key="serviceUrl">http://localhost:1080/datamung-service/v1/</prop>
+    </util:properties>
     <bean id="aws.Credentials"
         class="com.amazonaws.auth.InstanceProfileCredentialsProvider" />
-    <jaxrs:client id="dataMungService"
-        serviceClass="org.cyclopsgroup.datamung.api.DataMungService"
-        address="http://cg-datamung-svc-beta.elasticbeanstalk.com/v1/" />
 </beans>

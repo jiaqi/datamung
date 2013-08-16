@@ -3,7 +3,7 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
     xmlns:aop="http://www.springframework.org/schema/aop"
     xmlns:http-conf="http://cxf.apache.org/transports/http/configuration"
-
+    xmlns:jaxrs="http://cxf.apache.org/jaxrs"
     xsi:schemaLocation="
        http://www.springframework.org/schema/beans
        http://www.springframework.org/schema/beans/spring-beans.xsd
@@ -12,9 +12,13 @@
        http://www.springframework.org/schema/aop
        http://www.springframework.org/schema/aop/spring-aop.xsd
        http://cxf.apache.org/transports/http/configuration
-       http://cxf.apache.org/schemas/configuration/http-conf.xsd">
+       http://cxf.apache.org/schemas/configuration/http-conf.xsd
+       http://cxf.apache.org/jaxrs
+       http://cxf.apache.org/schemas/jaxrs.xsd">
 
     <import resource="./context-${stage:alpha}.xml" />
+    <context:property-placeholder
+        properties-ref="appProperties" />
     <aop:aspectj-autoproxy />
     <aop:config>
         <aop:aspect ref="loggingAdvice" order="1">
@@ -44,6 +48,9 @@
     </bean>
 
     <!-- CXF client -->
+    <jaxrs:client id="dataMungService"
+        serviceClass="org.cyclopsgroup.datamung.api.DataMungService"
+        address="${serviceUrl}" />
     <http-conf:conduit name="*.http-conduit">
         <http-conf:client Connection="Keep-Alive"
             ConnectionTimeout="2000" ReceiveTimeout="5000" />
