@@ -16,9 +16,8 @@
        http://cxf.apache.org/jaxrs
        http://cxf.apache.org/schemas/jaxrs.xsd">
 
-    <import resource="./context-${stage:alpha}.xml" />
     <context:property-placeholder
-        properties-ref="appProperties" />
+        location="classpath:datamung/context-${stage:alpha}.properties" />
     <aop:aspectj-autoproxy />
     <aop:config>
         <aop:aspect ref="loggingAdvice" order="1">
@@ -37,6 +36,10 @@
 
 
     <!-- AWS resources -->
+    <bean id="aws.Credentials" class="com.amazonaws.auth.BasicAWSCredentials">
+        <constructor-arg value="DUMMY_ACCESS_KEY_ID" />
+        <constructor-arg value="DUMMY_SECRET_KEY" />
+    </bean>
     <bean class="com.amazonaws.services.rds.AmazonRDSClient">
         <constructor-arg ref="aws.Credentials" />
     </bean>
