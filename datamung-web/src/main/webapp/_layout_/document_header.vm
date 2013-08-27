@@ -1,6 +1,9 @@
 <head>
     <title>CyclopsGroup.org - DataMung</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    #if($refreshPage)
+    <meta http-equiv="refresh" content="5" />
+    #end
     <script language="javascript"
         src="$link.contextPath/js/google-analytics-boot.js">
     </script>

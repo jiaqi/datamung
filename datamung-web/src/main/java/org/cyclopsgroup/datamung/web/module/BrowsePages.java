@@ -1,6 +1,11 @@
 package org.cyclopsgroup.datamung.web.module;
 
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
 import org.cyclopsgroup.datamung.api.DataMungService;
+import org.cyclopsgroup.datamung.api.types.Workflow;
+import org.cyclopsgroup.datamung.api.types.WorkflowDetail;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,7 +26,12 @@ public class BrowsePages
     String runId )
     {
         ModelAndView mav = new ModelAndView( "browse/job_detail.vm" );
-        mav.addObject( "job", dataMungService.getWorkflow( workflowId, runId ) );
+        WorkflowDetail job = dataMungService.getWorkflow( workflowId, runId );
+        mav.addObject( "job", job );
+        if ( job.getWorkflow().getWorkflowStatus().equals( "OPEN" ) )
+        {
+            mav.addObject( "refreshPage", Boolean.TRUE );
+        }
         return mav;
     }
 
@@ -32,10 +42,45 @@ public class BrowsePages
         ModelAndView mav =
             new ModelAndView( "browse/list_jobs.vm" ).addObject( "highlight",
                                                                  highlight );
-        mav.addObject( "openWorkflows",
-                       dataMungService.listWorkflows( false ).getList() );
-        mav.addObject( "closedWorkflows",
-                       dataMungService.listWorkflows( true ).getList() );
+
+        List<Workflow> openFlows =
+            dataMungService.listWorkflows( false ).getList();
+        mav.addObject( "openWorkflows", openFlows );
+
+        List<Workflow> closedFlows =
+            dataMungService.listWorkflows( true ).getList();
+        mav.addObject( "closedWorkflows", closedFlows );
+
+        if ( StringUtils.isNotBlank( highlight ) )
+        {
+            boolean highlightFound = false;
+            if ( openFlows != null )
+            {
+                for ( Workflow flow : openFlows )
+                {
+                    if ( flow.getWorkflowId().equals( highlight ) )
+                    {
+                        highlightFound = true;
+                        break;
+                    }
+                }
+            }
+            if ( !highlightFound && closedFlows != null )
+            {
+                for ( Workflow flow : closedFlows )
+                {
+                    if ( flow.getWorkflowId().equals( highlight ) )
+                    {
+                        highlightFound = true;
+                        break;
+                    }
+                }
+            }
+            if ( !highlightFound )
+            {
+                mav.addObject( "refreshPage", Boolean.TRUE );
+            }
+        }
         return mav;
     }
 }
