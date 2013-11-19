@@ -70,7 +70,7 @@
             <tr>
                 <td>AWS secret key: </td>
                 <td>
-                    <input type="text" name="awsSecretKey" size="64"
+                    <input type="password" name="awsSecretKey" size="64"
                         value="$!input.awsSecretKey" />
                 </td>
             </tr>
