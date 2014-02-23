@@ -6,6 +6,7 @@ import java.util.Map;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.cyclopsgroup.datamung.api.JobEventListener;
 import org.cyclopsgroup.datamung.api.types.AgentConfig;
 import org.cyclopsgroup.datamung.api.types.Identity;
 import org.cyclopsgroup.datamung.service.ServiceConfig;
@@ -19,6 +20,7 @@ import com.amazonaws.services.identitymanagement.model.Role;
 import com.amazonaws.services.simpleworkflow.flow.ActivityExecutionContextProvider;
 import com.amazonaws.services.simpleworkflow.flow.ActivityExecutionContextProviderImpl;
 import com.amazonaws.services.simpleworkflow.flow.JsonDataConverter;
+import com.amazonaws.services.simpleworkflow.model.WorkflowExecution;
 
 @Component( "workflow.ControlActivities" )
 public class ControlActivitiesImpl
@@ -29,19 +31,23 @@ public class ControlActivitiesImpl
 
     private final String accountId;
 
+    private final ActivityExecutionContextProvider contextProvider =
+        new ActivityExecutionContextProviderImpl();
+
     private final JsonDataConverter converter = new JsonDataConverter();
 
     private final AmazonIdentityManagement iam;
 
-    private final ActivityExecutionContextProvider contextProvider =
-        new ActivityExecutionContextProviderImpl();
+    private final JobEventListener jobEventListener;
 
     @Autowired
     public ControlActivitiesImpl( AmazonIdentityManagement iam,
-                                  ServiceConfig config )
+                                  ServiceConfig config,
+                                  JobEventListener jobEventListener )
     {
         this.iam = iam;
         this.accountId = config.getAwsAccountId();
+        this.jobEventListener = jobEventListener;
         LOG.info( "AWS account id is " + accountId );
     }
 
@@ -110,5 +116,39 @@ public class ControlActivitiesImpl
     public void deleteRole( String roleName )
     {
         ActivityUtils.deleteRole( roleName, iam, null );
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public void notifyJobCompleted()
+    {
+        jobEventListener.onJobCompleted( contextProvider.getActivityExecutionContext().getWorkflowExecution().getWorkflowId() );
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public void notifyJobFailed( Throwable e )
+    {
+        jobEventListener.onJobFailed( contextProvider.getActivityExecutionContext().getWorkflowExecution().getWorkflowId(),
+                                      e );
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public void notifyJobStarted()
+    {
+        WorkflowExecution exec =
+            contextProvider.getActivityExecutionContext().getWorkflowExecution();
+        String ref =
+            String.format( "swf:%s:%s:%s",
+                           contextProvider.getActivityExecutionContext().getDomain(),
+                           exec.getWorkflowId(), exec.getRunId() );
+        jobEventListener.onJobStarted( exec.getWorkflowId(), ref );
     }
 }

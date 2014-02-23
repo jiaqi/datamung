@@ -19,7 +19,7 @@ import com.amazonaws.services.simpleworkflow.flow.DecisionContextProvider;
 import com.amazonaws.services.simpleworkflow.flow.DecisionContextProviderImpl;
 import com.amazonaws.services.simpleworkflow.flow.annotations.Asynchronous;
 import com.amazonaws.services.simpleworkflow.flow.core.Promise;
-import com.amazonaws.services.simpleworkflow.flow.core.TryFinally;
+import com.amazonaws.services.simpleworkflow.flow.core.TryCatchFinally;
 
 public class ExportSnapshotWorkflowImpl
     implements ExportSnapshotWorkflow
@@ -44,7 +44,7 @@ public class ExportSnapshotWorkflowImpl
     private String workflowId;
 
     @Asynchronous
-    private void dumpDatabase( Promise<DatabaseInstance> database )
+    private Promise<Void> dumpDatabase( Promise<DatabaseInstance> database )
     {
         MySQLDumpJob job = new MySQLDumpJob();
         job.setDataArchive( request.getDestinationArchive() );
@@ -56,7 +56,7 @@ public class ExportSnapshotWorkflowImpl
         runJob.setJob( job );
         runJob.setIdentity( request.getIdentity() );
         runJob.setWorkerOptions( request.getWorkerOptions() );
-        jobFlowFactory.getClient( workflowId + "-job" ).executeCommand( runJob );
+        return jobFlowFactory.getClient( workflowId + "-job" ).executeCommand( runJob );
     }
 
     /**
@@ -68,11 +68,19 @@ public class ExportSnapshotWorkflowImpl
         this.request = request;
         this.workflowId =
             contextProvider.getDecisionContext().getWorkflowContext().getWorkflowExecution().getWorkflowId();
+        Promise<Void> started = controlActivities.notifyJobStarted();
 
         final Promise<String> databaseName =
-            controlActivities.createDatabaseName( request.getSnapshotName() );
-        new TryFinally( databaseName )
+            controlActivities.createDatabaseName( request.getSnapshotName(),
+                                                  started );
+        new TryCatchFinally( databaseName )
         {
+            @Override
+            protected void doCatch( Throwable cause )
+                throws Throwable
+            {
+                controlActivities.notifyJobFailed( cause );
+            }
 
             @Override
             protected void doFinally()
@@ -84,19 +92,20 @@ public class ExportSnapshotWorkflowImpl
             @Override
             protected void doTry()
             {
-                Promise<DatabaseInstance> done =
+                Promise<DatabaseInstance> instance =
                     rdsActivities.restoreSnapshot( Promise.asPromise( request.getSnapshotName() ),
                                                    databaseName,
                                                    Promise.asPromise( request.getSubnetGroupName() ),
                                                    Promise.asPromise( request.getIdentity() ) );
 
                 Promise<Void> sourceAvailable =
-                    waitUntilDatabaseAvailable( databaseName, done );
+                    waitUntilDatabaseAvailable( databaseName, instance );
                 Promise<DatabaseInstance> source =
                     rdsActivities.describeInstance( databaseName,
                                                     Promise.asPromise( request.getIdentity() ),
                                                     sourceAvailable );
-                dumpDatabase( source );
+                Promise<Void> done = dumpDatabase( source );
+                controlActivities.notifyJobCompleted( done );
             }
         };
     }

@@ -22,7 +22,8 @@ import com.amazonaws.services.simpleworkflow.flow.DecisionContextProvider;
 import com.amazonaws.services.simpleworkflow.flow.DecisionContextProviderImpl;
 import com.amazonaws.services.simpleworkflow.flow.annotations.Asynchronous;
 import com.amazonaws.services.simpleworkflow.flow.core.Promise;
-import com.amazonaws.services.simpleworkflow.flow.core.TryFinally;
+import com.amazonaws.services.simpleworkflow.flow.core.TryCatch;
+import com.amazonaws.services.simpleworkflow.flow.core.TryCatchFinally;
 
 public class ExportInstanceWorkflowImpl
     implements ExportInstanceWorkflow
@@ -64,16 +65,9 @@ public class ExportInstanceWorkflowImpl
         return Promise.asPromise( snapshotRequest );
     }
 
-    /**
-     * @inheritDoc
-     */
-    @Override
-    public void export( final ExportInstanceRequest request )
+    @Asynchronous
+    private void doExport( Promise<?>... waitFor )
     {
-        this.request = request;
-        this.workflowId =
-            contextProvider.getDecisionContext().getWorkflowContext().getWorkflowExecution().getWorkflowId();
-
         if ( request.isLiveInstanceTouched() )
         {
             Promise<DatabaseInstance> db =
@@ -87,20 +81,51 @@ public class ExportInstanceWorkflowImpl
         }
     }
 
-    @Asynchronous
-    private void exportLiveInstance( Promise<DatabaseInstance> db )
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public void export( final ExportInstanceRequest request )
     {
-        MySQLDumpJob job = new MySQLDumpJob();
-        job.setDataArchive( request.getDestinationArchive() );
-        job.setDatabaseInstance( db.get() );
-        job.setIdentity( request.getIdentity() );
-        job.setMasterPassword( request.getDatabaseMasterPassword() );
+        this.request = request;
+        this.workflowId =
+            contextProvider.getDecisionContext().getWorkflowContext().getWorkflowExecution().getWorkflowId();
 
-        RunJobRequest runJob = new RunJobRequest();
-        runJob.setJob( job );
-        runJob.setIdentity( request.getIdentity() );
-        runJob.setWorkerOptions( request.getWorkerOptions() );
-        jobFlowFactory.getClient( workflowId + "-job" ).executeCommand( runJob );
+        Promise<Void> started = controlActivities.notifyJobStarted();
+        doExport( started );
+    }
+
+    @Asynchronous
+    private void exportLiveInstance( final Promise<DatabaseInstance> db )
+    {
+        new TryCatch()
+        {
+            @Override
+            protected void doCatch( Throwable cause )
+                throws Throwable
+            {
+                controlActivities.notifyJobFailed( cause );
+            }
+
+            @Override
+            protected void doTry()
+                throws Throwable
+            {
+                MySQLDumpJob job = new MySQLDumpJob();
+                job.setDataArchive( request.getDestinationArchive() );
+                job.setDatabaseInstance( db.get() );
+                job.setIdentity( request.getIdentity() );
+                job.setMasterPassword( request.getDatabaseMasterPassword() );
+
+                RunJobRequest runJob = new RunJobRequest();
+                runJob.setJob( job );
+                runJob.setIdentity( request.getIdentity() );
+                runJob.setWorkerOptions( request.getWorkerOptions() );
+                Promise<Void> done =
+                    jobFlowFactory.getClient( workflowId + "-job" ).executeCommand( runJob );
+                controlActivities.notifyJobCompleted( done );
+            }
+        };
     }
 
     @Asynchronous
@@ -116,8 +141,14 @@ public class ExportInstanceWorkflowImpl
                                           Promise.asPromise( request.getInstanceName() ),
                                           Promise.asPromise( request.getIdentity() ),
                                           database );
-        new TryFinally( done )
+        new TryCatchFinally( done )
         {
+            @Override
+            protected void doCatch( Throwable cause )
+            {
+                controlActivities.notifyJobFailed( cause );
+            }
+
             @Override
             protected void doFinally()
                 throws Throwable
@@ -132,8 +163,11 @@ public class ExportInstanceWorkflowImpl
                 Promise<Void> done = waitUntilSnapshotAvailable( snapshotName );
                 Promise<ExportSnapshotRequest> snapshotRequest =
                     createExportSnapshotRequest( snapshotName, database );
-                exportSnapshotFlowFactory.getClient( workflowId + "-snapshot" ).export( snapshotRequest,
-                                                                                        done );
+                done =
+                    exportSnapshotFlowFactory.getClient( workflowId
+                                                             + "-snapshot" ).export( snapshotRequest,
+                                                                                     done );
+                controlActivities.notifyJobCompleted( done );
             }
         };
     }

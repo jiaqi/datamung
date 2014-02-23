@@ -56,6 +56,7 @@
     </bean>
 
     <context:component-scan base-package="org.cyclopsgroup.datamung.service.core" />
+    <bean class="org.cyclopsgroup.datamung.service.core.NoOpJobEventListener" />
     <!-- SWF workers -->
     <context:component-scan
         base-package="org.cyclopsgroup.datamung.service.activities" />
