@@ -6,12 +6,21 @@
        http://www.springframework.org/schema/beans/spring-beans.xsd
        http://www.springframework.org/schema/context
        http://www.springframework.org/schema/context/spring-context.xsd">
-    <context:property-placeholder />
+    <context:property-placeholder
+        properties-ref="appProperties" />
+
+    <bean id="appProperties"
+        class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+        <property name="properties">
+            <props>
+                <prop key="aws.swfDomain">datamung-test</prop>
+                <prop key="aws.dislableSwfRegistration">true</prop>
+            </props>
+        </property>
+    </bean>
+
     <bean id="aws.Credentials"
         class="com.amazonaws.auth.InstanceProfileCredentialsProvider" />
-    <bean id="aws.SwfDomain" class="java.lang.String">
-        <constructor-arg value="datamung-test" />
-    </bean>
     <bean id="aws.AccountId" class="java.lang.String">
         <constructor-arg value="${accountId}" />
     </bean>

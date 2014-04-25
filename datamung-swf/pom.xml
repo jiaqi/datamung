@@ -37,6 +37,7 @@
             <version>${aws.sdk.version}</version>
             <scope>system</scope>
             <systemPath>${aws.sdk.home}/lib/aws-java-sdk-flow-build-tools-${aws.sdk.version}.jar</systemPath>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.cyclopsgroup</groupId>

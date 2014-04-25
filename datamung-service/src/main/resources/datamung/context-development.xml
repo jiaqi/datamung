@@ -6,18 +6,28 @@
        http://www.springframework.org/schema/beans/spring-beans.xsd
        http://www.springframework.org/schema/context
        http://www.springframework.org/schema/context/spring-context.xsd">
-    <context:property-placeholder />
+
+    <context:property-placeholder
+        properties-ref="appProperties" />
+
+    <bean id="appProperties"
+        class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+        <property name="properties">
+            <props>
+                <prop key="aws.swfDomain">datamung-test</prop>
+                <prop key="aws.dislableSwfRegistration">false</prop>
+            </props>
+        </property>
+    </bean>
     <bean id="aws.Credentials" class="com.amazonaws.auth.PropertiesCredentials">
         <constructor-arg>
             <bean class="java.io.File">
-                <constructor-arg value="${config}" />
+                <constructor-arg
+                    value="${user.home}/config/jiaqi-root-aws-creds.properties" />
             </bean>
         </constructor-arg>
     </bean>
 
-    <bean id="aws.SwfDomain" class="java.lang.String">
-        <constructor-arg value="datamung-test" />
-    </bean>
 
     <bean id="aws.AccountId"
         class="org.cyclopsgroup.datamung.service.activities.IamAccountIdFactoryBean">

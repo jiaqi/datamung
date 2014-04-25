@@ -283,7 +283,8 @@ public class DataMungServiceImpl
                             activityName = activity.getActivityName();
                             Class<?> resultType =
                                 activityDescriber.getActivityResultType( activityName );
-                            if ( resultType == Void.class )
+                            if ( resultType == Void.class
+                                || resultType == Void.TYPE )
                             {
                                 activity.setResult( "void" );
                                 break;

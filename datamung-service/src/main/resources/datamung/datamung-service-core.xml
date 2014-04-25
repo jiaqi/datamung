@@ -12,7 +12,7 @@
        http://www.springframework.org/schema/aop/spring-aop.xsd
        http://cxf.apache.org/jaxrs
        http://cxf.apache.org/schemas/jaxrs.xsd">
-    <import resource="./context-${stage:alpha}.xml" />
+    <import resource="./context-${stage:development}.xml" />
 
     <!-- Logging configuration -->
     <aop:aspectj-autoproxy />
@@ -30,8 +30,8 @@
     </aop:config>
 
     <bean class="org.cyclopsgroup.datamung.service.ServiceConfig">
-        <property name="agentAmiId" value="ami-703b4219" />
-        <property name="swfDomainName" ref="aws.SwfDomain" />
+        <property name="agentAmiId" value="ami-4213f62a" />
+        <property name="swfDomainName" value="${aws.swfDomain}" />
         <property name="awsAccountId" ref="aws.AccountId" />
     </bean>
 
@@ -64,9 +64,9 @@
     <bean class="com.amazonaws.services.simpleworkflow.flow.WorkflowWorker"
         init-method="start" destroy-method="shutdown">
         <constructor-arg ref="aws.SimpleWorkflow" />
-        <constructor-arg ref="aws.SwfDomain" />
+        <constructor-arg value="${aws.swfDomain}" />
         <constructor-arg value="datamung-workflow-tasks" />
-        <property name="disableTypeRegistrationOnStart" value="${disableSwfTypeRegistration:false}" />
+        <property name="disableTypeRegistrationOnStart" value="${aws.dislableSwfRegistration}" />
         <property name="workflowImplementationTypes">
             <list>
                 <value>
@@ -88,9 +88,9 @@
     <bean class="com.amazonaws.services.simpleworkflow.flow.ActivityWorker"
         init-method="start" destroy-method="shutdown">
         <constructor-arg ref="aws.SimpleWorkflow" />
-        <constructor-arg ref="aws.SwfDomain" />
+        <constructor-arg value="${aws.swfDomain}" />
         <constructor-arg value="datamung-activity-tasks" />
-        <property name="disableTypeRegistrationOnStart" value="${disableSwfTypeRegistration:false}" />
+        <property name="disableTypeRegistrationOnStart" value="${aws.dislableSwfRegistration}" />
         <property name="activitiesImplementations">
             <list>
                 <ref bean="workflow.ControlActivities" />
