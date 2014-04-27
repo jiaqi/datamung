@@ -17,6 +17,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.cyclopsgroup</groupId>
+            <artifactId>kaufman-interfaces</artifactId>
+            <version>0.0.1</version>
+        </dependency>
+        <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk</artifactId>
             <version>${aws.sdk.version}</version>
@@ -40,11 +45,6 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.cyclopsgroup</groupId>
-            <artifactId>kaufman-interfaces</artifactId>
-            <version>0.0.1</version>
-        </dependency>
-        <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjrt</artifactId>
             <version>1.7.3</version>
@@ -53,6 +53,12 @@
             <groupId>org.freemarker</groupId>
             <artifactId>freemarker</artifactId>
             <version>2.3.19</version>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.cyclopsgroup</groupId>
@@ -66,7 +72,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>aspectj-maven-plugin</artifactId>
-                <version>1.4</version>
+                <version>1.6</version>
                 <configuration>
                     <complianceLevel>1.6</complianceLevel>
                     <verbose>true</verbose>
@@ -101,9 +107,19 @@
                     <execution>
                         <goals>
                             <goal>process</goal>
+                            <goal>test-process</goal>
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.5</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -9,7 +9,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>datamung-web</artifactId>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
     <name>Datamung web UI</name>
     <inceptionYear>2013</inceptionYear>
     <dependencies>
@@ -120,7 +120,7 @@
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-mapper-asl</artifactId>
-            <version>1.8.9</version>
+            <version>${jackson.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>

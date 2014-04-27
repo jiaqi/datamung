@@ -17,7 +17,7 @@
        http://cxf.apache.org/schemas/jaxrs.xsd">
 
     <context:property-placeholder
-        location="classpath:datamung/context-${stage:alpha}.properties" />
+        location="classpath:datamung-web/context-${stage:development}.properties" />
     <aop:aspectj-autoproxy />
     <aop:config>
         <aop:aspect ref="loggingAdvice" order="1">
@@ -31,10 +31,9 @@
     </aop:config>
     <bean id="loggingAdvice"
         class="org.cyclopsgroup.kaufman.logging.InvocationLoggingAdvice" />
+
     <bean
         class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean" />
-
-
     <!-- AWS resources -->
     <bean id="aws.Credentials" class="com.amazonaws.auth.BasicAWSCredentials">
         <constructor-arg value="DUMMY_ACCESS_KEY_ID" />

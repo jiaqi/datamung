@@ -13,18 +13,18 @@
     <script type="text/javascript"
         src="//ajax.aspnetcdn.com/ajax/jquery.ui/1.8.10/jquery-ui.min.js">
     </script>
-    <script type="text/javascript" src="$link.contextPath/js/kaufman-core.js">
+    <script type="text/javascript" src="//cyclopsgroup.org/js/boot-analytics.js">
     </script>
-
     <script language="javascript">
         // <!DATA[
         // Setting context path to a goal variable so other scripts can use it
         document.webappBase="$link.contextPath";
         //]]>
     </script>
-    <link rel="stylesheet" href="$link.contextPath/css/main.css" />
+    <script type="text/javascript" src="$link.absolute('/js/kaufman-core.js')"></script>
+    <link rel="stylesheet" href="$link.absolute('/css/main.css')" />
     <link href='http://fonts.googleapis.com/css?family=Marmelad'
-        rel='stylesheet' type='text/css'>
-        <link rel="stylesheet"
-            href="//ajax.aspnetcdn.com/ajax/jquery.ui/1.8.10/themes/cupertino/jquery-ui.css" />
+        rel='stylesheet' type='text/css' />
+    <link rel="stylesheet"
+        href="//ajax.aspnetcdn.com/ajax/jquery.ui/1.8.10/themes/cupertino/jquery-ui.css" />
 </head>
