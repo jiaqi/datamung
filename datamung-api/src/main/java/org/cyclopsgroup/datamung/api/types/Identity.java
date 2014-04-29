@@ -9,22 +9,32 @@ import org.cyclopsgroup.kaufman.interfaces.BaseComparableBean;
 public class Identity
     extends BaseComparableBean
 {
-    private String awsAccessKeyId;
-
-    private String awsSecretKey;
-
-    public static Identity of( String accessKeyId, String secretKey )
+    public static Identity of( String accessKeyId, String secretKey,
+                               String regionName )
     {
         Identity id = new Identity();
         id.awsAccessKeyId = accessKeyId;
         id.awsSecretKey = secretKey;
+        id.awsRegionName = regionName;
         return id;
     }
+
+    private String awsAccessKeyId;
+
+    private String awsRegionName;
+
+    private String awsSecretKey;
 
     @XmlElement
     public String getAwsAccessKeyId()
     {
         return awsAccessKeyId;
+    }
+
+    @XmlElement
+    public String getAwsRegionName()
+    {
+        return awsRegionName;
     }
 
     @XmlElement
@@ -36,6 +46,11 @@ public class Identity
     public void setAwsAccessKeyId( String awsAccessKeyId )
     {
         this.awsAccessKeyId = awsAccessKeyId;
+    }
+
+    public void setAwsRegionName( String awsRegionName )
+    {
+        this.awsRegionName = awsRegionName;
     }
 
     public void setAwsSecretKey( String awsSecretKey )

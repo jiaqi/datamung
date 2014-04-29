@@ -3,10 +3,10 @@ package org.cyclopsgroup.datamung.service.activities;
 import org.cyclopsgroup.datamung.api.types.Identity;
 import org.cyclopsgroup.datamung.swf.interfaces.RdsActivities;
 import org.cyclopsgroup.datamung.swf.types.DatabaseInstance;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.amazonaws.services.rds.AmazonRDS;
+import com.amazonaws.services.rds.AmazonRDSClient;
 import com.amazonaws.services.rds.model.CreateDBSnapshotRequest;
 import com.amazonaws.services.rds.model.DBInstance;
 import com.amazonaws.services.rds.model.DBInstanceNotFoundException;
@@ -45,9 +45,6 @@ public class RdsActivitiesImpl
         return i;
     }
 
-    @Autowired
-    private AmazonRDS rds;
-
     /**
      * @inheritDoc
      */
@@ -55,19 +52,18 @@ public class RdsActivitiesImpl
     public void createSnapshot( String snapshotName, String instanceName,
                                 Identity identity )
     {
+        AmazonRDS rds =
+            ActivityUtils.createClient( AmazonRDSClient.class, identity );
         try
         {
-            rds.describeDBSnapshots( ActivityUtils.decorate( new DescribeDBSnapshotsRequest().withDBSnapshotIdentifier( snapshotName ),
-                                                             identity ) );
+            rds.describeDBSnapshots( new DescribeDBSnapshotsRequest().withDBSnapshotIdentifier( snapshotName ) );
             return;
         }
         catch ( DBSnapshotNotFoundException e )
         {
         }
-        rds.createDBSnapshot( ActivityUtils.decorate( new CreateDBSnapshotRequest(
-                                                                                   snapshotName,
-                                                                                   instanceName ),
-                                                      identity ) );
+        rds.createDBSnapshot( new CreateDBSnapshotRequest( snapshotName,
+                                                           instanceName ) );
     }
 
     /**
@@ -76,11 +72,11 @@ public class RdsActivitiesImpl
     @Override
     public void deleteSnapshot( String snapshotName, Identity identity )
     {
+        AmazonRDS rds =
+            ActivityUtils.createClient( AmazonRDSClient.class, identity );
         try
         {
-            rds.deleteDBSnapshot( ActivityUtils.decorate( new DeleteDBSnapshotRequest(
-                                                                                       snapshotName ),
-                                                          identity ) );
+            rds.deleteDBSnapshot( new DeleteDBSnapshotRequest( snapshotName ) );
         }
         catch ( DBSnapshotNotFoundException e )
         {
@@ -94,9 +90,10 @@ public class RdsActivitiesImpl
     public DatabaseInstance describeInstance( String instanceName,
                                               Identity identity )
     {
+        AmazonRDS rds =
+            ActivityUtils.createClient( AmazonRDSClient.class, identity );
         DescribeDBInstancesResult results =
-            rds.describeDBInstances( ActivityUtils.decorate( new DescribeDBInstancesRequest().withDBInstanceIdentifier( instanceName ),
-                                                             identity ) );
+            rds.describeDBInstances( new DescribeDBInstancesRequest().withDBInstanceIdentifier( instanceName ) );
         if ( results.getDBInstances().isEmpty() )
         {
             return null;
@@ -111,11 +108,12 @@ public class RdsActivitiesImpl
     @Override
     public String getSnapshotStatus( String snapshotName, Identity identity )
     {
+        AmazonRDS rds =
+            ActivityUtils.createClient( AmazonRDSClient.class, identity );
         try
         {
             DescribeDBSnapshotsResult result =
-                rds.describeDBSnapshots( ActivityUtils.decorate( new DescribeDBSnapshotsRequest().withDBSnapshotIdentifier( snapshotName ),
-                                                                 identity ) );
+                rds.describeDBSnapshots( new DescribeDBSnapshotsRequest().withDBSnapshotIdentifier( snapshotName ) );
             return result.getDBSnapshots().get( 0 ).getStatus();
         }
         catch ( DBSnapshotNotFoundException e )
@@ -133,11 +131,12 @@ public class RdsActivitiesImpl
                                              String subnetGroupName,
                                              Identity identity )
     {
+        AmazonRDS rds =
+            ActivityUtils.createClient( AmazonRDSClient.class, identity );
         try
         {
             DescribeDBInstancesResult results =
-                rds.describeDBInstances( ActivityUtils.decorate( new DescribeDBInstancesRequest().withDBInstanceIdentifier( instanceName ),
-                                                                 identity ) );
+                rds.describeDBInstances( new DescribeDBInstancesRequest().withDBInstanceIdentifier( instanceName ) );
             return toDatabaseInstance( results.getDBInstances().get( 0 ) );
         }
         catch ( DBInstanceNotFoundException e )
@@ -145,8 +144,7 @@ public class RdsActivitiesImpl
         }
 
         DescribeDBSnapshotsResult result =
-            rds.describeDBSnapshots( ActivityUtils.decorate( new DescribeDBSnapshotsRequest().withDBSnapshotIdentifier( snapshotName ),
-                                                             identity ) );
+            rds.describeDBSnapshots( new DescribeDBSnapshotsRequest().withDBSnapshotIdentifier( snapshotName ) );
         if ( result.getDBSnapshots().isEmpty() )
         {
             throw new IllegalArgumentException( "Snapshot  " + snapshotName
@@ -167,9 +165,7 @@ public class RdsActivitiesImpl
             request.setDBSubnetGroupName( subnetGroupName );
         }
 
-        DBInstance ins =
-            rds.restoreDBInstanceFromDBSnapshot( ActivityUtils.decorate( request,
-                                                                         identity ) );
+        DBInstance ins = rds.restoreDBInstanceFromDBSnapshot( request );
         DatabaseInstance desc = new DatabaseInstance();
         desc.setAllocatedStorage( ins.getAllocatedStorage() );
         desc.setAvailabilityZone( ins.getAvailabilityZone() );
@@ -190,11 +186,11 @@ public class RdsActivitiesImpl
     @Override
     public void terminateInstance( String instanceName, Identity identity )
     {
+        AmazonRDS rds =
+            ActivityUtils.createClient( AmazonRDSClient.class, identity );
         try
         {
-            rds.deleteDBInstance( ActivityUtils.decorate( new DeleteDBInstanceRequest(
-                                                                                       instanceName ),
-                                                          identity ).withSkipFinalSnapshot( true ) );
+            rds.deleteDBInstance( new DeleteDBInstanceRequest( instanceName ).withSkipFinalSnapshot( true ) );
         }
         catch ( DBInstanceNotFoundException e )
         {

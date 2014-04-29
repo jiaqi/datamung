@@ -53,7 +53,7 @@ public class JobWorkflowImplTest
     @Test
     public void testRun()
     {
-        final Identity identity = Identity.of( "a", "b" );
+        final Identity identity = Identity.of( "a", "b", "c" );
 
         WorkerOptions workerOptions = new WorkerOptions();
 

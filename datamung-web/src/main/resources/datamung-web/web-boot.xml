@@ -32,8 +32,6 @@
     <bean id="loggingAdvice"
         class="org.cyclopsgroup.kaufman.logging.InvocationLoggingAdvice" />
 
-    <bean
-        class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean" />
     <!-- AWS resources -->
     <bean id="aws.Credentials" class="com.amazonaws.auth.BasicAWSCredentials">
         <constructor-arg value="DUMMY_ACCESS_KEY_ID" />

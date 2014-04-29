@@ -3,6 +3,7 @@ package org.cyclopsgroup.datamung.service.activities;
 import org.springframework.beans.factory.FactoryBean;
 
 import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagement;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
 
@@ -16,13 +17,18 @@ public class IamAccountIdFactoryBean
         this.iam = new AmazonIdentityManagementClient( iam );
     }
 
+    public IamAccountIdFactoryBean( AWSCredentialsProvider iam )
+    {
+        this.iam = new AmazonIdentityManagementClient( iam );
+    }
+
     /**
      * @inheritDoc
      */
     @Override
     public String getObject()
     {
-        return ActivityUtils.getAccountId( iam, null );
+        return ActivityUtils.getAccountId( iam );
     }
 
     /**

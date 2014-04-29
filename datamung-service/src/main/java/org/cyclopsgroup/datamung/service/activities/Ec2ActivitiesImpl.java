@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.amazonaws.services.ec2.AmazonEC2;
+import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.IamInstanceProfileSpecification;
@@ -25,6 +26,7 @@ import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.RunInstancesResult;
 import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagement;
+import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
 import com.amazonaws.services.identitymanagement.model.AddRoleToInstanceProfileRequest;
 import com.amazonaws.services.identitymanagement.model.CreateInstanceProfileRequest;
 import com.amazonaws.services.identitymanagement.model.DeleteInstanceProfileRequest;
@@ -42,12 +44,6 @@ public class Ec2ActivitiesImpl
     private static final Log LOG = LogFactory.getLog( Ec2ActivitiesImpl.class );
 
     @Autowired
-    private AmazonEC2 ec2;
-
-    @Autowired
-    private AmazonIdentityManagement iam;
-
-    @Autowired
     private ServiceConfig config;
 
     /**
@@ -58,38 +54,37 @@ public class Ec2ActivitiesImpl
                                             String controlRoleArn,
                                             Identity identity )
     {
+        AmazonIdentityManagement iam =
+            ActivityUtils.createClient( AmazonIdentityManagementClient.class,
+                                        identity );
+
         // Create role if necessary
         String roleName = profileName + "-role";
-
         Map<String, String> policyVariables = new HashMap<String, String>();
         policyVariables.put( "CONTROLLER_ROLE_ARN", controlRoleArn );
         Role role =
             ActivityUtils.createRole( roleName, iam,
                                       "datamung/agent-policy.json",
                                       policyVariables,
-                                      "datamung/agent-trust.json", null,
-                                      identity );
+                                      "datamung/agent-trust.json", null );
 
         // Create instance profile and associate role if necessary
         boolean roleAssociationRequired = true;
         try
         {
-            iam.createInstanceProfile( ActivityUtils.decorate( new CreateInstanceProfileRequest().withInstanceProfileName( profileName ).withPath( role.getPath() ),
-                                                               identity ) );
+            iam.createInstanceProfile( new CreateInstanceProfileRequest().withInstanceProfileName( profileName ).withPath( role.getPath() ) );
         }
         catch ( EntityAlreadyExistsException e )
         {
             LOG.info( "Instance profile " + profileName + " already exists!" );
             roleAssociationRequired =
-                iam.getInstanceProfile( ActivityUtils.decorate( new GetInstanceProfileRequest().withInstanceProfileName( profileName ),
-                                                                identity ) ).getInstanceProfile().getRoles().isEmpty();
+                iam.getInstanceProfile( new GetInstanceProfileRequest().withInstanceProfileName( profileName ) ).getInstanceProfile().getRoles().isEmpty();
         }
         if ( roleAssociationRequired )
         {
             LOG.info( "Adding role " + roleName + " to instance profile "
                 + profileName );
-            iam.addRoleToInstanceProfile( ActivityUtils.decorate( new AddRoleToInstanceProfileRequest().withInstanceProfileName( profileName ).withRoleName( roleName ),
-                                                                  identity ) );
+            iam.addRoleToInstanceProfile( new AddRoleToInstanceProfileRequest().withInstanceProfileName( profileName ).withRoleName( roleName ) );
         }
     }
 
@@ -99,28 +94,28 @@ public class Ec2ActivitiesImpl
     @Override
     public void deleteInstanceProfile( String profileName, Identity identity )
     {
-        String roleName = profileName + "-role";
+        AmazonIdentityManagement iam =
+            ActivityUtils.createClient( AmazonIdentityManagementClient.class,
+                                        identity );
 
+        String roleName = profileName + "-role";
         try
         {
             GetInstanceProfileResult profileResult =
-                iam.getInstanceProfile( ActivityUtils.decorate( new GetInstanceProfileRequest().withInstanceProfileName( profileName ),
-                                                                identity ) );
+                iam.getInstanceProfile( new GetInstanceProfileRequest().withInstanceProfileName( profileName ) );
 
             if ( !profileResult.getInstanceProfile().getRoles().isEmpty() )
             {
-                iam.removeRoleFromInstanceProfile( ActivityUtils.decorate( new RemoveRoleFromInstanceProfileRequest().withInstanceProfileName( profileName ).withRoleName( roleName ),
-                                                                           identity ) );
+                iam.removeRoleFromInstanceProfile( new RemoveRoleFromInstanceProfileRequest().withInstanceProfileName( profileName ).withRoleName( roleName ) );
             }
 
-            iam.deleteInstanceProfile( ActivityUtils.decorate( new DeleteInstanceProfileRequest().withInstanceProfileName( profileName ),
-                                                               identity ) );
+            iam.deleteInstanceProfile( new DeleteInstanceProfileRequest().withInstanceProfileName( profileName ) );
         }
         catch ( NoSuchEntityException e )
         {
             LOG.info( "Instance profile is already gone: " + profileName );
         }
-        ActivityUtils.deleteRole( roleName, iam, identity );
+        ActivityUtils.deleteRole( roleName, iam );
     }
 
     /**
@@ -129,9 +124,10 @@ public class Ec2ActivitiesImpl
     @Override
     public WorkerInstance describeInstance( String instanceId, Identity identity )
     {
+        AmazonEC2 ec2 =
+            ActivityUtils.createClient( AmazonEC2Client.class, identity );
         DescribeInstancesResult result =
-            ec2.describeInstances( ActivityUtils.decorate( new DescribeInstancesRequest().withInstanceIds( instanceId ),
-                                                           identity ) );
+            ec2.describeInstances( new DescribeInstancesRequest().withInstanceIds( instanceId ) );
         if ( result.getReservations().isEmpty() )
         {
             return null;
@@ -169,8 +165,10 @@ public class Ec2ActivitiesImpl
         }
         request.withMinCount( 1 ).withMaxCount( 1 ).withImageId( config.getAgentAmiId() ).withInstanceType( InstanceType.T1Micro );
         request.setKeyName( options.getWorkerOptions().getKeyPairName() );
-        RunInstancesResult result =
-            ec2.runInstances( ActivityUtils.decorate( request, identity ) );
+
+        AmazonEC2 ec2 =
+            ActivityUtils.createClient( AmazonEC2Client.class, identity );
+        RunInstancesResult result = ec2.runInstances( request );
         return result.getReservation().getInstances().get( 0 ).getInstanceId();
     }
 
@@ -180,7 +178,8 @@ public class Ec2ActivitiesImpl
     @Override
     public void terminateInstance( String instanceId, Identity identity )
     {
-        ec2.terminateInstances( ActivityUtils.decorate( new TerminateInstancesRequest().withInstanceIds( instanceId ),
-                                                        identity ) );
+        AmazonEC2 ec2 =
+            ActivityUtils.createClient( AmazonEC2Client.class, identity );
+        ec2.terminateInstances( new TerminateInstancesRequest().withInstanceIds( instanceId ) );
     }
 }

@@ -9,9 +9,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.cyclopsgroup.datamung.api.types.Identity;
 
-import com.amazonaws.AmazonWebServiceRequest;
-import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.AmazonWebServiceClient;
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.internal.StaticCredentialsProvider;
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagement;
 import com.amazonaws.services.identitymanagement.model.CreateRoleRequest;
 import com.amazonaws.services.identitymanagement.model.CreateRoleResult;
@@ -20,7 +23,6 @@ import com.amazonaws.services.identitymanagement.model.DeleteRoleRequest;
 import com.amazonaws.services.identitymanagement.model.EntityAlreadyExistsException;
 import com.amazonaws.services.identitymanagement.model.GetRolePolicyRequest;
 import com.amazonaws.services.identitymanagement.model.GetRoleRequest;
-import com.amazonaws.services.identitymanagement.model.GetUserRequest;
 import com.amazonaws.services.identitymanagement.model.NoSuchEntityException;
 import com.amazonaws.services.identitymanagement.model.PutRolePolicyRequest;
 import com.amazonaws.services.identitymanagement.model.Role;
@@ -29,12 +31,28 @@ class ActivityUtils
 {
     private static final Log LOG = LogFactory.getLog( Ec2ActivitiesImpl.class );
 
+    static <T extends AmazonWebServiceClient> T createClient( Class<T> clientType,
+                                                              Identity identity )
+    {
+        Regions r = Regions.US_EAST_1;
+        if ( StringUtils.isNotBlank( identity.getAwsRegionName() ) )
+        {
+            r = Regions.fromName( identity.getAwsRegionName() );
+        }
+        AWSCredentialsProvider creds =
+            new StaticCredentialsProvider(
+                                           new BasicAWSCredentials(
+                                                                    identity.getAwsAccessKeyId(),
+                                                                    identity.getAwsSecretKey() ) );
+
+        return Region.getRegion( r ).createClient( clientType, creds, null );
+    }
+
     static Role createRole( String roleName, AmazonIdentityManagement iam,
                             String policyTemplate,
                             Map<String, String> policyVariables,
                             String trustTemplate,
-                            Map<String, String> trustVariables,
-                            Identity identity )
+                            Map<String, String> trustVariables )
     {
         boolean roleExisted = false;
         String assumeRolePolicy = mergeDocument( trustTemplate, trustVariables );
@@ -45,16 +63,14 @@ class ActivityUtils
         {
             LOG.info( "Creating new role " + roleName );
             CreateRoleResult role =
-                iam.createRole( decorate( new CreateRoleRequest().withRoleName( roleName ).withAssumeRolePolicyDocument( assumeRolePolicy ),
-                                          identity ) );
+                iam.createRole( new CreateRoleRequest().withRoleName( roleName ).withAssumeRolePolicyDocument( assumeRolePolicy ) );
             r = role.getRole();
         }
         catch ( EntityAlreadyExistsException e )
         {
             LOG.info( "Role already exists! " + roleName + ", ignore" );
             r =
-                iam.getRole( decorate( new GetRoleRequest().withRoleName( roleName ),
-                                       identity ) ).getRole();
+                iam.getRole( new GetRoleRequest().withRoleName( roleName ) ).getRole();
             roleExisted = true;
         }
 
@@ -64,8 +80,7 @@ class ActivityUtils
         {
             try
             {
-                iam.getRolePolicy( decorate( new GetRolePolicyRequest().withPolicyName( policyName ).withRoleName( roleName ),
-                                             identity ) );
+                iam.getRolePolicy( new GetRolePolicyRequest().withPolicyName( policyName ).withRoleName( roleName ) );
                 policyRequired = false;
                 LOG.info( "Policy " + policyName + " already exists, exit" );
             }
@@ -78,32 +93,16 @@ class ActivityUtils
             String rolePolicy = mergeDocument( policyTemplate, policyVariables );
             LOG.info( "Attaching policy " + policyName + " with content "
                 + rolePolicy + " to role " + roleName );
-            iam.putRolePolicy( decorate( new PutRolePolicyRequest().withRoleName( roleName ).withPolicyName( policyName ).withPolicyDocument( rolePolicy ),
-                                         identity ) );
+            iam.putRolePolicy( new PutRolePolicyRequest().withRoleName( roleName ).withPolicyName( policyName ).withPolicyDocument( rolePolicy ) );
         }
         return r;
     }
 
-    static <T extends AmazonWebServiceRequest> T decorate( T request,
-                                                           Identity id )
-    {
-        if ( id != null )
-        {
-            AWSCredentials creds =
-                new BasicAWSCredentials( id.getAwsAccessKeyId(),
-                                         id.getAwsSecretKey() );
-            request.setRequestCredentials( creds );
-        }
-        return request;
-    }
-
-    static void deleteRole( String roleName, AmazonIdentityManagement iam,
-                            Identity id )
+    static void deleteRole( String roleName, AmazonIdentityManagement iam )
     {
         try
         {
-            iam.getRole( decorate( new GetRoleRequest().withRoleName( roleName ),
-                                   id ) );
+            iam.getRole( new GetRoleRequest().withRoleName( roleName ) );
         }
         catch ( NoSuchEntityException e )
         {
@@ -112,9 +111,8 @@ class ActivityUtils
         }
         try
         {
-            iam.deleteRolePolicy( decorate( new DeleteRolePolicyRequest().withRoleName( roleName ).withPolicyName( roleName
-                                                                                                                       + "-policy" ),
-                                            id ) );
+            iam.deleteRolePolicy( new DeleteRolePolicyRequest().withRoleName( roleName ).withPolicyName( roleName
+                                                                                                             + "-policy" ) );
         }
         catch ( NoSuchEntityException e )
         {
@@ -123,8 +121,7 @@ class ActivityUtils
 
         try
         {
-            iam.deleteRole( decorate( new DeleteRoleRequest().withRoleName( roleName ),
-                                      id ) );
+            iam.deleteRole( new DeleteRoleRequest().withRoleName( roleName ) );
         }
         catch ( NoSuchEntityException e )
         {
@@ -132,10 +129,9 @@ class ActivityUtils
         }
     }
 
-    static String getAccountId( AmazonIdentityManagement iam, Identity identity )
+    static String getAccountId( AmazonIdentityManagement iam )
     {
-        String arn =
-            iam.getUser( decorate( new GetUserRequest(), identity ) ).getUser().getArn();
+        String arn = iam.getUser().getUser().getArn();
         return StringUtils.removeStart( arn, "arn:aws:iam::" ).replaceAll( ":.+$",
                                                                            "" );
     }

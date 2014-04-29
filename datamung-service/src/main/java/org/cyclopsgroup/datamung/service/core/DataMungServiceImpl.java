@@ -45,7 +45,7 @@ import com.amazonaws.services.simpleworkflow.model.WorkflowExecution;
 import com.amazonaws.services.simpleworkflow.model.WorkflowExecutionDetail;
 import com.amazonaws.services.simpleworkflow.model.WorkflowExecutionInfo;
 
-@Component( "dataMungService" )
+@Component( "datamungService" )
 public class DataMungServiceImpl
     implements DataMungService
 {

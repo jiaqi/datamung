@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagement;
+import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
 import com.amazonaws.services.identitymanagement.model.Role;
 import com.amazonaws.services.simpleworkflow.flow.ActivityExecutionContextProvider;
 import com.amazonaws.services.simpleworkflow.flow.ActivityExecutionContextProviderImpl;
@@ -36,16 +37,12 @@ public class ControlActivitiesImpl
 
     private final JsonDataConverter converter = new JsonDataConverter();
 
-    private final AmazonIdentityManagement iam;
-
     private final JobEventListener jobEventListener;
 
     @Autowired
-    public ControlActivitiesImpl( AmazonIdentityManagement iam,
-                                  ServiceConfig config,
+    public ControlActivitiesImpl( ServiceConfig config,
                                   JobEventListener jobEventListener )
     {
-        this.iam = iam;
         this.accountId = config.getAwsAccountId();
         this.jobEventListener = jobEventListener;
         LOG.info( "AWS account id is " + accountId );
@@ -64,17 +61,21 @@ public class ControlActivitiesImpl
         policyVariables.put( "SWF_DOMAIN", "datamung-test" );
         policyVariables.put( "TASK_LIST", workflowTaskList );
 
+        AmazonIdentityManagement iam =
+            ActivityUtils.createClient( AmazonIdentityManagementClient.class,
+                                        identity );
+
         Map<String, String> trustVariables = new HashMap<String, String>();
         trustVariables.put( "CLIENT_EXTERNAL_ID", AgentConfig.ROLE_EXTERNAL_ID );
         trustVariables.put( "CLIENT_ACCOUNT_ID",
-                            ActivityUtils.getAccountId( iam, identity ) );
+                            ActivityUtils.getAccountId( iam ) );
 
         Role role =
             ActivityUtils.createRole( roleName, iam,
                                       "datamung/agent-controller-policy.json",
                                       policyVariables,
                                       "datamung/agent-controller-trust.json",
-                                      trustVariables, null );
+                                      trustVariables );
         return role.getArn();
     }
 
@@ -115,7 +116,7 @@ public class ControlActivitiesImpl
     @Override
     public void deleteRole( String roleName )
     {
-        ActivityUtils.deleteRole( roleName, iam, null );
+        ActivityUtils.deleteRole( roleName, null );
     }
 
     /**
