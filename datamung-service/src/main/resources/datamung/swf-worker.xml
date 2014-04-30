@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd">
+    <context:component-scan
+        base-package="org.cyclopsgroup.datamung.service.activities" />
+    <bean class="com.amazonaws.services.simpleworkflow.flow.WorkflowWorker"
+        init-method="start" destroy-method="shutdown">
+        <constructor-arg ref="awsSimpleWorkflow" />
+        <constructor-arg value="${aws.swfDomain}" />
+        <constructor-arg value="datamung-workflow-tasks" />
+        <property name="disableTypeRegistrationOnStart" value="${aws.dislableSwfRegistration}" />
+        <property name="workflowImplementationTypes">
+            <list>
+                <value>
+                    org.cyclopsgroup.datamung.swf.flows.CheckWaitWorkflowImpl
+                </value>
+                <value>
+                    org.cyclopsgroup.datamung.swf.flows.ExportInstanceWorkflowImpl
+                </value>
+                <value>
+                    org.cyclopsgroup.datamung.swf.flows.ExportSnapshotWorkflowImpl
+                </value>
+                <value>
+                    org.cyclopsgroup.datamung.swf.flows.JobWorkflowImpl
+                </value>
+            </list>
+        </property>
+    </bean>
+    <bean class="com.amazonaws.services.simpleworkflow.flow.ActivityWorker"
+        init-method="start" destroy-method="shutdown">
+        <constructor-arg ref="awsSimpleWorkflow" />
+        <constructor-arg value="${aws.swfDomain}" />
+        <constructor-arg value="datamung-activity-tasks" />
+        <property name="disableTypeRegistrationOnStart" value="${aws.dislableSwfRegistration}" />
+        <property name="activitiesImplementations">
+            <list>
+                <ref bean="workflow.ControlActivities" />
+                <ref bean="workflow.RdsActivities" />
+                <ref bean="workflow.Ec2Activities" />
+                <ref bean="workflow.AgentActivities" />
+            </list>
+        </property>
+    </bean>
+</beans>

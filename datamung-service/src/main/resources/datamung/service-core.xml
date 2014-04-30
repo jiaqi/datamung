@@ -19,50 +19,5 @@
         <constructor-arg ref="awsCredentials" />
         <property name="endpoint" value="https://swf.us-east-1.amazonaws.com" />
     </bean>
-
     <context:component-scan base-package="org.cyclopsgroup.datamung.service.core" />
-    <!-- SWF workers -->
-    <context:component-scan
-        base-package="org.cyclopsgroup.datamung.service.activities" />
-
-
-    <bean class="com.amazonaws.services.simpleworkflow.flow.WorkflowWorker"
-        init-method="start" destroy-method="shutdown">
-        <constructor-arg ref="awsSimpleWorkflow" />
-        <constructor-arg value="${aws.swfDomain}" />
-        <constructor-arg value="datamung-workflow-tasks" />
-        <property name="disableTypeRegistrationOnStart" value="${aws.dislableSwfRegistration}" />
-        <property name="workflowImplementationTypes">
-            <list>
-                <value>
-                    org.cyclopsgroup.datamung.swf.flows.CheckWaitWorkflowImpl
-                </value>
-                <value>
-                    org.cyclopsgroup.datamung.swf.flows.ExportInstanceWorkflowImpl
-                </value>
-                <value>
-                    org.cyclopsgroup.datamung.swf.flows.ExportSnapshotWorkflowImpl
-                </value>
-                <value>
-                    org.cyclopsgroup.datamung.swf.flows.JobWorkflowImpl
-                </value>
-            </list>
-        </property>
-    </bean>
-
-    <bean class="com.amazonaws.services.simpleworkflow.flow.ActivityWorker"
-        init-method="start" destroy-method="shutdown">
-        <constructor-arg ref="awsSimpleWorkflow" />
-        <constructor-arg value="${aws.swfDomain}" />
-        <constructor-arg value="datamung-activity-tasks" />
-        <property name="disableTypeRegistrationOnStart" value="${aws.dislableSwfRegistration}" />
-        <property name="activitiesImplementations">
-            <list>
-                <ref bean="workflow.ControlActivities" />
-                <ref bean="workflow.RdsActivities" />
-                <ref bean="workflow.Ec2Activities" />
-                <ref bean="workflow.AgentActivities" />
-            </list>
-        </property>
-    </bean>
 </beans>

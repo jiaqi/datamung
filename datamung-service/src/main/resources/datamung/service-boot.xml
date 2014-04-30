@@ -32,7 +32,7 @@
     <bean class="org.cyclopsgroup.datamung.service.core.NoOpJobEventListener" />
     <import resource="./context-${stage:development}.xml" />
     <import resource="./service-core.xml" />
-
+    <import resource="./swf-worker.xml" />
 
     <!-- CXF service support -->
     <import resource="classpath:META-INF/cxf/cxf.xml" />

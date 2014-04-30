@@ -25,7 +25,8 @@
     </aop:config>
     <bean class="org.cyclopsgroup.datamung.service.core.NoOpJobEventListener" />
     <import resource="./context-${stage:development}.xml" />
-    <import resource="classpath*:datamung/service-core.xml" />
+    <import resource="classpath:datamung/service-core.xml" />
+    <import resource="classpath:datamung/swf-worker.xml" />
 
     <!-- Temporarily web still requires RDS, EC2 and S3 -->
     <bean class="com.amazonaws.services.rds.AmazonRDSClient">
