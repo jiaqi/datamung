@@ -54,6 +54,14 @@ public class AgentActivitiesImpl
         };
     }
 
+    private static String read( Future<String> out )
+        throws InterruptedException, ExecutionException
+    {
+        String s = out.get();
+        s = StringUtils.removeEnd( s, SystemUtils.LINE_SEPARATOR );
+        return StringUtils.right( s, 80 );
+    }
+
     private int runCommandLine( String commandLine, ExecutorService executor,
                                 JobResult result )
         throws IOException, InterruptedException, ExecutionException
@@ -66,9 +74,8 @@ public class AgentActivitiesImpl
         Future<String> errorOutput =
             executor.submit( collectOutput( proc.getErrorStream() ) );
         result.setExitCode( proc.waitFor() );
-        result.setErrorOutput( errorOutput.get() );
-        result.setStandardOutput( StringUtils.removeEnd( standardOutput.get(),
-                                                         SystemUtils.LINE_SEPARATOR ) );
+        result.setErrorOutput( read( errorOutput ) );
+        result.setStandardOutput( read( standardOutput ) );
         return result.getExitCode();
     }
 
@@ -99,7 +106,6 @@ public class AgentActivitiesImpl
         }
         catch ( Throwable e )
         {
-            result.setExitCode( -1 );
             result.setStackTrace( ExceptionUtils.getStackTrace( e ) );
             LOG.error( "Execution failed " + e.getMessage(), e );
         }

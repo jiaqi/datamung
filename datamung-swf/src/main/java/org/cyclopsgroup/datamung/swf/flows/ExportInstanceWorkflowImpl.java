@@ -4,6 +4,7 @@ import org.cyclopsgroup.datamung.api.types.ExportInstanceRequest;
 import org.cyclopsgroup.datamung.api.types.ExportSnapshotRequest;
 import org.cyclopsgroup.datamung.swf.interfaces.CheckWaitWorkflowClientFactory;
 import org.cyclopsgroup.datamung.swf.interfaces.CheckWaitWorkflowClientFactoryImpl;
+import org.cyclopsgroup.datamung.swf.interfaces.Constants;
 import org.cyclopsgroup.datamung.swf.interfaces.ControlActivitiesClient;
 import org.cyclopsgroup.datamung.swf.interfaces.ControlActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.ExportInstanceWorkflow;
@@ -122,7 +123,8 @@ public class ExportInstanceWorkflowImpl
                 runJob.setIdentity( request.getIdentity() );
                 runJob.setWorkerOptions( request.getWorkerOptions() );
                 Promise<Void> done =
-                    jobFlowFactory.getClient( workflowId + "-job" ).executeCommand( runJob );
+                    jobFlowFactory.getClient( workflowId
+                                                  + Constants.JOB_WORKFLOW_ID_SUFFIX ).executeCommand( runJob );
                 controlActivities.notifyJobCompleted( done );
             }
         };

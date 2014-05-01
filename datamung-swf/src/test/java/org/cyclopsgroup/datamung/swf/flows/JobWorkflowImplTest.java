@@ -10,6 +10,7 @@ import org.cyclopsgroup.datamung.swf.interfaces.JobWorkflowClientFactoryImpl;
 import org.cyclopsgroup.datamung.swf.types.CommandLineJob;
 import org.cyclopsgroup.datamung.swf.types.CreateInstanceOptions;
 import org.cyclopsgroup.datamung.swf.types.Job;
+import org.cyclopsgroup.datamung.swf.types.JobResult;
 import org.cyclopsgroup.datamung.swf.types.RunJobRequest;
 import org.cyclopsgroup.datamung.swf.types.WorkerInstance;
 import org.cyclopsgroup.kaufman.logging.InvocationLoggingDecorator;
@@ -71,6 +72,9 @@ public class JobWorkflowImplTest
         options.setInstanceProfileName( "dm-profile-test" );
         options.setUserData( "test-data" );
 
+        final JobResult result = new JobResult();
+        result.setStandardOutput( "something" );
+        result.setElapsedMillis( 1000 );
         context.checking( new Expectations()
         {
             {
@@ -93,13 +97,22 @@ public class JobWorkflowImplTest
                 one( ec2Activities ).describeInstance( "dmw-test", identity );
                 will( returnValue( new WorkerInstance().withInstanceStatus( "running" ) ) );
 
+                one( controlActivities ).notifyActionStarted( "AgentActivities.runJob",
+                                                              "Start running command on instance" );
+                will( returnValue( "action-id" ) );
+
                 one( agentActivities ).runJob( job );
-                will( returnValue( null ) );
+                will( returnValue( result ) );
+
+                one( controlActivities ).notifyActionCompleted( with( equal( "action-id" ) ),
+                                                                with( aNonNull( String.class ) ),
+                                                                with( equal( 1000L ) ) );
 
                 one( ec2Activities ).terminateInstance( "dmw-test", identity );
                 one( ec2Activities ).deleteInstanceProfile( "dm-profile-test",
                                                             identity );
-                one( controlActivities ).deleteRole( "dm-master-role-test" );
+                one( controlActivities ).deleteRole( "dm-master-role-test",
+                                                     identity );
             }
         } );
 

@@ -4,12 +4,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.cyclopsgroup.datamung.api.JobEventListener;
 import org.cyclopsgroup.datamung.api.types.AgentConfig;
 import org.cyclopsgroup.datamung.api.types.Identity;
 import org.cyclopsgroup.datamung.service.ServiceConfig;
+import org.cyclopsgroup.datamung.swf.interfaces.Constants;
 import org.cyclopsgroup.datamung.swf.interfaces.ControlActivities;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -114,9 +116,41 @@ public class ControlActivitiesImpl
      * @inheritDoc
      */
     @Override
-    public void deleteRole( String roleName )
+    public void deleteRole( String roleName, Identity identity )
     {
-        ActivityUtils.deleteRole( roleName, null );
+        AmazonIdentityManagement iam =
+            ActivityUtils.createClient( AmazonIdentityManagementClient.class,
+                                        identity );
+        ActivityUtils.deleteRole( roleName, iam );
+    }
+
+    @Override
+    public void notifyActionCompleted( String actionId, String result,
+                                       long elapsedMillis )
+    {
+        jobEventListener.onActionCompleted( actionId, result, elapsedMillis );
+    }
+
+    @Override
+    public void notifyActionFailed( String actionId, String result,
+                                    String failureDetails, long elaspsedMillis )
+    {
+        jobEventListener.onActionFailed( actionId, result, failureDetails,
+                                         elaspsedMillis );
+    }
+
+    @Override
+    public String notifyActionStarted( String actionName, String description )
+    {
+        String workflowId =
+            contextProvider.getActivityExecutionContext().getWorkflowExecution().getWorkflowId();
+        if ( workflowId.endsWith( Constants.JOB_WORKFLOW_ID_SUFFIX ) )
+        {
+            workflowId =
+                StringUtils.removeEnd( workflowId,
+                                       Constants.JOB_WORKFLOW_ID_SUFFIX );
+        }
+        return jobEventListener.onActionStarted( actionName, description );
     }
 
     /**

@@ -36,12 +36,17 @@ import com.amazonaws.services.identitymanagement.model.GetInstanceProfileResult;
 import com.amazonaws.services.identitymanagement.model.NoSuchEntityException;
 import com.amazonaws.services.identitymanagement.model.RemoveRoleFromInstanceProfileRequest;
 import com.amazonaws.services.identitymanagement.model.Role;
+import com.amazonaws.services.simpleworkflow.flow.ActivityExecutionContextProvider;
+import com.amazonaws.services.simpleworkflow.flow.ActivityExecutionContextProviderImpl;
 
 @Component( "workflow.Ec2Activities" )
 public class Ec2ActivitiesImpl
     implements Ec2Activities
 {
     private static final Log LOG = LogFactory.getLog( Ec2ActivitiesImpl.class );
+
+    private final ActivityExecutionContextProvider contextProvider =
+        new ActivityExecutionContextProviderImpl();
 
     @Autowired
     private ServiceConfig config;
@@ -165,6 +170,8 @@ public class Ec2ActivitiesImpl
         }
         request.withMinCount( 1 ).withMaxCount( 1 ).withImageId( config.getAgentAmiId() ).withInstanceType( InstanceType.T1Micro );
         request.setKeyName( options.getWorkerOptions().getKeyPairName() );
+        request.setClientToken( "launch-ec2-worker-"
+            + contextProvider.getActivityExecutionContext().getWorkflowExecution().getWorkflowId() );
 
         AmazonEC2 ec2 =
             ActivityUtils.createClient( AmazonEC2Client.class, identity );

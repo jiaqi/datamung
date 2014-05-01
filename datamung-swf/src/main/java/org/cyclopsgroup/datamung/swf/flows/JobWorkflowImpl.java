@@ -11,6 +11,7 @@ import org.cyclopsgroup.datamung.swf.interfaces.Ec2ActivitiesClientImpl;
 import org.cyclopsgroup.datamung.swf.interfaces.JobWorkflow;
 import org.cyclopsgroup.datamung.swf.types.CheckAndWait;
 import org.cyclopsgroup.datamung.swf.types.CreateInstanceOptions;
+import org.cyclopsgroup.datamung.swf.types.JobResult;
 import org.cyclopsgroup.datamung.swf.types.RunJobRequest;
 
 import com.amazonaws.services.simpleworkflow.flow.ActivitySchedulingOptions;
@@ -58,6 +59,24 @@ public class JobWorkflowImpl
         new TryFinally()
         {
             @Override
+            protected void doFinally()
+            {
+                Promise<Void> done = Promise.Void();
+                if ( workerId != null )
+                {
+                    done =
+                        ec2Activities.terminateInstance( workerId,
+                                                         request.getIdentity() );
+                }
+                done =
+                    ec2Activities.deleteInstanceProfile( agentProfileName,
+                                                         request.getIdentity(),
+                                                         done );
+                controlActivities.deleteRole( masterRoleName,
+                                              request.getIdentity(), done );
+            }
+
+            @Override
             protected void doTry()
             {
                 String taskListName = "dm-agent-tl-" + workflowId;
@@ -77,27 +96,16 @@ public class JobWorkflowImpl
                 Promise<String> workerId =
                     launchInstances( agentProfileName, userData, profileCreated );
                 Promise<Void> set = setWorkerId( workerId );
-
-                agentActivities.runJob( request.getJob(),
-                                        new ActivitySchedulingOptions().withTaskList( taskListName ).withStartToCloseTimeoutSeconds( request.getWorkerOptions().getJobTimeoutSeconds() ),
-                                        set, waitUntilWorkerReady( workerId ) );
-            }
-
-            @Override
-            protected void doFinally()
-            {
-                Promise<Void> done = Promise.Void();
-                if ( workerId != null )
-                {
-                    done =
-                        ec2Activities.terminateInstance( workerId,
-                                                         request.getIdentity() );
-                }
-                done =
-                    ec2Activities.deleteInstanceProfile( agentProfileName,
-                                                         request.getIdentity(),
-                                                         done );
-                controlActivities.deleteRole( masterRoleName, done );
+                Promise<Void> ready = waitUntilWorkerReady( workerId, set );
+                Promise<String> actionId =
+                    controlActivities.notifyActionStarted( "AgentActivities.runJob",
+                                                           "Start running command on instance",
+                                                           ready );
+                Promise<JobResult> result =
+                    agentActivities.runJob( request.getJob(),
+                                            new ActivitySchedulingOptions().withTaskList( taskListName ).withStartToCloseTimeoutSeconds( request.getWorkerOptions().getJobTimeoutSeconds() ),
+                                            actionId );
+                reportResult( actionId, result );
             }
         };
     }
@@ -115,6 +123,32 @@ public class JobWorkflowImpl
     }
 
     @Asynchronous
+    private Promise<Void> reportResult( Promise<String> actionId,
+                                        Promise<JobResult> result )
+    {
+        if ( actionId.get() == null )
+        {
+            return Promise.Void();
+        }
+        JobResult r = result.get();
+        String summary =
+            String.format( "stdout=%s, stderr=%s, on=%s",
+                           r.getStandardOutput(), r.getErrorOutput(),
+                           r.getRunsOn() );
+        if ( r.getExitCode() == 0 )
+        {
+            return controlActivities.notifyActionCompleted( actionId.get(),
+                                                            summary,
+                                                            r.getElapsedMillis() );
+        }
+        return controlActivities.notifyActionFailed( actionId.get(),
+                                                     summary + ", code="
+                                                         + r.getExitCode(),
+                                                     r.getStackTrace(),
+                                                     r.getElapsedMillis() );
+    }
+
+    @Asynchronous
     private Promise<Void> setWorkerId( Promise<String> workerId )
     {
         this.workerId = workerId.get();
@@ -122,7 +156,8 @@ public class JobWorkflowImpl
     }
 
     @Asynchronous
-    private Promise<Void> waitUntilWorkerReady( Promise<String> workerId )
+    private Promise<Void> waitUntilWorkerReady( Promise<String> workerId,
+                                                Promise<?>... waitFor )
     {
         CheckAndWait waitWorker = new CheckAndWait();
         waitWorker.setCheckType( CheckAndWait.Type.WORKER_LAUNCH );
