@@ -15,12 +15,15 @@ public interface ControlActivities
     String createAgentControllerRole( String roleName, String workflowTaskList,
                                       Identity clientIdentity );
 
+    @Description( value = "Determine UserData of worker EC2 instance" )
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
     String createAgentUserData( String roleArn, String workflowTaskList );
 
+    @Description( value = "Determine temporary database instance name for snapshot $params.get(0)" )
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
     String createDatabaseName( String snapshotName );
 
+    @Description( value = "Determine snapshot name of database instance $params.get(0)" )
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
     String createSnapshotName( String databaseName );
 
