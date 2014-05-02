@@ -72,8 +72,7 @@ public class JobWorkflowImpl
                     ec2Activities.deleteInstanceProfile( agentProfileName,
                                                          request.getIdentity(),
                                                          done );
-                controlActivities.deleteRole( masterRoleName,
-                                              request.getIdentity(), done );
+                controlActivities.deleteRole( masterRoleName, done );
             }
 
             @Override

@@ -111,8 +111,7 @@ public class JobWorkflowImplTest
                 one( ec2Activities ).terminateInstance( "dmw-test", identity );
                 one( ec2Activities ).deleteInstanceProfile( "dm-profile-test",
                                                             identity );
-                one( controlActivities ).deleteRole( "dm-master-role-test",
-                                                     identity );
+                one( controlActivities ).deleteRole( "dm-master-role-test" );
             }
         } );
 

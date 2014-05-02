@@ -19,5 +19,9 @@
         <constructor-arg ref="awsCredentials" />
         <property name="endpoint" value="https://swf.us-east-1.amazonaws.com" />
     </bean>
+    <bean
+        class="com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient">
+        <constructor-arg ref="awsCredentials" />
+    </bean>
     <context:component-scan base-package="org.cyclopsgroup.datamung.service.core" />
 </beans>

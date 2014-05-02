@@ -26,7 +26,7 @@ public interface ControlActivities
 
     @Description( "Delete role $params.get(0)" )
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
-    void deleteRole( String roleName, Identity clientIdentity );
+    void deleteRole( String roleName );
 
     @ExponentialRetry( initialRetryIntervalSeconds = 30, maximumAttempts = 5 )
     void notifyActionCompleted( String actionId, String result,

@@ -41,12 +41,16 @@ public class ControlActivitiesImpl
 
     private final JobEventListener jobEventListener;
 
+    private final AmazonIdentityManagement serverIam;
+
     @Autowired
     public ControlActivitiesImpl( ServiceConfig config,
-                                  JobEventListener jobEventListener )
+                                  JobEventListener jobEventListener,
+                                  AmazonIdentityManagement iam )
     {
         this.accountId = config.getAwsAccountId();
         this.jobEventListener = jobEventListener;
+        this.serverIam = iam;
         LOG.info( "AWS account id is " + accountId );
     }
 
@@ -60,20 +64,21 @@ public class ControlActivitiesImpl
     {
         Map<String, String> policyVariables = new HashMap<String, String>();
         policyVariables.put( "CONTROLLER_ACCOUNT_ID", accountId );
-        policyVariables.put( "SWF_DOMAIN", "datamung-test" );
+        policyVariables.put( "SWF_DOMAIN",
+                             contextProvider.getActivityExecutionContext().getDomain() );
         policyVariables.put( "TASK_LIST", workflowTaskList );
 
-        AmazonIdentityManagement iam =
+        AmazonIdentityManagement clientIam =
             ActivityUtils.createClient( AmazonIdentityManagementClient.class,
                                         identity );
 
         Map<String, String> trustVariables = new HashMap<String, String>();
         trustVariables.put( "CLIENT_EXTERNAL_ID", AgentConfig.ROLE_EXTERNAL_ID );
         trustVariables.put( "CLIENT_ACCOUNT_ID",
-                            ActivityUtils.getAccountId( iam ) );
+                            ActivityUtils.getAccountId( clientIam ) );
 
         Role role =
-            ActivityUtils.createRole( roleName, iam,
+            ActivityUtils.createRole( roleName, serverIam,
                                       "datamung/agent-controller-policy.json",
                                       policyVariables,
                                       "datamung/agent-controller-trust.json",
@@ -116,12 +121,9 @@ public class ControlActivitiesImpl
      * @inheritDoc
      */
     @Override
-    public void deleteRole( String roleName, Identity identity )
+    public void deleteRole( String roleName )
     {
-        AmazonIdentityManagement iam =
-            ActivityUtils.createClient( AmazonIdentityManagementClient.class,
-                                        identity );
-        ActivityUtils.deleteRole( roleName, iam );
+        ActivityUtils.deleteRole( roleName, serverIam );
     }
 
     @Override
