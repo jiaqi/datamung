@@ -48,7 +48,7 @@ class ActivityUtils
         return Region.getRegion( r ).createClient( clientType, creds, null );
     }
 
-    static Role createRole( String roleName, AmazonIdentityManagement iam,
+    static Role createRole( String roleName, AmazonIdentityManagement aim,
                             String policyTemplate,
                             Map<String, String> policyVariables,
                             String trustTemplate,
@@ -63,14 +63,14 @@ class ActivityUtils
         {
             LOG.info( "Creating new role " + roleName );
             CreateRoleResult role =
-                iam.createRole( new CreateRoleRequest().withRoleName( roleName ).withAssumeRolePolicyDocument( assumeRolePolicy ) );
+                aim.createRole( new CreateRoleRequest().withRoleName( roleName ).withAssumeRolePolicyDocument( assumeRolePolicy ) );
             r = role.getRole();
         }
         catch ( EntityAlreadyExistsException e )
         {
             LOG.info( "Role already exists! " + roleName + ", ignore" );
             r =
-                iam.getRole( new GetRoleRequest().withRoleName( roleName ) ).getRole();
+                aim.getRole( new GetRoleRequest().withRoleName( roleName ) ).getRole();
             roleExisted = true;
         }
 
@@ -80,7 +80,7 @@ class ActivityUtils
         {
             try
             {
-                iam.getRolePolicy( new GetRolePolicyRequest().withPolicyName( policyName ).withRoleName( roleName ) );
+                aim.getRolePolicy( new GetRolePolicyRequest().withPolicyName( policyName ).withRoleName( roleName ) );
                 policyRequired = false;
                 LOG.info( "Policy " + policyName + " already exists, exit" );
             }
@@ -93,16 +93,16 @@ class ActivityUtils
             String rolePolicy = mergeDocument( policyTemplate, policyVariables );
             LOG.info( "Attaching policy " + policyName + " with content "
                 + rolePolicy + " to role " + roleName );
-            iam.putRolePolicy( new PutRolePolicyRequest().withRoleName( roleName ).withPolicyName( policyName ).withPolicyDocument( rolePolicy ) );
+            aim.putRolePolicy( new PutRolePolicyRequest().withRoleName( roleName ).withPolicyName( policyName ).withPolicyDocument( rolePolicy ) );
         }
         return r;
     }
 
-    static void deleteRole( String roleName, AmazonIdentityManagement iam )
+    static void deleteRole( String roleName, AmazonIdentityManagement aim )
     {
         try
         {
-            iam.getRole( new GetRoleRequest().withRoleName( roleName ) );
+            aim.getRole( new GetRoleRequest().withRoleName( roleName ) );
         }
         catch ( NoSuchEntityException e )
         {
@@ -111,7 +111,7 @@ class ActivityUtils
         }
         try
         {
-            iam.deleteRolePolicy( new DeleteRolePolicyRequest().withRoleName( roleName ).withPolicyName( roleName
+            aim.deleteRolePolicy( new DeleteRolePolicyRequest().withRoleName( roleName ).withPolicyName( roleName
                                                                                                              + "-policy" ) );
         }
         catch ( NoSuchEntityException e )
@@ -121,7 +121,7 @@ class ActivityUtils
 
         try
         {
-            iam.deleteRole( new DeleteRoleRequest().withRoleName( roleName ) );
+            aim.deleteRole( new DeleteRoleRequest().withRoleName( roleName ) );
         }
         catch ( NoSuchEntityException e )
         {
@@ -129,11 +129,10 @@ class ActivityUtils
         }
     }
 
-    static String getAccountId( AmazonIdentityManagement iam )
+    static String getAccountId( AmazonIdentityManagement aim )
     {
-        String arn = iam.getUser().getUser().getArn();
-        return StringUtils.removeStart( arn, "arn:aws:iam::" ).replaceAll( ":.+$",
-                                                                           "" );
+        String[] parts = aim.getUser().getUser().getArn().split( ":" );
+        return parts.length > 4 ? parts[4] : null;
     }
 
     private static String mergeDocument( String template,

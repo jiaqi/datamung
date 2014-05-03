@@ -19,7 +19,4 @@
     </bean>
     <bean id="awsCredentials"
         class="com.amazonaws.auth.InstanceProfileCredentialsProvider" />
-    <bean id="awsAccountId" class="java.lang.String">
-        <constructor-arg value="${accountId}" />
-    </bean>
 </beans>

@@ -25,8 +25,4 @@
             </bean>
         </constructor-arg>
     </bean>
-    <bean id="awsAccountId"
-        class="org.cyclopsgroup.datamung.service.activities.IamAccountIdFactoryBean">
-        <constructor-arg ref="awsCredentials" />
-    </bean>
 </beans>

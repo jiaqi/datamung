@@ -7,21 +7,24 @@
        http://www.springframework.org/schema/beans/spring-beans.xsd
        http://www.springframework.org/schema/context
        http://www.springframework.org/schema/context/spring-context.xsd">
-    <bean class="org.cyclopsgroup.datamung.service.ServiceConfig">
-        <property name="agentAmiId" value="ami-4213f62a" />
-        <property name="swfDomainName" value="${aws.swfDomain}" />
-        <property name="awsAccountId" ref="awsAccountId" />
-    </bean>
-
     <!-- AWS resources -->
     <bean id="awsSimpleWorkflow"
         class="com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflowClient">
         <constructor-arg ref="awsCredentials" />
         <property name="endpoint" value="https://swf.us-east-1.amazonaws.com" />
     </bean>
-    <bean
+    <bean id="awsIdentityManagement"
         class="com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient">
         <constructor-arg ref="awsCredentials" />
+    </bean>
+    <bean id="awsAccountId"
+        class="org.cyclopsgroup.datamung.service.activities.IamAccountIdFactoryBean">
+        <constructor-arg ref="awsIdentityManagement" />
+    </bean>
+    <bean class="org.cyclopsgroup.datamung.service.ServiceConfig">
+        <property name="agentAmiId" value="ami-4213f62a" />
+        <property name="swfDomainName" value="${aws.swfDomain}" />
+        <property name="awsAccountId" ref="awsAccountId" />
     </bean>
     <context:component-scan base-package="org.cyclopsgroup.datamung.service.core" />
 </beans>
