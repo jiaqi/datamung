@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.cyclopsgroup</groupId>
         <artifactId>cyclopsgroup-java-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>0.5</version>
     </parent>
     <groupId>org.cyclopsgroup.datamung</groupId>
     <artifactId>datamung</artifactId>
@@ -137,7 +137,8 @@
     <properties>
         <org.springframework.version>3.2.0.RELEASE</org.springframework.version>
         <jackson.version>1.8.9</jackson.version>
-        <aws.sdk.version>1.7.1</aws.sdk.version>
+        <aws.sdk.version>1.7.3</aws.sdk.version>
+        <!--1.7.5 or newer does not work will maven plugins for SWF-->
         <aws.sdk.home>${user.home}/aws-java-sdk/${aws.sdk.version}</aws.sdk.home>
     </properties>
 </project>
