@@ -20,9 +20,9 @@
     </scm>
     <distributionManagement>
         <site>
-            <id>cyclopsgroup.server.sourceforge</id>
+            <id>cyclopsgroup.server</id>
             <url>
-                s3://www2.cyclopsgroup.org/projects/datamung
+                s3://${dist.bucketName}/projects/datamung
             </url>
         </site>
     </distributionManagement>
