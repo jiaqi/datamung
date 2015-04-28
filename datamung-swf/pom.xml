@@ -40,9 +40,6 @@
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-flow-build-tools</artifactId>
             <version>${aws.sdk.version}</version>
-            <scope>system</scope>
-            <systemPath>${aws.sdk.home}/lib/aws-java-sdk-flow-build-tools-${aws.sdk.version}.jar</systemPath>
-            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.aspectj</groupId>
@@ -73,6 +70,19 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <repositories>
+        <repository>
+            <id>cyclopsgroup-extra</id>
+            <name>CyclopsGroup extra library repository</name>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <url>http://${dist.server.name}/maven/extra-repository</url>
+        </repository>
+    </repositories>
     <build>
         <plugins>
             <plugin>
