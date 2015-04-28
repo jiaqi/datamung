@@ -55,4 +55,8 @@
         <http-conf:client Connection="Keep-Alive"
             ConnectionTimeout="2000" ReceiveTimeout="5000" />
     </http-conf:conduit>
+
+    <bean
+        class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean"
+        lazy-init="false" />
 </beans>

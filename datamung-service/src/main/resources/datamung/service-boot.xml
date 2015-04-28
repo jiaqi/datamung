@@ -43,7 +43,8 @@
             <ref bean="systemService" />
         </jaxrs:serviceBeans>
         <jaxrs:providers>
-            <bean class="org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider" />
+            <bean
+                class="com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider" />
         </jaxrs:providers>
     </jaxrs:server>
 </beans>

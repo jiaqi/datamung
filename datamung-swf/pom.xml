@@ -23,18 +23,8 @@
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk</artifactId>
+            <artifactId>aws-java-sdk-swf-libraries</artifactId>
             <version>${aws.sdk.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-codec</groupId>
-                    <artifactId>commons-codec</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
@@ -56,12 +46,6 @@
             <artifactId>log4j</artifactId>
             <version>1.2.17</version>
             <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-mapper-asl</artifactId>
-            <version>${jackson.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.cyclopsgroup</groupId>
@@ -103,7 +87,7 @@
                     <aspectLibraries>
                         <aspectLibrary>
                             <groupId>com.amazonaws</groupId>
-                            <artifactId>aws-java-sdk</artifactId>
+                            <artifactId>aws-java-sdk-swf-libraries</artifactId>
                         </aspectLibrary>
                     </aspectLibraries>
                 </configuration>

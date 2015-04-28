@@ -38,4 +38,7 @@
     <bean class="com.amazonaws.services.s3.AmazonS3Client">
         <constructor-arg ref="awsCredentials" />
     </bean>
+    <bean
+        class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean"
+        lazy-init="false" />
 </beans>

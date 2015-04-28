@@ -60,6 +60,4 @@
             </list>
         </property>
     </bean>
-    <bean
-        class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean" />
 </beans>

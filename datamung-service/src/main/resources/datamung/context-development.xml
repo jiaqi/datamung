@@ -21,7 +21,7 @@
         <constructor-arg>
             <bean class="java.io.File">
                 <constructor-arg
-                    value="${user.home}/config/jiaqi-root-aws-creds.properties" />
+                    value="${user.home}/config/${user.name}-root-aws-creds.properties" />
             </bean>
         </constructor-arg>
     </bean>
