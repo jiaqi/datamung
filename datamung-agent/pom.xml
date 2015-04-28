@@ -9,7 +9,7 @@
     </parent>
     <artifactId>datamung-agent</artifactId>
     <packaging>war</packaging>
-    <name>DataMung command line agent</name>
+    <name>DataMung client agent</name>
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
