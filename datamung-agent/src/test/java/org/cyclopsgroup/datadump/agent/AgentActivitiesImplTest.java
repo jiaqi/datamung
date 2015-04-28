@@ -1,7 +1,7 @@
 package org.cyclopsgroup.datadump.agent;
 
 import static org.junit.Assert.assertEquals;
-
+import static org.junit.Assume.assumeTrue;
 import java.io.File;
 
 import org.apache.commons.lang.SystemUtils;
@@ -20,10 +20,7 @@ public class AgentActivitiesImplTest
     @Test
     public void testRunJobWithPwd()
     {
-        if ( isWindows() )
-        {
-            return;
-        }
+        assumeTrue( !isWindows() );
         CommandLineJob job = new CommandLineJob();
         job.setCommand( "pwd" );
         JobResult result = new AgentActivitiesImpl().runJob( job );
@@ -33,10 +30,7 @@ public class AgentActivitiesImplTest
     @Test
     public void testRunJobWithEcho()
     {
-        if ( isWindows() )
-        {
-            return;
-        }
+        assumeTrue( !isWindows() );
         CommandLineJob job = new CommandLineJob();
         job.setCommand( "echo 1 2 3" );
         JobResult result = new AgentActivitiesImpl().runJob( job );
