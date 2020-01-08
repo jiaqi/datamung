@@ -1,17 +1,15 @@
 package org.cyclopsgroup.datamung.api;
 
-public interface JobEventListener
-{
-    void onActionCompleted( String actionId, String result, long elapsedMillis );
+public interface JobEventListener {
+  void onActionCompleted(String actionId, String result, long elapsedMillis);
 
-    void onActionFailed( String actionId, String result, String failureDetails,
-                         long elaspseMillis );
+  void onActionFailed(String actionId, String result, String failureDetails, long elaspseMillis);
 
-    String onActionStarted( String actionName, String description );
+  String onActionStarted(String actionName, String description);
 
-    void onJobCompleted( String workflowId );
+  void onJobCompleted(String workflowId);
 
-    void onJobFailed( String workflowId, Throwable cause );
+  void onJobFailed(String workflowId, Throwable cause);
 
-    void onJobStarted( String workflowId, String reference );
+  void onJobStarted(String workflowId, String reference);
 }
