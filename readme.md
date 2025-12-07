@@ -20,5 +20,4 @@ More references
 * [Netflix announcement](https://netflixtechblog.com/netflix-open-source-software-cloud-prize-winners-5a15d87a9ed7)
 * [Maven report](https://s3.us-east-1.amazonaws.com/dist.cyclopsgroup.org/projects/datamung/index.html)
 * [Javadoc](https://s3.us-east-1.amazonaws.com/dist.cyclopsgroup.org/projects/datamung/apidocs/index.html)
-
-![AWS re:Invent 2013](https://drive.usercontent.google.com/download?id=0Bz3rOVFJPPCQX1UtZVgtUG5KSFk&export=view)
+* [Photo from 2013 AWS re:Invent](https://drive.google.com/file/d/0Bz3rOVFJPPCQX1UtZVgtUG5KSFk/view?usp=sharing&resourcekey=0-jD5vB3wCg9f0J_hylq-05g)
