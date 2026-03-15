@@ -1,5 +1,7 @@
 # Introduction
 
+This project is in read-only mode.
+
 **Introduction** | [Why](doc/why.md) | [How](doc/how.md) | [Run](doc/run.md)
 
 Datamung is a Java open source, web based, [AWS Simple Workflow](https://docs.aws.amazon.com/swf) driven solution that backs up AWS RDS MySQL database into S3 object by launching EC2 instance and running mysqldump command. It makes it possible to replicate RDS across regions, VPC, accounts or outside AWS network.
